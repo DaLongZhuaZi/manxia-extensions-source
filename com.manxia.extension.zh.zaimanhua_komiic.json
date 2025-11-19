@@ -1,0 +1,215 @@
+{
+  "name": "ManXia: Komiic",
+  "pkg": "com.manxia.extension.zh.komiic",
+  "lang": "zh",
+  "code": 2,
+  "version": "4.0.0",
+  "nsfw": 0,
+  "sources": [
+    {
+      "name": "Komiic",
+      "lang": "zh",
+      "id": "924579092615598719",
+      "baseUrl": "https://komiic.com"
+    }
+  ],
+  "metadata": {
+    "name": "Komiic (API)",
+    "version": "4.0.0",
+    "author": "ManXia Team",
+    "description": "Komiic漫画图源 - 使用GraphQL API",
+    "baseUrl": "https://komiic.com",
+    "language": "zh-TW"
+  },
+  
+  "settings": {
+    "enableJavaScript": true,
+    "enableImages": false,
+    "enableCookies": true,
+    "bypassCloudflare": false,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  },
+  
+  "api": {
+    "type": "graphql",
+    "endpoint": "https://komiic.com/api/query",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    }
+  },
+  
+  "workflows": {
+    "latest": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query recentUpdate($pagination: Pagination!) { recentUpdate(pagination: $pagination) { id title description status imageUrl authors { id name } categories { id name } dateUpdated } }",
+        "variables": {
+          "pagination": {
+            "limit": 30,
+            "offset": "{{offset}}",
+            "orderBy": "DATE_UPDATED",
+            "asc": false
+          }
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.recentUpdate",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "cover": "imageUrl",
+          "author": "authors[0].name",
+          "description": "description",
+          "status": "status",
+          "genres": "categories[*].name",
+          "url": "https://komiic.com/comic/{{id}}"
+        }
+      }
+    },
+    
+    "popular": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query hotComics($pagination: Pagination!) { hotComics(pagination: $pagination) { id title description status imageUrl authors { id name } categories { id name } monthViews } }",
+        "variables": {
+          "pagination": {
+            "limit": 30,
+            "offset": "{{offset}}",
+            "orderBy": "MONTH_VIEWS",
+            "asc": false
+          }
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.hotComics",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "cover": "imageUrl",
+          "author": "authors[0].name",
+          "description": "description",
+          "status": "status",
+          "genres": "categories[*].name",
+          "url": "https://komiic.com/comic/{{id}}"
+        }
+      }
+    },
+    
+    "search": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query searchComics($keyword: String!, $pagination: Pagination!) { searchComics(keyword: $keyword, pagination: $pagination) { id title description status imageUrl authors { id name } categories { id name } } }",
+        "variables": {
+          "keyword": "{{keyword}}",
+          "pagination": {
+            "limit": 30,
+            "offset": "{{offset}}",
+            "orderBy": "DATE_UPDATED",
+            "asc": false
+          }
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.searchComics",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "cover": "imageUrl",
+          "author": "authors[0].name",
+          "description": "description",
+          "status": "status",
+          "genres": "categories[*].name",
+          "url": "https://komiic.com/comic/{{id}}"
+        }
+      }
+    },
+    
+    "getMangaDetail": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query chapterByComicId($comicId: ID!) { comicById(comicId: $comicId) { id title description status imageUrl authors { id name } categories { id name } } chaptersByComicId(comicId: $comicId) { id serial type size dateCreated } }",
+        "variables": {
+          "comicId": "{{mangaId}}"
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.comicById",
+        "fields": {
+          "id": "id",
+          "title": "title",
+          "cover": "imageUrl",
+          "author": "authors[0].name",
+          "description": "description",
+          "status": "status",
+          "genres": "categories[*].name"
+        }
+      }
+    },
+    
+    "getChapterList": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query chapterByComicId($comicId: ID!) { chaptersByComicId(comicId: $comicId) { id serial type size dateCreated } }",
+        "variables": {
+          "comicId": "{{mangaId}}"
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.chaptersByComicId",
+        "fields": {
+          "id": "id",
+          "title": "serial",
+          "type": "type",
+          "size": "size",
+          "publishTime": "dateCreated"
+        }
+      }
+    },
+    
+    "getPageList": {
+      "type": "api",
+      "method": "POST",
+      "url": "{{api.endpoint}}",
+      "headers": "{{api.headers}}",
+      "body": {
+        "query": "query imagesByChapterId($chapterId: ID!) { reachedImageLimit imagesByChapterId(chapterId: $chapterId) { kid } }",
+        "variables": {
+          "chapterId": "{{chapterId}}"
+        }
+      },
+      "extract": {
+        "type": "json",
+        "path": "data.imagesByChapterId",
+        "fields": {
+          "kid": "kid"
+        }
+      }
+    },
+    
+    "getImageUrl": {
+      "type": "direct",
+      "url": "https://komiic.com/api/image/{{kid}}"
+    }
+  }
+}
