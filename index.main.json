@@ -1,0 +1,18 @@
+[
+  {
+    "name": "ManXia: Zaimanhua",
+    "pkg": "com.manxia.extension.zh.zaimanhua",
+    "lang": "zh",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "sources": [
+      {
+        "name": "再漫画",
+        "lang": "zh",
+        "id": "524579092615598717",
+        "baseUrl": "https://manhua.zaimanhua.com"
+      }
+    ]
+  }
+]
