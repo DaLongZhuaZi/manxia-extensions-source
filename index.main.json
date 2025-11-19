@@ -17,6 +17,7 @@
   },
   {
     "name": "ManXia: Komiic",
+    "pkg": "com.manxia.extension.zh.komiic",
     "lang": "zh",
     "code": 2,
     "version": "4.0.0",
