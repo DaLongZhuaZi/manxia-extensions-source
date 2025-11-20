@@ -190,7 +190,7 @@
     "getPageList": {
       "type": "api",
       "method": "POST",
-      "url": "{{api.endpoint}}",
+      "url": "https://komiic.com/api/query",
       "headers": {
         "Content-Type": "application/json",
         "Referer": "https://komiic.com",
