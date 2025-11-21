@@ -254,7 +254,13 @@
               "updateTime": "datetime_updated"
             }
           }
-        },
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
         {
           "type": "api",
           "method": "GET",
@@ -275,14 +281,13 @@
               "publishTime": "datetime_created",
               "url": "{{baseUrl}}/comic/{{mangaId}}/chapter/{{uuid}}"
             }
-          },
-          "saveAs": "chapters"
+          }
         }
       ]
     },
 
-    "getChapterPages": {
-      "description": "获取章节图片",
+    "getPageList": {
+      "description": "获取章节页面列表",
       "actions": [
         {
           "type": "api",
@@ -295,6 +300,20 @@
             "fields": {
               "url": "url"
             }
+          }
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL",
+      "actions": [
+        {
+          "type": "direct",
+          "description": "直接返回图片URL，无需额外处理",
+          "extract": {
+            "type": "passthrough",
+            "field": "url"
           }
         }
       ]
