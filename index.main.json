@@ -30,5 +30,21 @@
         "baseUrl": "https://komiic.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: Copymanga",
+    "pkg": "com.manxia.extension.zh.copymanga",
+    "lang": "zh",
+    "code": 3,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "sources": [
+      {
+        "name": "拷贝漫画",
+        "lang": "zh",
+        "id": "324579092615598720",
+        "baseUrl": "https://www.mangacopy.com"
+      }
+    ]
   }
 ]
