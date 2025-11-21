@@ -36,8 +36,8 @@
       "Accept": "application/json, text/plain, */*",
       "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
       "Accept-Encoding": "gzip, deflate, br",
-      "Referer": "{{baseUrl}}",
-      "Origin": "{{baseUrl}}"
+      "Referer": "https://www.copy20.com",
+      "Origin": "https://www.copy20.com"
     },
     "timeout": 30000,
     "retryCount": 3,
@@ -63,7 +63,7 @@
 
   "api": {
     "type": "rest",
-    "endpoint": "{{baseUrl}}/api/v3",
+    "endpoint": "https://www.copy20.com/api/v3",
     "authentication": {
       "type": "cookie",
       "requiresLogin": false
@@ -134,7 +134,7 @@
     "fallback": {
       "enabled": true,
       "strategies": [
-        {"type": "alternativeUrl", "url": "{{alternativeUrls.copy20}}"},
+        {"type": "alternativeUrl", "url": "https://www.copy20.com"},
         {"type": "webview"}
       ]
     }
@@ -147,7 +147,7 @@
         {
           "type": "http",
           "method": "GET",
-          "url": "{{baseUrl}}",
+          "url": "https://www.copy20.com",
           "description": "访问首页建立基础Cookie"
         }
       ]
@@ -159,7 +159,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/recs",
+          "url": "https://www.copy20.com/api/v3/recs",
           "params": {
             "pos": "3200102",
             "limit": "30",
@@ -176,7 +176,7 @@
               "description": "comic.brief",
               "status": "comic.status.display",
               "genres": "comic.theme[*].name",
-              "url": "{{baseUrl}}/comic/{{comic.path_word}}"
+              "url": "https://www.copy20.com/comic/{{comic.path_word}}"
             }
           }
         }
@@ -189,7 +189,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/update/newest",
+          "url": "https://www.copy20.com/api/v3/update/newest",
           "params": {
             "limit": "30",
             "offset": "0"
@@ -215,7 +215,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/search/comic",
+          "url": "https://www.copy20.com/api/v3/search/comic",
           "params": {
             "q": "{{query}}",
             "limit": "30",
@@ -242,7 +242,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comic2/{{mangaId}}",
+          "url": "https://www.copy20.com/api/v3/comic2/{{mangaId}}",
           "extract": {
             "type": "json",
             "path": "results.comic",
@@ -268,7 +268,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comic/{{mangaId}}/group/default/chapters",
+          "url": "https://www.copy20.com/api/v3/comic/{{mangaId}}/group/default/chapters",
           "params": {
             "limit": "500",
             "offset": "0",
@@ -282,7 +282,7 @@
               "title": "name",
               "index": "index",
               "publishTime": "datetime_created",
-              "url": "{{baseUrl}}/comic/{{mangaId}}/chapter/{{uuid}}"
+              "url": "https://www.copy20.com/comic/{{mangaId}}/chapter/{{uuid}}"
             }
           }
         }
@@ -295,7 +295,7 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comic/{{mangaId}}/chapter2/{{chapterId}}",
+          "url": "https://www.copy20.com/api/v3/comic/{{mangaId}}/chapter2/{{chapterId}}",
           "extract": {
             "type": "json",
             "path": "results.chapter.contents",
@@ -327,7 +327,7 @@
       "enabled": false
     },
     "headers": {
-      "Referer": "{{baseUrl}}",
+      "Referer": "https://www.copy20.com",
       "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*"
     }
   },
