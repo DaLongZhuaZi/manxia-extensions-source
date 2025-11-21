@@ -123,7 +123,22 @@
   "api": {
     "type": "graphql",
     "endpoint": "https://komiic.com/api/query",
-    "headers": "{{network.headers}}"
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "*/*",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Accept-Language": "zh-CN,zh-HK;q=0.9,zh;q=0.8,zh-TW;q=0.7",
+      "User-Agent": "{{settings.userAgent}}",
+      "Origin": "https://komiic.com",
+      "Referer": "https://komiic.com",
+      "DNT": "1",
+      "Sec-CH-UA": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+      "Sec-CH-UA-Mobile": "?0",
+      "Sec-CH-UA-Platform": "\"Windows\"",
+      "Sec-Fetch-Dest": "empty",
+      "Sec-Fetch-Mode": "cors",
+      "Sec-Fetch-Site": "same-origin"
+    }
   },
   
   "workflows": {
