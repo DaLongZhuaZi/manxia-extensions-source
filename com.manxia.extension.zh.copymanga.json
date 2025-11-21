@@ -231,7 +231,7 @@
       ]
     },
 
-    "detail": {
+    "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
         {
@@ -281,7 +281,7 @@
       ]
     },
 
-    "pages": {
+    "getChapterPages": {
       "description": "获取章节图片",
       "actions": [
         {
