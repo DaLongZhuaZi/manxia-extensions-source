@@ -63,7 +63,7 @@
 
   "api": {
     "type": "rest",
-    "endpoint": "https://{{baseUrl}}/api/v3",
+    "endpoint": "{{baseUrl}}/api/v3",
     "authentication": {
       "type": "cookie",
       "requiresLogin": false
@@ -162,10 +162,9 @@
           "url": "{{api.endpoint}}/recs",
           "params": {
             "pos": "3200102",
-            "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}"
+            "limit": "30",
+            "offset": "0"
           },
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.list",
@@ -192,10 +191,9 @@
           "method": "GET",
           "url": "{{api.endpoint}}/update/newest",
           "params": {
-            "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}"
+            "limit": "30",
+            "offset": "0"
           },
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.list",
@@ -220,11 +218,10 @@
           "url": "{{api.endpoint}}/search/comic",
           "params": {
             "q": "{{query}}",
-            "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}",
+            "limit": "30",
+            "offset": "0",
             "platform": "2"
           },
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.list",
@@ -246,7 +243,6 @@
           "type": "api",
           "method": "GET",
           "url": "{{api.endpoint}}/comic2/{{mangaId}}",
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.comic",
@@ -278,7 +274,6 @@
             "offset": "0",
             "ordering": "-datetime_created"
           },
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.list",
@@ -301,7 +296,6 @@
           "type": "api",
           "method": "GET",
           "url": "{{api.endpoint}}/comic/{{mangaId}}/chapter2/{{chapterId}}",
-          "headers": "{{network.headers}}",
           "extract": {
             "type": "json",
             "path": "results.chapter.contents",
