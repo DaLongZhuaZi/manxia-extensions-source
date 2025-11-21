@@ -43,7 +43,23 @@
         "name": "拷贝漫画",
         "lang": "zh",
         "id": "324579092615598720",
-        "baseUrl": "https://www.mangacopy.com"
+        "baseUrl": "https://www.2025copy.com/"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: CopymangaWebview",
+    "pkg": "com.manxia.extension.zh.copymangawebview",
+    "lang": "zh",
+    "code": 4,
+    "version": "2.0.0",
+    "nsfw": 1,
+    "sources": [
+      {
+        "name": "拷贝漫画Webview",
+        "lang": "zh",
+        "id": "324579092615598721",
+        "baseUrl": "https://www.2025copy.com/"
       }
     ]
   }
