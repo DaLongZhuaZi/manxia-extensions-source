@@ -4,13 +4,19 @@
     "name": "拷贝漫画",
     "version": "1.0.0",
     "language": "zh-CN",
-    "baseUrl": "https://www.mangacopy.com",
+    "baseUrl": "https://www.copy20.com",
     "description": "拷贝漫画 - 中文漫画图源，支持域名切换、简繁转换、UA轮换等高级功能",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "popular"],
     "alternativeUrls": {
-      "hotmanga": "https://www.hotmanga.com",
+      "mangacopy": "https://api.mangacopy.com",
+      "copymanga_tv": "https://api.copymanga.tv",
+      "copymanga_org": "https://api.copymanga.org",
+      "copymanga_info": "https://api.copymanga.info",
+      "copymanga_net": "https://api.copymanga.net",
+      "xsskc": "https://api.xsskc.com",
+      "copymanga_site": "https://api.copymanga.site",
       "copy20": "https://www.copy20.com"
     }
   },
@@ -57,7 +63,7 @@
 
   "api": {
     "type": "rest",
-    "endpoint": "{{baseUrl}}/api/v3",
+    "endpoint": "https://{{baseUrl}}/api/v3",
     "authentication": {
       "type": "cookie",
       "requiresLogin": false
@@ -69,22 +75,24 @@
       "type": "select",
       "name": "API域名",
       "description": "选择要使用的API服务器",
-      "default": "main",
+      "default": "copy20",
       "options": [
-        {"value": "main", "label": "主站 (mangacopy.com)"},
-        {"value": "hotmanga", "label": "热辣漫画"},
-        {"value": "copy20", "label": "Copy20镜像"}
+        {"value": "copy20", "label": "Copy20 (推荐)"},
+        {"value": "mangacopy", "label": "MangaCopy API"},
+        {"value": "copymanga_tv", "label": "CopyManga.tv"},
+        {"value": "copymanga_org", "label": "CopyManga.org"},
+        {"value": "xsskc", "label": "XSSKC镜像"}
       ]
     },
     "imageQuality": {
       "type": "select",
       "name": "图片质量",
       "description": "选择图片质量",
-      "default": "high",
+      "default": "800",
       "options": [
-        {"value": "low", "label": "低质量（省流量）"},
-        {"value": "medium", "label": "中等质量"},
-        {"value": "high", "label": "高质量（原图）"}
+        {"value": "800", "label": "标准 (800px)"},
+        {"value": "1200", "label": "高清 (1200px)"},
+        {"value": "1500", "label": "超清 (1500px)"}
       ]
     },
     "enableBookshelf": {
@@ -151,11 +159,11 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comics/rank",
+          "url": "{{api.endpoint}}/recs",
           "params": {
+            "pos": "3200102",
             "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}",
-            "type": "popular"
+            "offset": "{{offset|0}}"
           },
           "headers": "{{network.headers}}",
           "extract": {
@@ -182,11 +190,10 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comics",
+          "url": "{{api.endpoint}}/update/newest",
           "params": {
             "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}",
-            "ordering": "-datetime_updated"
+            "offset": "{{offset|0}}"
           },
           "headers": "{{network.headers}}",
           "extract": {
@@ -210,11 +217,12 @@
         {
           "type": "api",
           "method": "GET",
-          "url": "{{api.endpoint}}/comics/search",
+          "url": "{{api.endpoint}}/search/comic",
           "params": {
             "q": "{{query}}",
             "limit": "{{limit|30}}",
-            "offset": "{{offset|0}}"
+            "offset": "{{offset|0}}",
+            "platform": "2"
           },
           "headers": "{{network.headers}}",
           "extract": {
