@@ -1,19 +1,6 @@
 {
-  "name": "ManXia: Zaimanhua",
-  "pkg": "com.manxia.extension.zh.zaimanhua",
-  "lang": "zh",
-  "code": 1,
-  "version": "1.0.0",
-  "nsfw": 0,
-  "sources": [
-    {
-      "name": "再漫画",
-      "lang": "zh",
-      "id": "524579092615598717",
-      "baseUrl": "https://manhua.zaimanhua.com"
-    }
-  ],
   "metadata": {
+    "id": "zaimanhua",
     "name": "再漫画 (API)",
     "version": "1.0.0",
     "author": "ManXia Team",
@@ -21,6 +8,7 @@
     "baseUrl": "https://manhua.zaimanhua.com",
     "language": "zh-CN"
   },
+  
   "settings": {
     "enableJavaScript": false,
     "enableImages": false,
@@ -28,6 +16,7 @@
     "bypassCloudflare": false,
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   },
+  
   "api": {
     "type": "rest",
     "endpoint": "https://v4api.zaimanhua.com/app/v1",
@@ -36,6 +25,7 @@
       "Accept": "application/json"
     }
   },
+  
   "workflows": {
     "search": {
       "type": "api",
@@ -60,6 +50,7 @@
         }
       }
     },
+    
     "getMangaDetail": {
       "type": "api",
       "method": "GET",
@@ -81,6 +72,7 @@
         }
       }
     },
+    
     "getChapterList": {
       "type": "api",
       "method": "GET",
@@ -99,6 +91,7 @@
         }
       }
     },
+    
     "getPageList": {
       "type": "api",
       "method": "GET",
@@ -114,10 +107,12 @@
         }
       }
     },
+    
     "getImageUrl": {
       "type": "direct",
       "url": "{{imageUrl}}"
     },
+    
     "popular": {
       "type": "api",
       "method": "GET",
@@ -140,6 +135,7 @@
         }
       }
     },
+    
     "latest": {
       "type": "api",
       "method": "GET",
