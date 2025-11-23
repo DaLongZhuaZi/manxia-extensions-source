@@ -452,6 +452,34 @@
       ]
     },
 
+    "getUserAvatar": {
+      "description": "获取用户头像（需要登录）",
+      "requiresLogin": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.2025copy.com/web/person/home",
+          "timeout": 10000,
+          "description": "导航到用户个人主页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "img[src*='user/cover']",
+          "timeout": 8000,
+          "description": "等待头像元素加载"
+        },
+        {
+          "type": "extract",
+          "selector": "img[src*='user/cover']",
+          "fields": {
+            "avatarUrl": "@src"
+          },
+          "description": "提取用户头像URL"
+        }
+      ]
+    },
+
     "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
