@@ -2,7 +2,7 @@
   "metadata": {
     "id": "copymanga_webview",
     "name": "拷贝漫画 (WebView)",
-    "version": "2.0.0",
+    "version": "2.0.2",
     "language": "zh-CN",
     "baseUrl": "https://www.2025copy.com",
     "description": "拷贝漫画 WebView版本 - 使用DOM提取，支持域名切换和Cookie管理",
@@ -313,6 +313,11 @@
 
     "filter": {
       "description": "筛选漫画（支持排序、地区、题材组合）",
+      "defaults": {
+        "filterOrdering": "-datetime_updated",
+        "filterRegion": "all",
+        "filterTheme": "all"
+      },
       "actions": [
         {
           "type": "script",
@@ -628,6 +633,153 @@
           "code": "return '{{imageUrl}}';",
           "description": "直接返回图片URL"
         }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "filterOrdering",
+            "title": "排序",
+            "defaultValue": "-datetime_updated",
+            "options": [
+              {"value": "-datetime_updated", "label": "按时间-从新到旧"},
+              {"value": "datetime_updated", "label": "按时间-从旧到新"},
+              {"value": "-popular", "label": "按热度-从高到低"},
+              {"value": "popular", "label": "按热度-从低到高"}
+            ]
+          },
+          {
+            "id": "filterRegion",
+            "title": "地区",
+            "defaultValue": "all",
+            "options": [
+              {"value": "all", "label": "全部"},
+              {"value": "0", "label": "日漫"},
+              {"value": "1", "label": "韩漫"},
+              {"value": "2", "label": "美漫"}
+            ]
+          },
+          {
+            "id": "filterTheme",
+            "title": "题材",
+            "defaultValue": "all",
+            "placeholder": "选择题材分类"
+          }
+        ]
+      }
+    }
+  ],
+
+  "filters": {
+    "filterOrdering": {
+      "type": "select",
+      "name": "排序",
+      "default": "-datetime_updated",
+      "options": [
+        {"value": "-datetime_updated", "label": "按时间-从新到旧"},
+        {"value": "datetime_updated", "label": "按时间-从旧到新"},
+        {"value": "-popular", "label": "按热度-从高到低"},
+        {"value": "popular", "label": "按热度-从低到高"}
+      ]
+    },
+    "filterRegion": {
+      "type": "select",
+      "name": "地区",
+      "default": "all",
+      "options": [
+        {"value": "all", "label": "全部"},
+        {"value": "0", "label": "日漫"},
+        {"value": "1", "label": "韩漫"},
+        {"value": "2", "label": "美漫"}
+      ]
+    },
+    "filterTheme": {
+      "type": "select",
+      "name": "题材",
+      "default": "all",
+      "options": [
+        {"value": "all", "label": "全部"},
+        {"value": "aiqing", "label": "愛情"},
+        {"value": "huanlexiang", "label": "歡樂向"},
+        {"value": "maoxian", "label": "冒險"},
+        {"value": "qihuan", "label": "奇幻"},
+        {"value": "baihe", "label": "百合"},
+        {"value": "xiaoyuan", "label": "校园"},
+        {"value": "kehuan", "label": "科幻"},
+        {"value": "dongfang", "label": "東方"},
+        {"value": "danmei", "label": "耽美"},
+        {"value": "shenghuo", "label": "生活"},
+        {"value": "gedou", "label": "格鬥"},
+        {"value": "qingxiaoshuo", "label": "轻小说"},
+        {"value": "qita", "label": "其他"},
+        {"value": "xuanyi", "label": "悬疑"},
+        {"value": "teenslove", "label": "TL"},
+        {"value": "mengxi", "label": "萌系"},
+        {"value": "shengui", "label": "神鬼"},
+        {"value": "zhichang", "label": "职场"},
+        {"value": "zhiyu", "label": "治愈"},
+        {"value": "jiecao", "label": "节操"},
+        {"value": "sige", "label": "四格"},
+        {"value": "changtiao", "label": "長條"},
+        {"value": "jianniang", "label": "舰娘"},
+        {"value": "gaoxiao", "label": "搞笑"},
+        {"value": "jingji", "label": "竞技"},
+        {"value": "weiniang", "label": "伪娘"},
+        {"value": "mohuan", "label": "魔幻"},
+        {"value": "rexue", "label": "热血"},
+        {"value": "xingzhuanhuan", "label": "性转换"},
+        {"value": "meishi", "label": "美食"},
+        {"value": "lizhi", "label": "励志"},
+        {"value": "COLOR", "label": "彩色"},
+        {"value": "hougong", "label": "後宮"},
+        {"value": "zhentan", "label": "侦探"},
+        {"value": "jingsong", "label": "惊悚"},
+        {"value": "aa", "label": "AA"},
+        {"value": "yinyuewudao", "label": "音乐舞蹈"},
+        {"value": "yishijie", "label": "异世界"},
+        {"value": "zhanzheng", "label": "战争"},
+        {"value": "lishi", "label": "历史"},
+        {"value": "jizhan", "label": "机战"},
+        {"value": "dushi", "label": "都市"},
+        {"value": "chuanyue", "label": "穿越"},
+        {"value": "chongsheng", "label": "重生"},
+        {"value": "kongbu", "label": "恐怖"},
+        {"value": "shengcun", "label": "生存"},
+        {"value": "wuxia", "label": "武侠"},
+        {"value": "zhaixi", "label": "宅系"},
+        {"value": "zhuansheng", "label": "转生"},
+        {"value": "fate", "label": "FATE"},
+        {"value": "Uncensored", "label": "無修正"},
+        {"value": "xianxia", "label": "仙侠"},
+        {"value": "loveLive", "label": "LoveLive"}
       ]
     }
   },
