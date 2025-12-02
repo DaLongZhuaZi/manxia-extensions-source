@@ -127,7 +127,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{mangaUrl}}",
+          "url": "https://b.amh1234.com/comic/{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
@@ -151,7 +151,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{mangaUrl}}",
+          "url": "https://b.amh1234.com/comic/{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
@@ -180,7 +180,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{mangaUrl}}",
+          "url": "https://b.amh1234.com/comic/{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
@@ -204,7 +204,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{chapterUrl}}",
+          "url": "https://b.amh1234.com{{chapterId}}",
           "timeout": 15000,
           "description": "导航到章节阅读页"
         },
@@ -218,6 +218,17 @@
           "type": "script",
           "code": "(() => { const body = document.body.innerHTML; const imgRegex1 = /var chapterImages = (\\[.*?\\])/; const imgRegex2 = /var chapterPath = \"(.*?)\"/; const match1 = body.match(imgRegex1); const match2 = body.match(imgRegex2); if (!match1 || !match2) { console.log('[MH1234] 未找到图片数据'); return JSON.stringify([]); } const chapterPath = match2[1]; const imagePrefix = 'https://gmh1234.wszwhg.net/' + chapterPath; let imageList; try { imageList = JSON.parse(match1[1]); } catch (e) { console.log('[MH1234] 解析图片列表失败:', e); return JSON.stringify([]); } const pages = imageList.map((img, index) => ({ index: index, url: imagePrefix + img })); console.log('[MH1234] 提取到', pages.length, '张图片'); return JSON.stringify(pages); })();",
           "description": "提取章节图片列表（通过正则解析JS变量）"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回，因为getPageList已返回完整URL）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
         }
       ]
     }
