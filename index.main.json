@@ -83,5 +83,22 @@
         "baseUrl": "https://everia.club"
       }
     ]
+  },
+  {
+    "name": "ManXia: Pixiv",
+    "pkg": "com.manxia.extension.zh.pixiv",
+    "lang": "zh",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": false,
+    "sources": [
+      {
+        "name": "Pixiv",
+        "lang": "zh",
+        "id": "772475187360186902",
+        "baseUrl": "https://www.pixiv.net"
+      }
+    ]
   }
 ]

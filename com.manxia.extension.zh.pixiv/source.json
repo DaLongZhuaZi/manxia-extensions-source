@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.pixiv",
+    "name": "Pixiv",
+    "version": "1.0.0",
+    "language": "zh-CN",
+    "baseUrl": "https://www.pixiv.net",
+    "description": "Pixiv 中文版 - 日本知名插画和漫画分享平台",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "popular", "illustration", "manga"]
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "sessionManagement": true,
+    "loginSupport": true
+  },
+
+  "login": {
+    "url": "https://accounts.pixiv.net/login",
+    "method": "manual",
+    "description": "请手动登录 Pixiv 账号以获取完整内容访问权限，完成后点击确认按钮保存Cookie"
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "headers": {
+      "Referer": "https://www.pixiv.net/",
+      "Accept-Language": "zh-CN,zh;q=0.9"
+    }
+  },
+
+  "settings": {
+    "contentType": {
+      "type": "select",
+      "name": "内容类型",
+      "description": "选择要显示的内容类型",
+      "default": "manga",
+      "options": [
+        {"value": "manga", "label": "漫画"},
+        {"value": "illust", "label": "插画"},
+        {"value": "all", "label": "全部"}
+      ]
+    },
+    "rating": {
+      "type": "select",
+      "name": "年龄限制",
+      "description": "选择内容年龄限制",
+      "default": "all",
+      "options": [
+        {"value": "all", "label": "全部"},
+        {"value": "safe", "label": "全年龄"},
+        {"value": "r18", "label": "R-18"}
+      ]
+    },
+    "searchMode": {
+      "type": "select",
+      "name": "搜索模式",
+      "description": "标签匹配模式",
+      "default": "s_tag",
+      "options": [
+        {"value": "s_tag", "label": "部分匹配"},
+        {"value": "s_tag_full", "label": "完全匹配"},
+        {"value": "s_tc", "label": "标题和说明"}
+      ]
+    }
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取每日漫画排行（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页（建立会话）"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; window.__pixivLoading = true; (async () => { try { console.log('[Pixiv API] 开始获取排行榜, 页码={{page}}'); const page = parseInt('{{page}}') || 1; const resp = await fetch('/touch/ajax/ranking/illust?mode=daily&type=manga&lang=zh&page=' + page, { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (data.error) { console.error('[Pixiv API] 错误:', data.message); window.__pixivResult = []; window.__pixivLoading = false; return; } const ranking = data.body?.ranking || []; console.log('[Pixiv API] 排行榜数量:', ranking.length); if (ranking.length === 0) { window.__pixivResult = []; window.__pixivLoading = false; return; } const ids = ranking.map(r => r.illustId).filter(id => id); const idsParam = ids.map(id => 'illust_ids[]=' + id).join('&'); const detailResp = await fetch('/touch/ajax/illust/details/many?' + idsParam + '&lang=zh', { headers: { 'Accept': 'application/json' } }); const detailData = await detailResp.json(); if (detailData.error) { console.error('[Pixiv API] 详情错误:', detailData.message); window.__pixivResult = []; window.__pixivLoading = false; return; } const illusts = detailData.body?.illust_details || []; const mangas = []; const seriesSeen = new Set(); illusts.forEach(illust => { if (!illust.id) return; let id, title, cover; if (illust.series && illust.series.id) { if (seriesSeen.has(illust.series.id)) return; seriesSeen.add(illust.series.id); id = 'series-' + (illust.series.userId || illust.author_details?.user_id) + '-' + illust.series.id; title = illust.series.title || illust.title || '(无标题)'; cover = illust.series.coverImage || illust.url || ''; } else { id = illust.id; title = illust.title || '(无标题)'; cover = illust.url || ''; } mangas.push({ id: id, title: title, cover: cover, author: illust.author_details?.user_name || '' }); }); console.log('[Pixiv API] 返回漫画数:', mangas.length); window.__pixivResult = mangas; window.__pixivLoading = false; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = []; window.__pixivLoading = false; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || []; console.log('[Pixiv API] 读取结果:', result.length, '条'); window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新漫画（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页（建立会话）"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; window.__pixivLoading = true; (async () => { try { console.log('[Pixiv API] 开始获取最新漫画, 页码={{page}}'); const page = parseInt('{{page}}') || 1; const resp = await fetch('/touch/ajax/latest?type=manga&lang=zh&p=' + page, { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (data.error) { console.error('[Pixiv API] 错误:', data.message); window.__pixivResult = []; window.__pixivLoading = false; return; } const illusts = data.body?.illusts || []; console.log('[Pixiv API] 最新作品数:', illusts.length); const mangas = []; const seriesSeen = new Set(); illusts.forEach(illust => { if (!illust.id) return; if (illust.is_ad_container === 1) return; let id, title, cover; if (illust.series && illust.series.id) { if (seriesSeen.has(illust.series.id)) return; seriesSeen.add(illust.series.id); id = 'series-' + (illust.series.userId || illust.author_details?.user_id) + '-' + illust.series.id; title = illust.series.title || illust.title || '(无标题)'; cover = illust.series.coverImage || illust.url || ''; } else { id = illust.id; title = illust.title || '(无标题)'; cover = illust.url || ''; } mangas.push({ id: id, title: title, cover: cover, author: illust.author_details?.user_name || '' }); }); console.log('[Pixiv API] 返回漫画数:', mangas.length); window.__pixivResult = mangas; window.__pixivLoading = false; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = []; window.__pixivLoading = false; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || []; console.log('[Pixiv API] 读取结果:', result.length, '条'); window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页（建立会话）"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; window.__pixivLoading = true; (async () => { try { const query = '{{query}}'; const page = parseInt('{{page}}') || 1; console.log('[Pixiv API] 搜索:', query, '页码:', page); const resp = await fetch('/touch/ajax/search/illusts?word=' + encodeURIComponent(query) + '&s_mode=s_tc&type=manga&lang=zh&p=' + page, { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (data.error) { console.error('[Pixiv API] 错误:', data.message); window.__pixivResult = []; window.__pixivLoading = false; return; } const illusts = data.body?.illusts || []; console.log('[Pixiv API] 搜索结果数:', illusts.length); const mangas = []; const seriesSeen = new Set(); illusts.forEach(illust => { if (!illust.id) return; if (illust.is_ad_container === 1) return; if (illust.type === '2') return; let id, title, cover; if (illust.series && illust.series.id) { if (seriesSeen.has(illust.series.id)) return; seriesSeen.add(illust.series.id); id = 'series-' + (illust.series.userId || illust.author_details?.user_id) + '-' + illust.series.id; title = illust.series.title || illust.title || '(无标题)'; cover = illust.series.coverImage || illust.url || ''; } else { id = illust.id; title = illust.title || '(无标题)'; cover = illust.url || ''; } mangas.push({ id: id, title: title, cover: cover, author: illust.author_details?.user_name || '' }); }); console.log('[Pixiv API] 返回漫画数:', mangas.length); window.__pixivResult = mangas; window.__pixivLoading = false; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = []; window.__pixivLoading = false; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || []; console.log('[Pixiv API] 读取结果:', result.length, '条'); window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 500,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; (async () => { try { const mangaId = '{{mangaId}}'; console.log('[Pixiv API] 获取详情:', mangaId); const isSeries = mangaId.startsWith('series-'); let result = { title: '', cover: '', author: '', status: '已完结', description: '', genre: '' }; if (isSeries) { const parts = mangaId.split('-'); const seriesId = parts[parts.length - 1]; const resp = await fetch('/touch/ajax/illust/series/' + seriesId + '?lang=zh', { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (!data.error && data.body?.series) { const series = data.body.series; result.title = series.title || ''; result.description = series.caption || series.title || ''; const coverImg = series.coverImage; result.cover = (typeof coverImg === 'string') ? coverImg : ''; } const contResp = await fetch('/touch/ajax/illust/series_content/' + seriesId + '?last_order=0&lang=zh', { headers: { 'Accept': 'application/json' } }); const contData = await contResp.json(); if (!contData.error && contData.body?.series_contents?.length > 0) { const firstIllust = contData.body.series_contents[0]; result.author = firstIllust.author_details?.user_name || ''; const tags = new Set(); contData.body.series_contents.forEach(i => (i.tags || []).forEach(t => tags.add(t))); result.genre = Array.from(tags).slice(0, 10).join(', '); if (!result.cover) result.cover = firstIllust.url || ''; } } else { const resp = await fetch('/touch/ajax/illust/details?illust_id=' + mangaId + '&lang=zh', { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (!data.error && data.body?.illust_details) { const illust = data.body.illust_details; result.title = illust.title || ''; result.cover = illust.url || ''; result.author = illust.author_details?.user_name || ''; result.description = illust.comment || illust.title || ''; result.genre = (illust.tags || []).join(', '); } } console.log('[Pixiv API] 详情结果:', result); window.__pixivResult = result; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = { title: '', cover: '', author: '', status: '', description: '', genre: '' }; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || { title: '', cover: '', author: '', status: '', description: '', genre: '' }; window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 500,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; (async () => { try { const mangaId = '{{mangaId}}'; console.log('[Pixiv API] 获取章节:', mangaId); const isSeries = mangaId.startsWith('series-'); const chapters = []; if (isSeries) { const parts = mangaId.split('-'); const seriesId = parts[parts.length - 1]; let lastOrder = 0; while (true) { const resp = await fetch('/touch/ajax/illust/series_content/' + seriesId + '?last_order=' + lastOrder + '&lang=zh', { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (data.error || !data.body?.series_contents?.length) break; const contents = data.body.series_contents; contents.forEach((illust, index) => { const date = illust.upload_timestamp ? new Date(illust.upload_timestamp * 1000).toISOString().split('T')[0] : ''; chapters.push({ id: illust.id, title: illust.title || '第' + (chapters.length + 1) + '话', date: date }); }); lastOrder += contents.length; if (contents.length < 30) break; } } else { const resp = await fetch('/touch/ajax/illust/details?illust_id=' + mangaId + '&lang=zh', { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (!data.error && data.body?.illust_details) { const illust = data.body.illust_details; const date = illust.upload_timestamp ? new Date(illust.upload_timestamp * 1000).toISOString().split('T')[0] : ''; chapters.push({ id: illust.id, title: illust.title || 'Gallery', date: date }); } } console.log('[Pixiv API] 章节数:', chapters.length); window.__pixivResult = chapters; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = []; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || []; window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表（使用API）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/?lang=zh",
+          "timeout": 15000,
+          "description": "导航到Pixiv首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 500,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__pixivResult = null; (async () => { try { const chapterId = '{{chapterId}}'; console.log('[Pixiv API] 获取图片列表:', chapterId); const resp = await fetch('/ajax/illust/' + chapterId + '/pages?lang=zh', { headers: { 'Accept': 'application/json' } }); const data = await resp.json(); if (data.error) { console.error('[Pixiv API] 错误:', data.message); window.__pixivResult = { pages: [], hasNextPage: false }; return; } const pageList = data.body || []; console.log('[Pixiv API] 图片数:', pageList.length); const pages = pageList.map((page, index) => ({ index: index, url: page.urls?.original || page.urls?.regular || '' })); window.__pixivResult = { pages: pages, hasNextPage: false, nextPageUrl: null }; } catch(e) { console.error('[Pixiv API] 异常:', e); window.__pixivResult = { pages: [], hasNextPage: false }; } })(); 'ASYNC_STARTED';",
+          "description": "启动异步API请求"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待API请求完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = window.__pixivResult || { pages: [], hasNextPage: false }; window.__pixivResult = null; return JSON.stringify(result); })();",
+          "description": "读取异步结果"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "排行榜",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    }
+  ],
+
+  "filters": {
+    "contentType": {
+      "type": "select",
+      "name": "内容类型",
+      "default": "manga",
+      "options": [
+        {"value": "manga", "label": "漫画"},
+        {"value": "illust", "label": "插画"}
+      ]
+    },
+    "rating": {
+      "type": "select",
+      "name": "年龄限制",
+      "default": "all",
+      "options": [
+        {"value": "all", "label": "全部"},
+        {"value": "safe", "label": "全年龄"},
+        {"value": "r18", "label": "R-18"}
+      ]
+    },
+    "searchMode": {
+      "type": "select",
+      "name": "搜索模式",
+      "default": "s_tc",
+      "options": [
+        {"value": "s_tag", "label": "部分标签匹配"},
+        {"value": "s_tag_full", "label": "完全标签匹配"},
+        {"value": "s_tc", "label": "标题和说明"}
+      ]
+    }
+  }
+}
