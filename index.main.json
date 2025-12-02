@@ -49,5 +49,22 @@
         "baseUrl": "https://b.amh1234.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: Baozimanhua",
+    "pkg": "com.manxia.extension.zh.baozimanhua",
+    "lang": "zh",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "包子漫画",
+        "lang": "zh",
+        "id": "572475187360186825",
+        "baseUrl": "https://cn.baozimh.com"
+      }
+    ]
   }
 ]
