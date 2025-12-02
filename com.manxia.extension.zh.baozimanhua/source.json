@@ -77,15 +77,9 @@
           "description": "检查分页信息（每页36个）"
         },
         {
-          "type": "extract",
-          "selector": "div.pure-g div a.comics-card__poster",
-          "multiple": true,
-          "description": "提取热门漫画列表",
-          "fields": {
-            "id": "::attr(href)",
-            "title": "::attr(title)",
-            "cover": "amp-img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.pure-g div a.comics-card__poster'); const results = []; cards.forEach((card, index) => { const href = card.getAttribute('href') || ''; const title = card.getAttribute('title') || ''; const ampImg = card.querySelector('amp-img'); const cover = ampImg ? (ampImg.getAttribute('src') || '') : ''; results.push({ id: href, title: title, cover: cover }); }); return JSON.stringify(results); })();",
+          "description": "提取热门漫画列表"
         }
       ]
     },
@@ -107,15 +101,9 @@
           "description": "等待漫画卡片加载"
         },
         {
-          "type": "extract",
-          "selector": "div.pure-g div a.comics-card__poster",
-          "multiple": true,
-          "description": "提取最新更新漫画",
-          "fields": {
-            "id": "::attr(href)",
-            "title": "::attr(title)",
-            "cover": "amp-img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.pure-g div a.comics-card__poster'); const results = []; cards.forEach((card, index) => { const href = card.getAttribute('href') || ''; const title = card.getAttribute('title') || ''; const ampImg = card.querySelector('amp-img'); const cover = ampImg ? (ampImg.getAttribute('src') || '') : ''; results.push({ id: href, title: title, cover: cover }); }); return JSON.stringify(results); })();",
+          "description": "提取最新更新漫画"
         }
       ]
     },
@@ -138,15 +126,9 @@
           "description": "等待搜索结果加载"
         },
         {
-          "type": "extract",
-          "selector": "div.pure-g div a.comics-card__poster",
-          "multiple": true,
-          "description": "提取搜索结果",
-          "fields": {
-            "id": "::attr(href)",
-            "title": "::attr(title)",
-            "cover": "amp-img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.pure-g div a.comics-card__poster'); const results = []; cards.forEach((card, index) => { const href = card.getAttribute('href') || ''; const title = card.getAttribute('title') || ''; const ampImg = card.querySelector('amp-img'); const cover = ampImg ? (ampImg.getAttribute('src') || '') : ''; results.push({ id: href, title: title, cover: cover }); }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
         }
       ]
     },
@@ -156,7 +138,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com{{mangaId}}",
+          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -180,7 +162,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com{{mangaId}}",
+          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -198,8 +180,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const chapters = []; const fullListTitle = document.querySelector('.section-title:contains(章节目录), .section-title:contains(章節目錄)'); let chapterEls; if (fullListTitle) { chapterEls = fullListTitle.parentElement.querySelectorAll('.comics-chapters'); } else { chapterEls = document.querySelectorAll('.comics-chapters'); } const dateEl = document.querySelector('em'); let updateDate = ''; if (dateEl) { const dateText = dateEl.textContent; if (dateText.includes('年')) { updateDate = dateText.replace('(', '').replace(' 更新)', '').trim(); } } chapterEls.forEach((el, index) => { const link = el.querySelector('a'); if (link) { const href = link.getAttribute('href'); const title = el.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: index === 0 ? updateDate : '' }); } } }); chapters.reverse(); return JSON.stringify(chapters); })();",
-          "description": "提取章节列表（从旧到新排列，反转为从新到旧）"
+          "code": "(() => { const chapters = []; const chapterEls = document.querySelectorAll('.comics-chapters'); const dateEl = document.querySelector('em'); let updateDate = ''; if (dateEl) { const dateText = dateEl.textContent || ''; if (dateText.includes('年')) { updateDate = dateText.replace('(', '').replace(' 更新)', '').replace('（', '').replace(' 更新）', '').trim(); } } chapterEls.forEach((el, index) => { const link = el.querySelector('a'); if (link) { let href = link.getAttribute('href') || ''; const title = link.textContent?.trim() || el.textContent?.trim() || ''; if (href && title) { try { const url = new URL(href, window.location.origin); if (url.pathname.includes('/user/page_direct')) { const comicId = url.searchParams.get('comic_id'); const sectionSlot = url.searchParams.get('section_slot') || '0'; const chapterSlot = url.searchParams.get('chapter_slot') || '0'; href = '/comic/chapter/' + comicId + '/' + sectionSlot + '_' + chapterSlot + '.html'; } } catch (e) { console.log('URL解析失败:', e); } chapters.push({ id: href, title: title, date: index === 0 ? updateDate : '' }); } } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（转换为直接章节URL格式）"
         }
       ]
     },
@@ -209,7 +191,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com{{mangaId}}",
+          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -222,33 +204,33 @@
         },
         {
           "type": "script",
-          "code": "(() => { const chapters = []; const fullListTitle = document.querySelector('.section-title:contains(章节目录), .section-title:contains(章節目錄)'); let chapterEls; if (fullListTitle) { chapterEls = fullListTitle.parentElement.querySelectorAll('.comics-chapters'); } else { chapterEls = document.querySelectorAll('.comics-chapters'); } const dateEl = document.querySelector('em'); let updateDate = ''; if (dateEl) { const dateText = dateEl.textContent; if (dateText.includes('年')) { updateDate = dateText.replace('(', '').replace(' 更新)', '').trim(); } } chapterEls.forEach((el, index) => { const link = el.querySelector('a'); if (link) { const href = link.getAttribute('href'); const title = el.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: index === 0 ? updateDate : '' }); } } }); chapters.reverse(); return JSON.stringify(chapters); })();",
-          "description": "提取章节列表"
+          "code": "(() => { const chapters = []; const chapterEls = document.querySelectorAll('.comics-chapters'); const dateEl = document.querySelector('em'); let updateDate = ''; if (dateEl) { const dateText = dateEl.textContent || ''; if (dateText.includes('年')) { updateDate = dateText.replace('(', '').replace(' 更新)', '').replace('（', '').replace(' 更新）', '').trim(); } } chapterEls.forEach((el, index) => { const link = el.querySelector('a'); if (link) { let href = link.getAttribute('href') || ''; const title = link.textContent?.trim() || el.textContent?.trim() || ''; if (href && title) { try { const url = new URL(href, window.location.origin); if (url.pathname.includes('/user/page_direct')) { const comicId = url.searchParams.get('comic_id'); const sectionSlot = url.searchParams.get('section_slot') || '0'; const chapterSlot = url.searchParams.get('chapter_slot') || '0'; href = '/comic/chapter/' + comicId + '/' + sectionSlot + '_' + chapterSlot + '.html'; } } catch (e) { console.log('URL解析失败:', e); } chapters.push({ id: href, title: title, date: index === 0 ? updateDate : '' }); } } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（转换为直接章节URL格式）"
         }
       ]
     },
 
     "getPageList": {
-      "description": "获取章节图片列表（支持分页章节）",
+      "description": "获取章节图片列表（使用直接章节URL格式 /comic/chapter/xxx/0_0.html）",
       "_TODO": "原版支持章节内分页，需要循环请求直到没有'下一页'按钮",
       "actions": [
         {
           "type": "navigate",
           "url": "https://cn.baozimh.com{{chapterId}}",
           "timeout": 20000,
-          "description": "导航到章节阅读页"
+          "description": "导航到章节阅读页（直接URL格式，无需重定向）"
         },
         {
           "type": "wait",
           "condition": "element",
           "selector": ".comic-contain amp-img",
           "timeout": 15000,
-          "description": "等待图片加载"
+          "description": "等待图片元素加载"
         },
         {
           "type": "script",
-          "code": "(() => { const pages = []; const images = document.querySelectorAll('.comic-contain amp-img'); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; if (src) { src = src.replace('.baozicdn.com', '.baozimh.com'); pages.push({ index: index, url: src }); } }); const nextBtn = document.querySelector('#next-chapter'); const hasNextPage = nextBtn && (nextBtn.textContent === '下一页' || nextBtn.textContent === '下一頁'); console.log('[Baozi] 提取到', pages.length, '张图片, 有下一页:', hasNextPage); return JSON.stringify({ pages: pages, hasNextPage: hasNextPage, nextPageUrl: hasNextPage ? nextBtn.getAttribute('href') : null }); })();",
-          "description": "提取当前页图片列表（TODO: 需要支持循环获取分页）"
+          "code": "(() => { const pages = []; const images = document.querySelectorAll('.comic-contain amp-img'); console.log('[Baozi] 找到图片元素数量:', images.length); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; console.log('[Baozi] 图片', index, 'src:', src); if (src) { src = src.replace('.baozicdn.com', '.baozimh.com'); pages.push({ index: index, url: src }); } }); const nextBtn = document.querySelector('#next-chapter'); const hasNextPage = nextBtn && (nextBtn.textContent === '下一页' || nextBtn.textContent === '下一頁'); console.log('[Baozi] 提取到', pages.length, '张图片, 有下一页:', hasNextPage); return JSON.stringify({ pages: pages, hasNextPage: hasNextPage, nextPageUrl: hasNextPage ? nextBtn.getAttribute('href') : null }); })();",
+          "description": "提取当前页图片列表"
         }
       ]
     },
