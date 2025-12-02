@@ -8,7 +8,8 @@
     "description": "漫画1234 - 免费在线漫画阅读网站",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": false,
-    "tags": ["chinese", "webview", "free"]
+    "tags": ["chinese", "webview", "free"],
+    "Internet": false
   },
 
   "capabilities": {

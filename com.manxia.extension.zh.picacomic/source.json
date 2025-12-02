@@ -9,6 +9,7 @@
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "authenticated", "popular"],
+    "Internet": true,
     "notes": "如果无法获取漫画列表，请检查网络连接或使用代理。分流服务器地址可从 http://68.183.234.72/init 获取。"
   },
 

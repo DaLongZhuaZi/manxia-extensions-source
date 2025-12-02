@@ -8,7 +8,8 @@
     "description": "Everia.club - 图片画廊网站 (移植自 keiyoushi)",
     "author": "ManXia Team",
     "nsfw": true,
-    "tags": ["gallery", "webview", "all-language"]
+    "tags": ["gallery", "webview", "all-language"],
+    "Internet": true
   },
 
   "capabilities": {

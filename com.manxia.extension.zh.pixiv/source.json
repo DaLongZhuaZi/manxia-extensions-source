@@ -8,7 +8,8 @@
     "description": "Pixiv 中文版 - 日本知名插画和漫画分享平台",
     "author": "ManXia Team",
     "nsfw": true,
-    "tags": ["chinese", "webview", "popular", "illustration", "manga"]
+    "tags": ["chinese", "webview", "popular", "illustration", "manga"],
+    "Internet": true
   },
 
   "capabilities": {

@@ -12,7 +12,8 @@
     "alternativeUrls": {
       "copy2025": "https://www.2025copy.com",
       "copy20": "https://www.copy20.com"
-    }
+    },
+    "Internet": false
   },
 
   "capabilities": {

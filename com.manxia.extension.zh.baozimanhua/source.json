@@ -8,7 +8,8 @@
     "description": "包子漫画 - 热门中文漫画阅读平台，支持简体/繁体",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": false,
-    "tags": ["chinese", "webview", "free", "popular"]
+    "tags": ["chinese", "webview", "free", "popular"],
+    "Internet": true
   },
 
   "capabilities": {
