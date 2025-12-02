@@ -66,5 +66,22 @@
         "baseUrl": "https://cn.baozimh.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: EveriaClub",
+    "pkg": "com.manxia.extension.all.everiaclub",
+    "lang": "all",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": false,
+    "sources": [
+      {
+        "name": "Everia.club",
+        "lang": "all",
+        "id": "672475187360186901",
+        "baseUrl": "https://everia.club"
+      }
+    ]
   }
 ]
