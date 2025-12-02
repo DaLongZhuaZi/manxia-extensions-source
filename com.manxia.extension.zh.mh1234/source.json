@@ -1,0 +1,230 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.mh1234",
+    "name": "漫画1234",
+    "version": "1.0.0",
+    "language": "zh-CN",
+    "baseUrl": "https://b.amh1234.com",
+    "description": "漫画1234 - 免费在线漫画阅读网站",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": false,
+    "tags": ["chinese", "webview", "free"]
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://b.amh1234.com/comic/one/page_hit.html",
+          "timeout": 10000,
+          "description": "导航到热门漫画页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".itemBox",
+          "timeout": 8000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "extract",
+          "selector": ".itemBox",
+          "multiple": true,
+          "description": "提取热门漫画列表",
+          "fields": {
+            "id": ".title::attr(href)",
+            "title": ".title::text",
+            "cover": "img::attr(src)"
+          }
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新更新",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://b.amh1234.com/comic/one/page_recent.html",
+          "timeout": 10000,
+          "description": "导航到最新更新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".itemBox",
+          "timeout": 8000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "extract",
+          "selector": ".itemBox",
+          "multiple": true,
+          "description": "提取最新更新漫画",
+          "fields": {
+            "id": ".title::attr(href)",
+            "title": ".title::text",
+            "cover": "img::attr(src)"
+          }
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://b.amh1234.com/search/?keywords={{query}}&page={{page}}",
+          "timeout": 10000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".itemBox",
+          "timeout": 8000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const totalPageEl = document.querySelector('#total-page'); const totalPage = totalPageEl ? parseInt(totalPageEl.getAttribute('value') || '1') : 1; const currentPage = {{page}} || 1; return JSON.stringify({ hasNextPage: currentPage < totalPage, totalPage: totalPage }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "extract",
+          "selector": ".itemBox",
+          "multiple": true,
+          "description": "提取搜索结果",
+          "fields": {
+            "id": ".title::attr(href)",
+            "title": ".title::text",
+            "cover": "img::attr(src)"
+          }
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 10000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".txtItme",
+          "timeout": 8000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const txtItems = document.querySelectorAll('.txtItme'); const author = txtItems[0] ? txtItems[0].textContent.trim() : ''; let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText === '连载中') status = '连载中'; else if (statusText === '已完结') status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } if (description.length > 3) { description = description.substring(3); } const cover = document.querySelector('.cover img')?.getAttribute('src') || ''; const title = document.querySelector('.title')?.textContent?.trim() || document.querySelector('h1')?.textContent?.trim() || ''; const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 10000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".txtItme",
+          "timeout": 8000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const txtItems = document.querySelectorAll('.txtItme'); const author = txtItems[0] ? txtItems[0].textContent.trim() : ''; let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText === '连载中') status = '连载中'; else if (statusText === '已完结') status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } if (description.length > 3) { description = description.substring(3); } const cover = document.querySelector('.cover img')?.getAttribute('src') || ''; const title = document.querySelector('.title')?.textContent?.trim() || document.querySelector('h1')?.textContent?.trim() || ''; const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
+          "description": "提取漫画详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const dateEl = document.querySelector('.txtItme .date'); let updateDate = ''; if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（按时间倒序）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 10000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#chapter-list-1",
+          "timeout": 8000,
+          "description": "等待章节列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const dateEl = document.querySelector('.txtItme .date'); let updateDate = ''; if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（按时间倒序）"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节页面列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{chapterUrl}}",
+          "timeout": 15000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待页面JS执行完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const body = document.body.innerHTML; const imgRegex1 = /var chapterImages = (\\[.*?\\])/; const imgRegex2 = /var chapterPath = \"(.*?)\"/; const match1 = body.match(imgRegex1); const match2 = body.match(imgRegex2); if (!match1 || !match2) { console.log('[MH1234] 未找到图片数据'); return JSON.stringify([]); } const chapterPath = match2[1]; const imagePrefix = 'https://gmh1234.wszwhg.net/' + chapterPath; let imageList; try { imageList = JSON.parse(match1[1]); } catch (e) { console.log('[MH1234] 解析图片列表失败:', e); return JSON.stringify([]); } const pages = imageList.map((img, index) => ({ index: index, url: imagePrefix + img })); console.log('[MH1234] 提取到', pages.length, '张图片'); return JSON.stringify(pages); })();",
+          "description": "提取章节图片列表（通过正则解析JS变量）"
+        }
+      ]
+    }
+  },
+
+  "imageHeaders": {
+    "Referer": "https://b.amh1234.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  }
+}

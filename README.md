@@ -4,6 +4,62 @@
 
 本目录包含ManXia漫画阅读器的图源配置文件。这些配置文件定义了如何从各个漫画网站获取数据。
 
+## 仓库结构 (v2.0)
+
+从 v2.0 版本开始，图源采用**文件夹结构**存储，每个图源有独立的文件夹：
+
+```
+manxia-extensions-source/
+├── index.main.json                              # 图源索引文件
+├── README.md                                    # 说明文档
+├── com.manxia.extension.zh.copymangawebview/    # 拷贝漫画图源文件夹
+│   ├── source.json                              # 图源配置文件
+│   └── icon.png                                 # 图源图标 (可选)
+├── com.manxia.extension.zh.picacomic/           # 哔咔漫画图源文件夹
+│   ├── source.json                              # 图源配置文件
+│   └── icon.png                                 # 图源图标 (可选)
+└── ...
+```
+
+### 文件夹命名规则
+
+- 文件夹名称必须与图源的 `pkg` 字段一致
+- 例如：`com.manxia.extension.zh.copymangawebview`
+
+### 文件说明
+
+| 文件名 | 必需 | 说明 |
+|--------|------|------|
+| `source.json` | ✅ | 图源配置文件，包含所有图源逻辑 |
+| `icon.png` | ❌ | 图源图标，支持 png/jpg/webp 格式 |
+
+### index.main.json 格式
+
+```json
+[
+  {
+    "name": "ManXia: CopymangaWebview",
+    "pkg": "com.manxia.extension.zh.copymangawebview",
+    "lang": "zh",
+    "code": 4,
+    "version": "2.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "拷贝漫画 (WebView)",
+        "lang": "zh",
+        "id": "324579092615598721",
+        "baseUrl": "https://www.2025copy.com/"
+      }
+    ]
+  }
+]
+```
+
+**新增字段**:
+- `hasIcon`: 布尔值，表示该图源是否有图标文件
+
 ## 已支持的图源
 
 ### 1. 拷贝漫画 (CopyManga)

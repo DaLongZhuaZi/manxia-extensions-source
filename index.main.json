@@ -1,62 +1,15 @@
 [
   {
-    "name": "ManXia: Zaimanhua(已废弃)",
-    "pkg": "com.manxia.extension.zh.zaimanhua",
-    "lang": "zh",
-    "code": 1,
-    "version": "1.0.0",
-    "nsfw": 0,
-    "sources": [
-      {
-        "name": "再漫画",
-        "lang": "zh",
-        "id": "524579092615598717",
-        "baseUrl": "https://manhua.zaimanhua.com"
-      }
-    ]
-  },
-  {
-    "name": "ManXia: Komiic(已废弃)",
-    "pkg": "com.manxia.extension.zh.komiic",
-    "lang": "zh",
-    "code": 2,
-    "version": "4.0.0",
-    "nsfw": 0,
-    "sources": [
-      {
-        "name": "Komiic",
-        "lang": "zh",
-        "id": "924579092615598719",
-        "baseUrl": "https://komiic.com"
-      }
-    ]
-  },
-  {
-    "name": "ManXia: Copymanga(已废弃)",
-    "pkg": "com.manxia.extension.zh.copymanga",
-    "lang": "zh",
-    "code": 3,
-    "version": "1.0.0",
-    "nsfw": 1,
-    "sources": [
-      {
-        "name": "拷贝漫画",
-        "lang": "zh",
-        "id": "324579092615598720",
-        "baseUrl": "https://www.2025copy.com/"
-      }
-    ]
-  },
-  {
     "name": "ManXia: CopymangaWebview",
     "pkg": "com.manxia.extension.zh.copymangawebview",
     "lang": "zh",
     "code": 4,
     "version": "2.0.0",
     "nsfw": 1,
+    "hasIcon": true,
     "sources": [
       {
-        "name": "拷贝漫画Webview",
+        "name": "拷贝漫画 (WebView)",
         "lang": "zh",
         "id": "324579092615598721",
         "baseUrl": "https://www.2025copy.com/"
@@ -70,12 +23,30 @@
     "code": 5,
     "version": "1.0.8",
     "nsfw": 1,
+    "hasIcon": true,
     "sources": [
       {
         "name": "哔咔漫画",
         "lang": "zh",
         "id": "324579092615598722",
         "baseUrl": "https://picaapi.picacomic.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: MH1234",
+    "pkg": "com.manxia.extension.zh.mh1234",
+    "lang": "zh",
+    "code": 1,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "漫画1234",
+        "lang": "zh",
+        "id": "524579092615598723",
+        "baseUrl": "https://b.amh1234.com"
       }
     ]
   }
