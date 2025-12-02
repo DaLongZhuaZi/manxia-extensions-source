@@ -74,7 +74,7 @@
     "code": 8,
     "version": "1.0.0",
     "nsfw": 1,
-    "hasIcon": false,
+    "hasIcon": true,
     "sources": [
       {
         "name": "Everia.club",
@@ -91,7 +91,7 @@
     "code": 9,
     "version": "1.0.0",
     "nsfw": 1,
-    "hasIcon": false,
+    "hasIcon": true,
     "sources": [
       {
         "name": "Pixiv",
