@@ -108,7 +108,7 @@
     "code": 10,
     "version": "1.0.0",
     "nsfw": 1,
-    "hasIcon": false,
+    "hasIcon": true,
     "sources": [
       {
         "name": "紳士漫畫",
@@ -149,6 +149,23 @@
         "lang": "zh",
         "id": "1072475187360186905",
         "baseUrl": "https://mycomic.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Comicabc",
+    "pkg": "com.manxia.extension.zh.comicabc",
+    "lang": "zh",
+    "code": 13,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "無限動漫",
+        "lang": "zh",
+        "id": "1172475187360186906",
+        "baseUrl": "https://www.8comic.com"
       }
     ]
   }
