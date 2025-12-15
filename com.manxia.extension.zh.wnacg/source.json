@@ -1,0 +1,273 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.wnacg",
+    "name": "紳士漫畫",
+    "version": "1.0.0",
+    "language": "zh",
+    "baseUrl": "https://www.wn05.ru",
+    "description": "紳士漫畫 (WNACG) - 同人志漫画网站",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "doujinshi", "nsfw"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "supportsLatest": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "headers": {
+      "Referer": "https://www.wn05.ru",
+      "sec-fetch-mode": "no-cors",
+      "sec-fetch-site": "cross-site"
+    }
+  },
+
+  "filters": {
+    "category": {
+      "title": "分类",
+      "type": "select",
+      "options": [
+        {"value": "", "label": "全部"},
+        {"value": "albums-index-page-%d.html", "label": "更新"},
+        {"value": "albums-index-page-%d-cate-5.html", "label": "同人志"},
+        {"value": "albums-index-page-%d-cate-1.html", "label": "同人志-汉化"},
+        {"value": "albums-index-page-%d-cate-12.html", "label": "同人志-日语"},
+        {"value": "albums-index-page-%d-cate-16.html", "label": "同人志-English"},
+        {"value": "albums-index-page-%d-cate-2.html", "label": "同人志-CG书籍"},
+        {"value": "albums-index-page-%d-cate-3.html", "label": "写真&Cosplay"},
+        {"value": "albums-index-page-%d-cate-6.html", "label": "单行本"},
+        {"value": "albums-index-page-%d-cate-9.html", "label": "单行本-汉化"},
+        {"value": "albums-index-page-%d-cate-17.html", "label": "单行本-English"},
+        {"value": "albums-index-page-%d-cate-13.html", "label": "单行本-日语"},
+        {"value": "albums-index-page-%d-cate-7.html", "label": "杂志&短篇-汉语"},
+        {"value": "albums-index-page-%d-cate-10.html", "label": "杂志&短篇-汉语2"},
+        {"value": "albums-index-page-%d-cate-14.html", "label": "杂志&短篇-日语"},
+        {"value": "albums-index-page-%d-cate-18.html", "label": "杂志&短篇-English"},
+        {"value": "albums-index-page-%d-cate-19.html", "label": "韩漫"},
+        {"value": "albums-index-page-%d-cate-20.html", "label": "韩漫-汉化"},
+        {"value": "albums-index-page-%d-cate-21.html", "label": "韩漫-生肉"},
+        {"value": "albums-index-page-%d-cate-22.html", "label": "3D&漫画"},
+        {"value": "albums-index-page-%d-cate-23.html", "label": "3D&漫画-汉语"},
+        {"value": "albums-index-page-%d-cate-24.html", "label": "3D&漫画-其他"},
+        {"value": "albums-index-page-%d-cate-37.html", "label": "AI图集"},
+        {"value": "albums-index-page-%d-cate-0.html", "label": "未分類相冊"}
+      ]
+    },
+    "tag": {
+      "title": "标签",
+      "type": "text",
+      "placeholder": "输入标签名（仅支持1个标签）"
+    }
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/albums-index-page-{{page}}.html",
+          "timeout": 15000,
+          "description": "导航到漫画列表页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('#classify_container > li, ul.col_2 > li'); const mangas = []; items.forEach(item => { const linkEl = item.querySelector('a.ImgA, a[href*=\"photos-index-aid\"]'); const titleEl = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); if (linkEl && imgEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent?.trim() : ''; let cover = imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || ''; if (cover.startsWith('//')) cover = 'http:' + cover; mangas.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取漫画列表"
+        }
+      ]
+    },
+
+    "filter": {
+      "description": "按分类筛选漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const category = '{{filter_category}}' || ''; const tag = '{{filter_tag}}' || ''; const page = {{page}} || 1; let url = '{{baseUrl}}/'; if (tag) { url += 'albums-index-page-' + page + '-tag-' + encodeURIComponent(tag) + '.html'; } else if (category) { url += category.replace('%d', page); } else { url += 'albums-index-page-' + page + '.html'; } return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('#classify_container > li, ul.col_2 > li'); const mangas = []; items.forEach(item => { const linkEl = item.querySelector('a.ImgA, a[href*=\"photos-index-aid\"]'); const titleEl = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); if (linkEl && imgEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent?.trim() : ''; let cover = imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || ''; if (cover.startsWith('//')) cover = 'http:' + cover; mangas.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/search/index.php?s=create_time_DESC&q={{query}}&p={{page}}",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('#classify_container > li, ul.col_2 > li'); const mangas = []; items.forEach(item => { const linkEl = item.querySelector('a.ImgA, a[href*=\"photos-index-aid\"]'); const titleEl = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); if (linkEl && imgEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent?.trim() : ''; let cover = imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || ''; if (cover.startsWith('//')) cover = 'http:' + cover; mangas.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let title = document.title || ''; title = title.replace(/-紳士漫畫.*$/, '').replace(/-紳士漫畅.*$/, '').trim(); const imgs = document.querySelectorAll('img'); let cover = ''; for (let i = 0; i < imgs.length; i++) { const src = imgs[i].src || ''; if (src.includes('/data/t/')) { cover = src; break; } } const tags = Array.from(document.querySelectorAll('a[href*=\"albums-index-tag\"]')).map(el => el.textContent.trim()).join(', '); const result = { title: title, cover: cover, author: '', artist: '', status: '已完结', genre: tags, description: '' }; return JSON.stringify(result); })();",
+          "description": "提取漫画详情（手机版UI）"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let title = document.title || ''; title = title.replace(/-紳士漫畫.*$/, '').replace(/-紳士漫畵.*$/, '').trim(); const imgs = document.querySelectorAll('img'); let cover = ''; for (let i = 0; i < imgs.length; i++) { const src = imgs[i].src || ''; if (src.includes('/data/t/')) { cover = src; break; } } const tags = Array.from(document.querySelectorAll('a[href*=\"albums-index-tag\"]')).map(el => el.textContent.trim()).join(', '); const result = { title: title, cover: cover, author: '', artist: '', status: '已完结', genre: tags, description: '' }; return JSON.stringify(result); })();",
+          "description": "提取漫画详情（手机版UI）"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let mangaUrl = '{{mangaId}}'; if (mangaUrl.startsWith('http')) { try { mangaUrl = new URL(mangaUrl).pathname; } catch(e) {} } if (!mangaUrl.startsWith('/')) mangaUrl = '/' + mangaUrl; const chapters = [{ id: mangaUrl, title: 'Ch. 1', date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（单章节）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let mangaUrl = '{{mangaId}}'; if (mangaUrl.startsWith('http')) { try { mangaUrl = new URL(mangaUrl).pathname; } catch(e) {} } if (!mangaUrl.startsWith('/')) mangaUrl = '/' + mangaUrl; const chapters = [{ id: mangaUrl, title: 'Ch. 1', url: mangaUrl }]; return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（单章节）"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节页面列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let chapterId = '{{chapterId}}'; if (!chapterId || chapterId === '{{' + 'chapterId}}') chapterId = '{{mangaId}}'; if (chapterId.startsWith('http')) { try { chapterId = new URL(chapterId).pathname; } catch(e) {} } if (!chapterId.startsWith('/')) chapterId = '/' + chapterId; const slistPath = chapterId.replace('-index-', '-slist-'); return '{{baseUrl}}' + slistPath; })();",
+          "description": "构建slist页面URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 20000,
+          "description": "导航到手机版阅读器页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const imgs = document.querySelectorAll('img'); imgs.forEach((img, index) => { const src = img.src || img.dataset.original || img.dataset.src || ''; if (src && src.includes('/data/') && !src.includes('/data/t/') && !src.includes('shoucang.jpg')) { pages.push({ index: pages.length, url: src }); } }); return JSON.stringify(pages); })();",
+          "description": "提取图片列表（排除缩略图）"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "imageHeaders": {
+    "Referer": "https://www.wn05.ru/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+  },
+
+  "coverTransform": {
+    "prefixHttp": true,
+    "comment": "封面URL可能以//开头，需要添加http:前缀"
+  }
+}

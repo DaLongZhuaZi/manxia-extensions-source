@@ -100,5 +100,22 @@
         "baseUrl": "https://www.pixiv.net"
       }
     ]
+  },
+  {
+    "name": "ManXia: WNACG",
+    "pkg": "com.manxia.extension.zh.wnacg",
+    "lang": "zh",
+    "code": 10,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": false,
+    "sources": [
+      {
+        "name": "紳士漫畫",
+        "lang": "zh",
+        "id": "872475187360186903",
+        "baseUrl": "https://www.wn05.ru"
+      }
+    ]
   }
 ]
