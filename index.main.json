@@ -38,7 +38,7 @@
     "pkg": "com.manxia.extension.zh.mh1234",
     "lang": "zh",
     "code": 6,
-    "version": "1.0.0",
+    "version": "2.0.0",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -46,7 +46,7 @@
         "name": "漫画1234",
         "lang": "zh",
         "id": "524579092615598723",
-        "baseUrl": "https://b.amh1234.com"
+        "baseUrl": "https://www.amh1234.com"
       }
     ]
   },

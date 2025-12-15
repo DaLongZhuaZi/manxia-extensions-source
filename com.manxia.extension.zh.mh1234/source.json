@@ -2,9 +2,9 @@
   "metadata": {
     "id": "com.manxia.extension.zh.mh1234",
     "name": "漫画1234",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "language": "zh-CN",
-    "baseUrl": "https://b.amh1234.com",
+    "baseUrl": "https://www.amh1234.com",
     "description": "漫画1234 - 免费在线漫画阅读网站",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": false,
@@ -32,27 +32,21 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/comic/one/page_hit.html",
+          "url": "https://www.amh1234.com/comic/one/page_hit.html",
           "timeout": 10000,
           "description": "导航到热门漫画页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".itemBox",
+          "selector": ".itemBox, .comic-item, li[class*='item']",
           "timeout": 8000,
           "description": "等待漫画列表加载"
         },
         {
-          "type": "extract",
-          "selector": ".itemBox",
-          "multiple": true,
-          "description": "提取热门漫画列表",
-          "fields": {
-            "id": ".title::attr(href)",
-            "title": ".title::text",
-            "cover": "img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('.itemBox, .comic-item, li[class*=\"item\"]'); const results = []; items.forEach(item => { const linkEl = item.querySelector('a[href*=\"/comic/\"]'); const imgEl = item.querySelector('img'); const titleEl = item.querySelector('.title, .comic-title, h3, h4, a'); if (linkEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent.trim() : ''; const cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''; if (href && title) { results.push({ id: href, title: title, cover: cover }); } } }); return JSON.stringify(results); })();",
+          "description": "提取热门漫画列表"
         }
       ]
     },
@@ -62,27 +56,21 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/comic/one/page_recent.html",
+          "url": "https://www.amh1234.com/comic/one/page_recent.html",
           "timeout": 10000,
           "description": "导航到最新更新页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".itemBox",
+          "selector": ".itemBox, .comic-item, li[class*='item']",
           "timeout": 8000,
           "description": "等待漫画列表加载"
         },
         {
-          "type": "extract",
-          "selector": ".itemBox",
-          "multiple": true,
-          "description": "提取最新更新漫画",
-          "fields": {
-            "id": ".title::attr(href)",
-            "title": ".title::text",
-            "cover": "img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('.itemBox, .comic-item, li[class*=\"item\"]'); const results = []; items.forEach(item => { const linkEl = item.querySelector('a[href*=\"/comic/\"]'); const imgEl = item.querySelector('img'); const titleEl = item.querySelector('.title, .comic-title, h3, h4, a'); if (linkEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent.trim() : ''; const cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''; if (href && title) { results.push({ id: href, title: title, cover: cover }); } } }); return JSON.stringify(results); })();",
+          "description": "提取最新更新漫画"
         }
       ]
     },
@@ -93,32 +81,26 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/search/?keywords={{query}}&page={{page}}",
+          "url": "https://www.amh1234.com/search/?keywords={{query}}&page={{page}}",
           "timeout": 10000,
           "description": "导航到搜索结果页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".itemBox",
+          "selector": ".itemBox, .comic-item, li[class*='item'], .search-result",
           "timeout": 8000,
           "description": "等待搜索结果加载"
         },
         {
           "type": "script",
-          "code": "(() => { const totalPageEl = document.querySelector('#total-page'); const totalPage = totalPageEl ? parseInt(totalPageEl.getAttribute('value') || '1') : 1; const currentPage = {{page}} || 1; return JSON.stringify({ hasNextPage: currentPage < totalPage, totalPage: totalPage }); })();",
+          "code": "(() => { const totalPageEl = document.querySelector('#total-page, .pagination .total, [data-total-page]'); const totalPage = totalPageEl ? parseInt(totalPageEl.getAttribute('value') || totalPageEl.textContent || '1') : 1; const currentPage = {{page}} || 1; return JSON.stringify({ hasNextPage: currentPage < totalPage, totalPage: totalPage }); })();",
           "description": "检查是否有下一页"
         },
         {
-          "type": "extract",
-          "selector": ".itemBox",
-          "multiple": true,
-          "description": "提取搜索结果",
-          "fields": {
-            "id": ".title::attr(href)",
-            "title": ".title::text",
-            "cover": "img::attr(src)"
-          }
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('.itemBox, .comic-item, li[class*=\"item\"], .search-result-item'); const results = []; items.forEach(item => { const linkEl = item.querySelector('a[href*=\"/comic/\"]'); const imgEl = item.querySelector('img'); const titleEl = item.querySelector('.title, .comic-title, h3, h4, a'); if (linkEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent.trim() : ''; const cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''; if (href && title) { results.push({ id: href, title: title, cover: cover }); } } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
         }
       ]
     },
@@ -128,20 +110,20 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/comic/{{mangaId}}",
+          "url": "{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".txtItme",
+          "selector": ".txtItme, .comic-info, .detail-info, h1",
           "timeout": 8000,
           "description": "等待详情加载"
         },
         {
           "type": "script",
-          "code": "(() => { const txtItems = document.querySelectorAll('.txtItme'); const author = txtItems[0] ? txtItems[0].textContent.trim() : ''; let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText === '连载中') status = '连载中'; else if (statusText === '已完结') status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } if (description.length > 3) { description = description.substring(3); } let cover = ''; const coverImg = document.querySelector('.cover img') || document.querySelector('.detailBox img') || document.querySelector('.comic-cover img') || document.querySelector('img[src*=\"images\"]'); if (coverImg) { cover = coverImg.getAttribute('src') || coverImg.getAttribute('data-src') || ''; } let title = ''; const titleEl = document.querySelector('.title') || document.querySelector('.detailBox .title') || document.querySelector('h1') || document.querySelector('.comic-title'); if (titleEl) { title = titleEl.textContent.trim(); } if (!title) { const h1 = document.querySelector('h1'); if (h1) title = h1.textContent.trim(); } const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
+          "code": "(() => { let author = ''; const txtItems = document.querySelectorAll('.txtItme'); if (txtItems[0]) { const authorText = txtItems[0].textContent.trim(); author = authorText.replace(/^[^:：]*[:：]/, '').trim(); } let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText.includes('连载')) status = '连载中'; else if (statusText.includes('完结')) status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); const descEl = document.querySelector('.comic-desc, .description, [class*=\"intro\"]'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } else if (descEl) { description = descEl.textContent.trim(); } if (description.startsWith('简介：') || description.startsWith('简　　介：')) { description = description.replace(/^简[　 ]*介[：:]/, '').trim(); } let cover = ''; const coverImg = document.querySelector('.cover img, .comic-cover img, .detail-cover img, img[src*=\"cover\"], img[src*=\"images\"]'); if (coverImg) { cover = coverImg.getAttribute('src') || coverImg.getAttribute('data-src') || ''; } let title = ''; const titleEl = document.querySelector('h1, .title, .comic-title'); if (titleEl) { title = titleEl.textContent.trim(); } const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
           "description": "提取漫画详情"
         }
       ]
@@ -152,25 +134,25 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/comic/{{mangaId}}",
+          "url": "{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".txtItme",
+          "selector": ".txtItme, .comic-info, .detail-info, h1",
           "timeout": 8000,
           "description": "等待详情加载"
         },
         {
           "type": "script",
-          "code": "(() => { const txtItems = document.querySelectorAll('.txtItme'); const author = txtItems[0] ? txtItems[0].textContent.trim() : ''; let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText === '连载中') status = '连载中'; else if (statusText === '已完结') status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } if (description.length > 3) { description = description.substring(3); } let cover = ''; const coverImg = document.querySelector('.cover img') || document.querySelector('.detailBox img') || document.querySelector('.comic-cover img') || document.querySelector('img[src*=\"images\"]'); if (coverImg) { cover = coverImg.getAttribute('src') || coverImg.getAttribute('data-src') || ''; } let title = ''; const titleEl = document.querySelector('.title') || document.querySelector('.detailBox .title') || document.querySelector('h1') || document.querySelector('.comic-title'); if (titleEl) { title = titleEl.textContent.trim(); } if (!title) { const h1 = document.querySelector('h1'); if (h1) title = h1.textContent.trim(); } const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
+          "code": "(() => { let author = ''; const txtItems = document.querySelectorAll('.txtItme'); if (txtItems[0]) { const authorText = txtItems[0].textContent.trim(); author = authorText.replace(/^[^:：]*[:：]/, '').trim(); } let status = '未知'; if (txtItems[2]) { const statusEl = txtItems[2].querySelector('a:last-child'); if (statusEl) { const statusText = statusEl.textContent.trim(); if (statusText.includes('连载')) status = '连载中'; else if (statusText.includes('完结')) status = '已完结'; } } let description = ''; const fullDes = document.querySelector('#full-des'); const simpleDes = document.querySelector('#simple-des'); const descEl = document.querySelector('.comic-desc, .description, [class*=\"intro\"]'); if (fullDes) { description = fullDes.textContent.trim(); } else if (simpleDes) { description = simpleDes.textContent.trim(); } else if (descEl) { description = descEl.textContent.trim(); } if (description.startsWith('简介：') || description.startsWith('简　　介：')) { description = description.replace(/^简[　 ]*介[：:]/, '').trim(); } let cover = ''; const coverImg = document.querySelector('.cover img, .comic-cover img, .detail-cover img, img[src*=\"cover\"], img[src*=\"images\"]'); if (coverImg) { cover = coverImg.getAttribute('src') || coverImg.getAttribute('data-src') || ''; } let title = ''; const titleEl = document.querySelector('h1, .title, .comic-title'); if (titleEl) { title = titleEl.textContent.trim(); } const result = { title: title, cover: cover, author: author, status: status, description: description }; return JSON.stringify(result); })();",
           "description": "提取漫画详情"
         },
         {
           "type": "script",
-          "code": "(() => { const chapters = []; const dateEl = document.querySelector('.txtItme .date'); let updateDate = ''; if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "code": "(() => { const chapters = []; let updateDate = ''; const dateEl = document.querySelector('.txtItme .date, .update-time, [class*=\"date\"]'); if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a, .chapter-list a, [class*=\"chapter\"] a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title && href.includes('/comic/')) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
           "description": "提取章节列表（按时间倒序）"
         }
       ]
@@ -181,20 +163,20 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com/comic/{{mangaId}}",
+          "url": "{{mangaId}}",
           "timeout": 10000,
           "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": "#chapter-list-1",
+          "selector": "#chapter-list-1, .chapter-list, [class*='chapter']",
           "timeout": 8000,
           "description": "等待章节列表加载"
         },
         {
           "type": "script",
-          "code": "(() => { const chapters = []; const dateEl = document.querySelector('.txtItme .date'); let updateDate = ''; if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "code": "(() => { const chapters = []; let updateDate = ''; const dateEl = document.querySelector('.txtItme .date, .update-time, [class*=\"date\"]'); if (dateEl) { updateDate = dateEl.textContent.trim(); } const chapterLinks = document.querySelectorAll('#chapter-list-1 a, .chapter-list a, [class*=\"chapter\"] a'); chapterLinks.forEach((link, index) => { const href = link.getAttribute('href'); const title = link.textContent.trim(); if (href && title && href.includes('/comic/')) { chapters.push({ id: href, title: title, date: updateDate }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
           "description": "提取章节列表（按时间倒序）"
         }
       ]
@@ -205,20 +187,20 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://b.amh1234.com{{chapterId}}",
+          "url": "{{chapterId}}",
           "timeout": 15000,
           "description": "导航到章节阅读页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 1500,
+          "duration": 2000,
           "description": "等待页面JS执行完成"
         },
         {
           "type": "script",
-          "code": "(() => { const body = document.body.innerHTML; const imgRegex1 = /var chapterImages = (\\[.*?\\])/; const imgRegex2 = /var chapterPath = \"(.*?)\"/; const match1 = body.match(imgRegex1); const match2 = body.match(imgRegex2); if (!match1 || !match2) { console.log('[MH1234] 未找到图片数据'); return JSON.stringify([]); } const chapterPath = match2[1]; const imagePrefix = 'https://gmh1234.wszwhg.net/' + chapterPath; let imageList; try { imageList = JSON.parse(match1[1]); } catch (e) { console.log('[MH1234] 解析图片列表失败:', e); return JSON.stringify([]); } const pages = imageList.map((img, index) => ({ index: index, url: imagePrefix + img })); console.log('[MH1234] 提取到', pages.length, '张图片'); return JSON.stringify(pages); })();",
-          "description": "提取章节图片列表（通过正则解析JS变量）"
+          "code": "(() => { const body = document.body.innerHTML; const imgRegex1 = /var\\s+chapterImages\\s*=\\s*(\\[.*?\\])/; const imgRegex2 = /var\\s+chapterPath\\s*=\\s*[\"'](.*?)[\"']/; const match1 = body.match(imgRegex1); const match2 = body.match(imgRegex2); if (match1 && match2) { const chapterPath = match2[1]; const imagePrefix = 'https://gmh1234.wszwhg.net/' + chapterPath; let imageList; try { imageList = JSON.parse(match1[1]); const pages = imageList.map((img, index) => ({ index: index, url: imagePrefix + img })); console.log('[MH1234] 提取到', pages.length, '张图片 (方式1)'); return JSON.stringify(pages); } catch (e) { console.log('[MH1234] 解析图片列表失败:', e); } } const imgElements = document.querySelectorAll('.comic-page img, .reader-page img, #images img, .manga-page img, [class*=\"page\"] img'); if (imgElements.length > 0) { const pages = []; imgElements.forEach((img, index) => { const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; if (src && !src.includes('loading') && !src.includes('placeholder')) { pages.push({ index: index, url: src }); } }); if (pages.length > 0) { console.log('[MH1234] 提取到', pages.length, '张图片 (方式2)'); return JSON.stringify(pages); } } const scripts = document.querySelectorAll('script'); for (const script of scripts) { const content = script.textContent || ''; const imgMatch = content.match(/images?\\s*[:=]\\s*(\\[.*?\\])/s); if (imgMatch) { try { const imgs = JSON.parse(imgMatch[1]); const pages = imgs.map((img, index) => ({ index: index, url: typeof img === 'string' ? img : img.url || img.src || '' })); if (pages.length > 0) { console.log('[MH1234] 提取到', pages.length, '张图片 (方式3)'); return JSON.stringify(pages); } } catch (e) {} } } console.log('[MH1234] 未找到图片数据'); return JSON.stringify([]); })();",
+          "description": "提取章节图片列表（多种方式尝试）"
         }
       ]
     },
@@ -236,7 +218,7 @@
   },
 
   "imageHeaders": {
-    "Referer": "https://b.amh1234.com/",
+    "Referer": "https://www.amh1234.com/",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   }
 }
