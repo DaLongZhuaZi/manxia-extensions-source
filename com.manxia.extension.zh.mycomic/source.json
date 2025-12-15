@@ -1,0 +1,401 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.mycomic",
+    "name": "MyComic",
+    "version": "1.0.0",
+    "language": "zh-TW",
+    "baseUrl": "https://mycomic.com",
+    "description": "MyComic - 港台日韓美漫，需要科学网络",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "free", "taiwan"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "settings": {
+    "language": {
+      "name": "首選語言",
+      "type": "select",
+      "default": "zh-hant",
+      "options": [
+        {"label": "繁體中文", "value": "zh-hant"},
+        {"label": "简体中文", "value": "zh-hans"}
+      ],
+      "description": "選擇網站顯示語言（簡體中文使用 /cn 路徑）"
+    }
+  },
+
+  "filters": {
+    "sort": {
+      "name": "排序",
+      "key": "sort",
+      "default": "",
+      "options": [
+        {"label": "最新上架", "value": ""},
+        {"label": "最近更新", "value": "-update"},
+        {"label": "最高人气", "value": "-views"},
+        {"label": "日排行", "value": "rank|"},
+        {"label": "週排行", "value": "rank|-week"},
+        {"label": "月排行", "value": "rank|-month"},
+        {"label": "歷史排行", "value": "rank|-views"}
+      ]
+    },
+    "region": {
+      "name": "作品地区",
+      "key": "filter[country]",
+      "default": "",
+      "options": [
+        {"label": "所有", "value": ""},
+        {"label": "日本", "value": "japan"},
+        {"label": "港台", "value": "hongkong"},
+        {"label": "歐美", "value": "europe"},
+        {"label": "內地", "value": "china"},
+        {"label": "韓國", "value": "korea"},
+        {"label": "其他", "value": "other"}
+      ]
+    },
+    "tag": {
+      "name": "作品类型",
+      "key": "filter[tag]",
+      "default": "",
+      "options": [
+        {"label": "所有", "value": ""},
+        {"label": "魔幻", "value": "mohuan"},
+        {"label": "魔法", "value": "mofa"},
+        {"label": "熱血", "value": "rexue"},
+        {"label": "冒險", "value": "maoxian"},
+        {"label": "懸疑", "value": "xuanyi"},
+        {"label": "偵探", "value": "zhentan"},
+        {"label": "愛情", "value": "aiqing"},
+        {"label": "校園", "value": "xiaoyuan"},
+        {"label": "搞笑", "value": "gaoxiao"},
+        {"label": "四格", "value": "sige"},
+        {"label": "科幻", "value": "kehuan"},
+        {"label": "神鬼", "value": "shengui"},
+        {"label": "舞蹈", "value": "wudao"},
+        {"label": "音樂", "value": "yinyue"},
+        {"label": "百合", "value": "baihe"},
+        {"label": "後宮", "value": "hougong"},
+        {"label": "機戰", "value": "jizhan"},
+        {"label": "格鬥", "value": "gedou"},
+        {"label": "恐怖", "value": "kongbu"},
+        {"label": "萌系", "value": "mengxi"},
+        {"label": "武俠", "value": "wuxia"},
+        {"label": "社會", "value": "shehui"},
+        {"label": "歷史", "value": "lishi"},
+        {"label": "耽美", "value": "danmei"},
+        {"label": "勵志", "value": "lizhi"},
+        {"label": "職場", "value": "zhichang"},
+        {"label": "生活", "value": "shenghuo"},
+        {"label": "治癒", "value": "zhiyu"},
+        {"label": "偽娘", "value": "weiniang"},
+        {"label": "黑道", "value": "heidao"},
+        {"label": "戰爭", "value": "zhanzheng"},
+        {"label": "競技", "value": "jingji"},
+        {"label": "體育", "value": "tiyu"},
+        {"label": "美食", "value": "meishi"},
+        {"label": "腐女", "value": "funv"},
+        {"label": "宅男", "value": "zhainan"},
+        {"label": "推理", "value": "tuili"},
+        {"label": "雜誌", "value": "zazhi"}
+      ]
+    },
+    "audience": {
+      "name": "适合受众",
+      "key": "filter[audience]",
+      "default": "",
+      "options": [
+        {"label": "所有", "value": ""},
+        {"label": "少女", "value": "shaonv"},
+        {"label": "少年", "value": "shaonian"},
+        {"label": "青年", "value": "qingnian"},
+        {"label": "兒童", "value": "ertong"},
+        {"label": "通用", "value": "tongyong"}
+      ]
+    },
+    "year": {
+      "name": "出品年份",
+      "key": "filter[year]",
+      "default": "",
+      "options": [
+        {"label": "所有", "value": ""},
+        {"label": "2025", "value": "2025"},
+        {"label": "2024", "value": "2024"},
+        {"label": "2023", "value": "2023"},
+        {"label": "2022", "value": "2022"},
+        {"label": "2021", "value": "2021"},
+        {"label": "2020", "value": "2020"},
+        {"label": "2019", "value": "2019"},
+        {"label": "2018", "value": "2018"},
+        {"label": "2017", "value": "2017"},
+        {"label": "2016", "value": "2016"},
+        {"label": "2015", "value": "2015"},
+        {"label": "2014", "value": "2014"},
+        {"label": "2013", "value": "2013"},
+        {"label": "2012", "value": "2012"},
+        {"label": "2011", "value": "2011"},
+        {"label": "2010", "value": "2010"},
+        {"label": "00年代", "value": "200x"},
+        {"label": "90年代", "value": "199x"},
+        {"label": "80年代", "value": "198x"},
+        {"label": "70年代或更早", "value": "197x"}
+      ]
+    },
+    "status": {
+      "name": "目前进度",
+      "key": "filter[end]",
+      "default": "",
+      "options": [
+        {"label": "所有", "value": ""},
+        {"label": "連載中", "value": "0"},
+        {"label": "已完結", "value": "1"}
+      ]
+    }
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画（最高人气排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://mycomic.com/comics?sort=-views&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到热门漫画页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.grid > div.group",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const nextBtn = document.querySelector('nav[role=navigation] a[rel=next]'); return JSON.stringify({ hasNextPage: !!nextBtn }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('div.grid > div.group'); const results = []; items.forEach((item) => { const link = item.querySelector('a'); const img = item.querySelector('img'); if (link && img) { const href = link.getAttribute('href') || ''; const title = img.getAttribute('alt') || ''; let cover = img.getAttribute('data-src') || img.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新更新",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://mycomic.com/comics?sort=-update&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到最新更新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.grid > div.group",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const nextBtn = document.querySelector('nav[role=navigation] a[rel=next]'); return JSON.stringify({ hasNextPage: !!nextBtn }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('div.grid > div.group'); const results = []; items.forEach((item) => { const link = item.querySelector('a'); const img = item.querySelector('img'); if (link && img) { const href = link.getAttribute('href') || ''; const title = img.getAttribute('alt') || ''; let cover = img.getAttribute('data-src') || img.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取最新更新漫画"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://mycomic.com/comics?q={{query}}&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.grid > div.group",
+          "timeout": 10000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const nextBtn = document.querySelector('nav[role=navigation] a[rel=next]'); return JSON.stringify({ hasNextPage: !!nextBtn }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('div.grid > div.group'); const results = []; items.forEach((item) => { const link = item.querySelector('a'); const img = item.querySelector('img'); if (link && img) { const href = link.getAttribute('href') || ''; const title = img.getAttribute('alt') || ''; let cover = img.getAttribute('data-src') || img.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div[data-flux-card]",
+          "timeout": 10000,
+          "description": "等待详情元素出现"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面数据完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const detailEl = document.querySelector('div[data-flux-card]'); if (!detailEl) return JSON.stringify({ title: '', cover: '', author: '', status: '未知', description: '' }); const title = detailEl.querySelector('div[data-flux-heading]')?.textContent?.trim() || ''; const coverImg = detailEl.querySelector('img.object-cover'); let cover = ''; if (coverImg) { cover = coverImg.getAttribute('data-src') || coverImg.getAttribute('src') || ''; } const badgeEl = detailEl.querySelector('div[data-flux-badge]'); let status = '未知'; if (badgeEl) { const statusText = badgeEl.textContent?.trim(); if (statusText === '连载中' || statusText === '連載中') status = '连载中'; else if (statusText === '已完结' || statusText === '已完結') status = '已完结'; } const infoEl = detailEl.querySelector('div[data-flux-badge] + div'); let author = ''; let genre = ''; if (infoEl) { const authorLink = infoEl.querySelector(':first-child a'); if (authorLink) author = authorLink.textContent?.trim() || ''; const genreLinks = infoEl.querySelectorAll(':nth-child(3) a'); if (genreLinks.length > 0) { genre = Array.from(genreLinks).map(a => a.textContent?.trim()).filter(Boolean).join(', '); } } let description = ''; const descEl = detailEl.querySelector('div[data-flux-badge] + div + div div[x-show=show]'); if (descEl) { description = descEl.textContent?.trim() || ''; } else { const metaDesc = document.querySelector('meta[name=description]'); if (metaDesc) description = metaDesc.getAttribute('content') || ''; } return JSON.stringify({ title, cover, author, status, description, genre }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div[data-flux-card]",
+          "timeout": 10000,
+          "description": "等待详情元素出现"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面数据完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const detailEl = document.querySelector('div[data-flux-card]'); if (!detailEl) return JSON.stringify({ title: '', cover: '', author: '', status: '未知', description: '' }); const title = detailEl.querySelector('div[data-flux-heading]')?.textContent?.trim() || ''; const coverImg = detailEl.querySelector('img.object-cover'); let cover = ''; if (coverImg) { cover = coverImg.getAttribute('data-src') || coverImg.getAttribute('src') || ''; } const badgeEl = detailEl.querySelector('div[data-flux-badge]'); let status = '未知'; if (badgeEl) { const statusText = badgeEl.textContent?.trim(); if (statusText === '连载中' || statusText === '連載中') status = '连载中'; else if (statusText === '已完结' || statusText === '已完結') status = '已完结'; } const infoEl = detailEl.querySelector('div[data-flux-badge] + div'); let author = ''; let genre = ''; if (infoEl) { const authorLink = infoEl.querySelector(':first-child a'); if (authorLink) author = authorLink.textContent?.trim() || ''; const genreLinks = infoEl.querySelectorAll(':nth-child(3) a'); if (genreLinks.length > 0) { genre = Array.from(genreLinks).map(a => a.textContent?.trim()).filter(Boolean).join(', '); } } let description = ''; const descEl = detailEl.querySelector('div[data-flux-badge] + div + div div[x-show=show]'); if (descEl) { description = descEl.textContent?.trim() || ''; } else { const metaDesc = document.querySelector('meta[name=description]'); if (metaDesc) description = metaDesc.getAttribute('content') || ''; } return JSON.stringify({ title, cover, author, status, description, genre }); })();",
+          "description": "提取漫画详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const xDataEls = document.querySelectorAll('[x-data]'); xDataEls.forEach(el => { const xData = el.getAttribute('x-data') || ''; if (xData.includes('chapters:')) { const startIdx = xData.indexOf('chapters:'); const bracketStart = xData.indexOf('[', startIdx); if (bracketStart === -1) return; let depth = 0, bracketEnd = -1; for (let i = bracketStart; i < xData.length; i++) { if (xData[i] === '[') depth++; else if (xData[i] === ']') { depth--; if (depth === 0) { bracketEnd = i; break; } } } if (bracketEnd !== -1) { try { const json = xData.substring(bracketStart, bracketEnd + 1); const parsed = JSON.parse(json); parsed.forEach(ch => { chapters.push({ id: '/chapters/' + ch.id, title: ch.title, date: '' }); }); } catch (e) {} } } }); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（从x-data属性解析JSON）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div[data-flux-card]",
+          "timeout": 10000,
+          "description": "等待详情元素出现"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面数据完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const xDataEls = document.querySelectorAll('[x-data]'); xDataEls.forEach(el => { const xData = el.getAttribute('x-data') || ''; if (xData.includes('chapters:')) { const startIdx = xData.indexOf('chapters:'); const bracketStart = xData.indexOf('[', startIdx); if (bracketStart === -1) return; let depth = 0, bracketEnd = -1; for (let i = bracketStart; i < xData.length; i++) { if (xData[i] === '[') depth++; else if (xData[i] === ']') { depth--; if (depth === 0) { bracketEnd = i; break; } } } if (bracketEnd !== -1) { try { const json = xData.substring(bracketStart, bracketEnd + 1); const parsed = JSON.parse(json); parsed.forEach(ch => { chapters.push({ id: '/chapters/' + ch.id, title: ch.title, date: '' }); }); } catch (e) {} } } }); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（从x-data属性解析JSON）"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://mycomic.com{{chapterId}}",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "img[x-ref]",
+          "timeout": 15000,
+          "description": "等待图片元素加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const images = document.querySelectorAll('img[x-ref]'); console.log('[MyComic] 找到图片元素数量:', images.length); images.forEach((img, index) => { let src = img.getAttribute('data-src') || img.getAttribute('src') || ''; console.log('[MyComic] 图片', index, 'src:', src); if (src) { pages.push({ index: index, url: src }); } }); console.log('[MyComic] 提取到', pages.length, '张图片'); return JSON.stringify(pages); })();",
+          "description": "提取章节图片列表"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "imageHeaders": {
+    "Referer": "https://mycomic.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  },
+
+  "coverHeaders": {
+    "Referer": "https://mycomic.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  }
+}

@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://www.pixiv.net",
-    "description": "Pixiv 中文版 - 日本知名插画和漫画分享平台",
+    "description": "Pixiv 中文版 - 需要科学网络，日本知名插画和漫画分享平台",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "webview", "popular", "illustration", "manga"],

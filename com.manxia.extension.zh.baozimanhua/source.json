@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://cn.baozimh.com",
-    "description": "包子漫画 - 热门中文漫画阅读平台，支持简体/繁体",
+    "description": "包子漫画 - 需要科学网络，国漫为主",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": false,
     "tags": ["chinese", "webview", "free", "popular"],

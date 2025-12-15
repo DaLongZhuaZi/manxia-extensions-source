@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "language": "zh",
     "baseUrl": "https://www.wn05.ru",
-    "description": "紳士漫畫 (WNACG) - 同人志漫画网站",
+    "description": "紳士漫畫 (WNACG) - 日漫、韩漫为主",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
     "tags": ["chinese", "webview", "doujinshi", "nsfw"],
@@ -141,8 +141,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const items = document.querySelectorAll('#classify_container > li, ul.col_2 > li'); const mangas = []; items.forEach(item => { const linkEl = item.querySelector('a.ImgA, a[href*=\"photos-index-aid\"]'); const titleEl = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); if (linkEl && imgEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl ? titleEl.textContent?.trim() : ''; let cover = imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || ''; if (cover.startsWith('//')) cover = 'http:' + cover; mangas.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
-          "description": "提取搜索结果"
+          "code": "(() => { const items = document.querySelectorAll('.gallary_item'); const mangas = []; const seen = new Set(); items.forEach(item => { const linkEl = item.querySelector('a[href*=\"photos-index\"]'); const imgEl = item.querySelector('img'); if (linkEl && imgEl) { const href = linkEl.getAttribute('href') || ''; if (seen.has(href)) return; seen.add(href); let title = linkEl.getAttribute('title') || linkEl.textContent?.trim() || ''; title = title.replace(/<[^>]*>/g, ''); let cover = imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || ''; if (cover.startsWith('//')) cover = 'https:' + cover; mangas.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取搜索结果（手机版UI，去重）"
         }
       ]
     },
@@ -225,8 +225,20 @@
       "description": "获取章节页面列表",
       "actions": [
         {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{chapterId}}",
+          "timeout": 15000,
+          "description": "先导航到详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面加载"
+        },
+        {
           "type": "script",
-          "code": "(() => { let chapterId = '{{chapterId}}'; if (!chapterId || chapterId === '{{' + 'chapterId}}') chapterId = '{{mangaId}}'; if (chapterId.startsWith('http')) { try { chapterId = new URL(chapterId).pathname; } catch(e) {} } if (!chapterId.startsWith('/')) chapterId = '/' + chapterId; const slistPath = chapterId.replace('-index-', '-slist-'); return '{{baseUrl}}' + slistPath; })();",
+          "code": "(() => { const slistUrl = window.location.href.replace('-index-', '-slist-'); return slistUrl; })();",
           "description": "构建slist页面URL"
         },
         {

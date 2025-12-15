@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "language": "all",
     "baseUrl": "https://everia.club",
-    "description": "Everia.club - 图片画廊网站 (移植自 keiyoushi)",
+    "description": "Everia.club - 图片写真",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["gallery", "webview", "all-language"],
@@ -83,7 +83,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://everia.club/?paged={{page}}&s={{keyword}}",
+          "url": "https://everia.club/?s={{query}}",
           "timeout": 15000,
           "description": "导航到搜索页面"
         },
@@ -93,6 +93,12 @@
           "selector": "#content > article",
           "timeout": 10000,
           "description": "等待搜索结果加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面完全渲染"
         },
         {
           "type": "script",

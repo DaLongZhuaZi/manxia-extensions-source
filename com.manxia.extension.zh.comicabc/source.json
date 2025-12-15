@@ -1,0 +1,266 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.comicabc",
+    "name": "無限動漫",
+    "version": "1.0.0",
+    "language": "zh-TW",
+    "baseUrl": "https://www.8comic.com",
+    "description": "無限動漫 (8comic.com) - 需要科学网络，日漫为主",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": false,
+    "tags": ["chinese", "webview", "free", "taiwan"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画列表",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comic/h-{{page}}.html",
+          "timeout": 15000,
+          "description": "导航到热门漫画列表页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".container .row a.comicpic_col6",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNext = !!document.querySelector('div.pager a span.mdi-skip-next'); return JSON.stringify({ hasNextPage: hasNext }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const baseUrl = 'https://www.8comic.com'; const results = []; document.querySelectorAll('.container .row a.comicpic_col6').forEach(el => { const titleEl = el.querySelector('li.nowraphide'); const imgEl = el.querySelector('img'); if (titleEl && imgEl) { let cover = imgEl.getAttribute('src') || ''; if (cover && !cover.startsWith('http')) cover = baseUrl + cover; results.push({ id: el.getAttribute('href') || '', title: titleEl.textContent?.trim() || '', cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
+    
+    "latest": {
+      "description": "获取最新更新漫画列表",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comic/u-{{page}}.html",
+          "timeout": 15000,
+          "description": "导航到最新更新列表页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".container .row .cat2_list a",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNext = !!document.querySelector('div.pager a span.mdi-skip-next'); return JSON.stringify({ hasNextPage: hasNext }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const baseUrl = 'https://www.8comic.com'; const results = []; document.querySelectorAll('.container .row .cat2_list a').forEach(el => { const titleEl = el.querySelector('li.nowraphide'); const imgEl = el.querySelector('img'); if (titleEl && imgEl) { let cover = imgEl.getAttribute('src') || ''; if (cover && !cover.startsWith('http')) cover = baseUrl + cover; results.push({ id: el.getAttribute('href') || '', title: titleEl.textContent?.trim() || '', cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取最新更新漫画列表"
+        }
+      ]
+    },
+    
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/member/search.aspx?key={{query}}&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".container .row a.comicpic_col6",
+          "timeout": 10000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面完全渲染"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNext = !!document.querySelector('div.pager a span.mdi-skip-next'); return JSON.stringify({ hasNextPage: hasNext }); })();",
+          "description": "检查是否有下一页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const baseUrl = 'https://www.8comic.com'; const results = []; document.querySelectorAll('.container .row a.comicpic_col6').forEach(el => { const titleEl = el.querySelector('li.nowraphide'); const imgEl = el.querySelector('img'); if (titleEl && imgEl) { let cover = imgEl.getAttribute('src') || ''; if (cover && !cover.startsWith('http')) cover = baseUrl + cover; results.push({ id: el.getAttribute('href') || '', title: titleEl.textContent?.trim() || '', cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/html/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".item_content_box",
+          "timeout": 10000,
+          "description": "等待详情页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const baseUrl = 'https://www.8comic.com'; const title = document.querySelector('.item_content_box .h2')?.textContent?.trim() || ''; const coverImg = document.querySelector('.item-cover img'); let cover = coverImg ? (coverImg.getAttribute('src') || '') : ''; if (cover && !cover.startsWith('http')) cover = baseUrl + cover; let author = document.querySelector('.item_content_box .item-info-author')?.textContent || ''; if (author.includes('作者:')) author = author.split('作者:')[1]?.trim() || ''; const description = document.querySelector('.item_content_box .item_info_detail')?.textContent?.trim() || ''; const statusText = document.querySelector('.item_content_box .item-info-status')?.textContent || ''; let status = '未知'; if (statusText.includes('連載中')) status = '连载中'; else if (statusText.includes('已完結')) status = '已完结'; return JSON.stringify({ title, cover, author, status, description }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+    
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/html/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".item_content_box",
+          "timeout": 10000,
+          "description": "等待详情页加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const baseUrl = 'https://www.8comic.com'; const title = document.querySelector('.item_content_box .h2')?.textContent?.trim() || ''; const coverImg = document.querySelector('.item-cover img'); let cover = coverImg ? (coverImg.getAttribute('src') || '') : ''; if (cover && !cover.startsWith('http')) cover = baseUrl + cover; let author = document.querySelector('.item_content_box .item-info-author')?.textContent || ''; if (author.includes('作者:')) author = author.split('作者:')[1]?.trim() || ''; const description = document.querySelector('.item_content_box .item_info_detail')?.textContent?.trim() || ''; const statusText = document.querySelector('.item_content_box .item-info-status')?.textContent || ''; let status = '未知'; if (statusText.includes('連載中')) status = '连载中'; else if (statusText.includes('已完結')) status = '已完结'; return JSON.stringify({ title, cover, author, status, description }); })();",
+          "description": "提取漫画详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; document.querySelectorAll('#chapters a').forEach(el => { const onclick = el.getAttribute('onclick') || ''; if (onclick.includes(\"cview('\")) { const match = onclick.match(/cview\\('(\\d+)-(\\d+)\\.html/); if (match) { const comicId = match[1]; const chapterId = match[2]; let title = el.textContent?.trim() || ''; const scriptIdx = title.indexOf(' document.'); if (scriptIdx > 0) title = title.substring(0, scriptIdx).trim(); chapters.push({ id: '/online/new-' + comicId + '.html?ch=' + chapterId, title: title, date: '' }); } } }); return JSON.stringify(chapters.reverse()); })();",
+          "description": "提取章节列表"
+        }
+      ]
+    },
+    
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/html/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#chapters",
+          "timeout": 10000,
+          "description": "等待章节列表加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; document.querySelectorAll('#chapters a').forEach(el => { const onclick = el.getAttribute('onclick') || ''; if (onclick.includes(\"cview('\")) { const match = onclick.match(/cview\\('(\\d+)-(\\d+)\\.html/); if (match) { const comicId = match[1]; const chapterId = match[2]; let title = el.textContent?.trim() || ''; const scriptIdx = title.indexOf(' document.'); if (scriptIdx > 0) title = title.substring(0, scriptIdx).trim(); chapters.push({ id: '/online/new-' + comicId + '.html?ch=' + chapterId, title: title, date: '' }); } } }); return JSON.stringify(chapters.reverse()); })();",
+          "description": "提取章节列表"
+        }
+      ]
+    },
+    
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}{{chapterId}}",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#comics-pics",
+          "timeout": 15000,
+          "description": "等待图片容器加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待JavaScript执行完成"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; document.querySelectorAll('#comics-pics img').forEach((img, idx) => { let src = img.getAttribute('s') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (src) { try { src = unescape(src); } catch(e) {} if (src.startsWith('//')) src = 'https:' + src; if (src && src.includes('8comic.com') && !src.includes('loading')) { pages.push({ index: idx, imageUrl: src }); } } }); return JSON.stringify(pages); })();",
+          "description": "提取图片URL列表 - 从's'属性获取URL编码的图片地址"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
+        }
+      ]
+    }
+  },
+  
+  "imageHeaders": {
+    "Referer": "https://www.8comic.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  },
+
+  "coverHeaders": {
+    "Referer": "https://www.8comic.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  }
+}

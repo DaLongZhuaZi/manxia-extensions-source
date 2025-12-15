@@ -5,7 +5,7 @@
     "version": "2.0.2",
     "language": "zh-CN",
     "baseUrl": "https://www.2025copy.com",
-    "description": "拷贝漫画 WebView版本 - 使用DOM提取，支持域名切换和Cookie管理",
+    "description": "拷贝漫画 WebView - 日漫为主",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "webview", "popular"],

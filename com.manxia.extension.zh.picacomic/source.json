@@ -5,7 +5,7 @@
     "version": "1.0.7",
     "language": "zh-CN",
     "baseUrl": "https://picaapi.picacomic.com",
-    "description": "哔咔漫画 - 需要登录的中文漫画图源，支持HMAC-SHA256签名认证。注意：此图源在部分地区可能无法访问，需要使用代理或VPN。",
+    "description": "哔咔漫画 - 需要登录，需要科学网络",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "authenticated", "popular"],

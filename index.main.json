@@ -117,5 +117,39 @@
         "baseUrl": "https://www.wn05.ru"
       }
     ]
+  },
+  {
+    "name": "ManXia: Manwa",
+    "pkg": "com.manxia.extension.zh.manwa",
+    "lang": "zh",
+    "code": 11,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "漫蛙",
+        "lang": "zh",
+        "id": "972475187360186904",
+        "baseUrl": "https://manwa.me"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: MyComic",
+    "pkg": "com.manxia.extension.zh.mycomic",
+    "lang": "zh",
+    "code": 12,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "MyComic",
+        "lang": "zh",
+        "id": "1072475187360186905",
+        "baseUrl": "https://mycomic.com"
+      }
+    ]
   }
 ]
