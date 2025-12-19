@@ -187,7 +187,7 @@
     "code": 14,
     "version": "1.0.0",
     "nsfw": 0,
-    "hasIcon": false,
+    "hasIcon": true,
     "sources": [
       {
         "name": "SaltyLeo 的书架",
