@@ -1,0 +1,254 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.tstrs",
+    "name": "SaltyLeo 的书架",
+    "type": "ebook",
+    "version": "1.0.0",
+    "language": "zh-CN",
+    "baseUrl": "https://tstrs.me",
+    "description": "SaltyLeo 的书架 - 免费电子书下载网站，提供EPUB/MOBI/PDF格式",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["chinese", "ebook", "epub", "pdf"],
+    "Internet": false
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "chineseConverter": false,
+    "pagination": true,
+    "userAgentRotation": false,
+    "errorRetry": true,
+    "sessionManagement": false,
+    "loginSupport": false,
+    "downloadSupport": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "settings": {
+    "downloadFormat": {
+      "type": "select",
+      "name": "下载格式",
+      "description": "选择电子书下载格式",
+      "default": "epub",
+      "options": [
+        {"value": "epub", "label": "EPUB"},
+        {"value": "mobi", "label": "MOBI"},
+        {"value": "pdf", "label": "PDF"},
+        {"value": "azw3", "label": "AZW3"}
+      ]
+    }
+  },
+
+  "workflows": {
+    "search": {
+      "description": "搜索电子书",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://tstrs.me/search?search_type=default&q={{query}}",
+          "timeout": 10000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待DOM渲染完成"
+        },
+        {
+          "type": "script",
+          "code": "window.scrollTo(0, 800);",
+          "description": "滚动触发懒加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 500,
+          "description": "等待懒加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const books = []; const items = document.querySelectorAll('.book-item, .search-result-item, article, .card'); items.forEach((item, index) => { const link = item.querySelector('a[href*=\"/book/\"], a[href*=\"/detail/\"]'); const img = item.querySelector('img'); const title = item.querySelector('h2, h3, .title, .book-title'); const author = item.querySelector('.author, .book-author, .meta'); if (link && title) { books.push({ id: link.getAttribute('href'), title: title.textContent.trim(), cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author ? author.textContent.trim() : '' }); } }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getCategory": {
+      "description": "获取分类下的电子书",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{categoryUrl}}",
+          "timeout": 10000,
+          "description": "导航到分类页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待DOM渲染完成"
+        },
+        {
+          "type": "script",
+          "code": "window.scrollTo(0, 1200);",
+          "description": "滚动触发懒加载"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 500,
+          "description": "等待懒加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const books = []; const items = document.querySelectorAll('.book-item, article, .card, .list-item'); items.forEach((item, index) => { const link = item.querySelector('a[href]'); const img = item.querySelector('img'); const title = item.querySelector('h2, h3, .title, .book-title'); const author = item.querySelector('.author, .book-author, .meta'); if (link && title) { const href = link.getAttribute('href'); if (href && !href.includes('/class/') && !href.includes('/tag/')) { books.push({ id: href, title: title.textContent.trim(), cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author ? author.textContent.trim() : '' }); } } }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "description": "提取分类下的电子书"
+        }
+      ]
+    },
+
+    "getBookDetail": {
+      "description": "获取电子书详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://tstrs.me{{bookId}}",
+          "timeout": 10000,
+          "description": "导航到电子书详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待详情页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const result = { id: '{{bookId}}', title: document.querySelector('h1, .book-title, .title')?.textContent?.trim() || '', cover: document.querySelector('.book-cover img, .cover img, article img')?.src || '', author: document.querySelector('.author, .book-author, [class*=\"author\"]')?.textContent?.trim() || '', publisher: document.querySelector('.publisher, [class*=\"publisher\"]')?.textContent?.trim() || '', publishDate: document.querySelector('.publish-date, .date, [class*=\"date\"]')?.textContent?.trim() || '', description: document.querySelector('.description, .intro, .book-intro, .content p')?.textContent?.trim() || '', categories: Array.from(document.querySelectorAll('.category a, .tag a, .tags a')).map(a => a.textContent?.trim()).filter(t => t).join(','), isbn: document.querySelector('.isbn, [class*=\"isbn\"]')?.textContent?.trim() || '', fileSize: document.querySelector('.file-size, [class*=\"size\"]')?.textContent?.trim() || '', downloadLinks: [] }; const downloadBtns = document.querySelectorAll('a[href*=\"download\"], a[href*=\".epub\"], a[href*=\".pdf\"], a[href*=\".mobi\"], .download-btn a'); downloadBtns.forEach(btn => { const href = btn.getAttribute('href'); const text = btn.textContent?.trim() || ''; if (href) { result.downloadLinks.push({ url: href, format: text }); } }); console.log('[电子书详情] 提取结果:', result); return JSON.stringify(result); })();",
+          "description": "提取电子书详情"
+        }
+      ]
+    },
+
+    "getDownloadUrl": {
+      "description": "获取下载链接",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{downloadPageUrl}}",
+          "timeout": 10000,
+          "description": "导航到下载页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const links = []; const downloadBtns = document.querySelectorAll('a[href*=\"download\"], a[href*=\".epub\"], a[href*=\".pdf\"], a[href*=\".mobi\"], a[href*=\".azw3\"]'); downloadBtns.forEach(btn => { const href = btn.getAttribute('href'); if (href && !links.includes(href)) { links.push(href); } }); return JSON.stringify(links); })();",
+          "description": "提取下载链接"
+        }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "newBooks",
+      "type": "category",
+      "name": "新书速递",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E6%96%B0%E4%B9%A6%E9%80%9F%E9%80%92"
+    },
+    {
+      "id": "classics",
+      "type": "category",
+      "name": "经典必读",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E5%85%B8%E5%BF%85%E8%AF%BB"
+    },
+    {
+      "id": "doubanTop",
+      "type": "category",
+      "name": "豆瓣高分",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E8%B1%86%E7%93%A3%E9%AB%98%E5%88%86"
+    },
+    {
+      "id": "literature",
+      "type": "category",
+      "name": "文学小说",
+      "enabled": true,
+      "order": 3,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E6%96%87%E5%AD%A6%E5%B0%8F%E8%AF%B4"
+    },
+    {
+      "id": "history",
+      "type": "category",
+      "name": "历史传记",
+      "enabled": true,
+      "order": 4,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E5%8E%86%E5%8F%B2%E4%BC%A0%E8%AE%B0"
+    },
+    {
+      "id": "science",
+      "type": "category",
+      "name": "科普百科",
+      "enabled": true,
+      "order": 5,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E7%A7%91%E6%99%AE%E7%99%BE%E7%A7%91"
+    },
+    {
+      "id": "business",
+      "type": "category",
+      "name": "经济管理",
+      "enabled": true,
+      "order": 6,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E6%B5%8E%E7%AE%A1%E7%90%86"
+    },
+    {
+      "id": "psychology",
+      "type": "category",
+      "name": "心理励志",
+      "enabled": true,
+      "order": 7,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E5%BF%83%E7%90%86%E5%8A%B1%E5%BF%97"
+    },
+    {
+      "id": "search",
+      "type": "search",
+      "name": "搜索",
+      "enabled": true,
+      "order": 99,
+      "requiresLogin": false
+    }
+  ],
+
+  "ebookConfig": {
+    "supportedFormats": ["epub", "mobi", "pdf", "azw3", "txt"],
+    "defaultFormat": "epub",
+    "downloadMethod": "direct",
+    "previewSupport": false
+  }
+}

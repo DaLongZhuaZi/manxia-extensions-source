@@ -178,5 +178,23 @@
         "baseUrl": "https://www.8comic.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: TSTRS",
+    "pkg": "com.manxia.extension.zh.tstrs",
+    "type": "ebook",
+    "lang": "zh",
+    "code": 14,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": false,
+    "sources": [
+      {
+        "name": "SaltyLeo 的书架",
+        "lang": "zh",
+        "id": "1272475187360186907",
+        "baseUrl": "https://tstrs.me"
+      }
+    ]
   }
 ]
