@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.mh1234",
     "name": "漫画1234",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://b.amh1234.com",

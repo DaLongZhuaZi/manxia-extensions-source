@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.comicabc",
     "name": "無限動漫",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-TW",
     "baseUrl": "https://www.8comic.com",

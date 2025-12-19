@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.pixiv",
     "name": "Pixiv",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://www.pixiv.net",

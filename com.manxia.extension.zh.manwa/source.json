@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.manwa",
     "name": "漫蛙",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://manwa.me",

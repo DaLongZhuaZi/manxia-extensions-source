@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.wnacg",
     "name": "紳士漫畫",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh",
     "baseUrl": "https://www.wn05.ru",

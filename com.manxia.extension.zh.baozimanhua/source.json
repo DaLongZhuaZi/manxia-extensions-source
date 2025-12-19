@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.baozimanhua",
     "name": "包子漫画",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://cn.baozimh.com",

@@ -2,6 +2,7 @@
   {
     "name": "ManXia: CopymangaWebview",
     "pkg": "com.manxia.extension.zh.copymangawebview",
+    "type": "manga",
     "lang": "zh",
     "code": 4,
     "version": "2.0.0",
@@ -19,6 +20,7 @@
   {
     "name": "ManXia: Picacomic",
     "pkg": "com.manxia.extension.zh.picacomic",
+    "type": "manga",
     "lang": "zh",
     "code": 5,
     "version": "1.0.8",
@@ -36,6 +38,7 @@
   {
     "name": "ManXia: MH1234",
     "pkg": "com.manxia.extension.zh.mh1234",
+    "type": "manga",
     "lang": "zh",
     "code": 6,
     "version": "1.0.0",
@@ -53,6 +56,7 @@
   {
     "name": "ManXia: Baozimanhua",
     "pkg": "com.manxia.extension.zh.baozimanhua",
+    "type": "manga",
     "lang": "zh",
     "code": 7,
     "version": "1.0.0",
@@ -70,6 +74,7 @@
   {
     "name": "ManXia: EveriaClub",
     "pkg": "com.manxia.extension.all.everiaclub",
+    "type": "manga",
     "lang": "all",
     "code": 8,
     "version": "1.0.0",
@@ -87,6 +92,7 @@
   {
     "name": "ManXia: Pixiv",
     "pkg": "com.manxia.extension.zh.pixiv",
+    "type": "manga",
     "lang": "zh",
     "code": 9,
     "version": "1.0.0",
@@ -104,6 +110,7 @@
   {
     "name": "ManXia: WNACG",
     "pkg": "com.manxia.extension.zh.wnacg",
+    "type": "manga",
     "lang": "zh",
     "code": 10,
     "version": "1.0.0",
@@ -121,6 +128,7 @@
   {
     "name": "ManXia: Manwa",
     "pkg": "com.manxia.extension.zh.manwa",
+    "type": "manga",
     "lang": "zh",
     "code": 11,
     "version": "1.0.0",
@@ -138,6 +146,7 @@
   {
     "name": "ManXia: MyComic",
     "pkg": "com.manxia.extension.zh.mycomic",
+    "type": "manga",
     "lang": "zh",
     "code": 12,
     "version": "1.0.0",
@@ -155,6 +164,7 @@
   {
     "name": "ManXia: Comicabc",
     "pkg": "com.manxia.extension.zh.comicabc",
+    "type": "manga",
     "lang": "zh",
     "code": 13,
     "version": "1.0.0",

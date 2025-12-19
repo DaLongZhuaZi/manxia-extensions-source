@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.all.everiaclub",
     "name": "Everia.club",
+    "type": "manga",
     "version": "1.0.0",
     "language": "all",
     "baseUrl": "https://everia.club",

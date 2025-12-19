@@ -2,6 +2,7 @@
   "metadata": {
     "id": "com.manxia.extension.zh.mycomic",
     "name": "MyComic",
+    "type": "manga",
     "version": "1.0.0",
     "language": "zh-TW",
     "baseUrl": "https://mycomic.com",
