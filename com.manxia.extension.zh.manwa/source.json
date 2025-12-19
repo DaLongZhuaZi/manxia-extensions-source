@@ -10,7 +10,7 @@
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
     "tags": ["chinese", "webview", "free", "nsfw"],
-    "Internet": false
+    "Internet": true
   },
 
   "capabilities": {

@@ -53,13 +53,13 @@
         {
           "type": "navigate",
           "url": "https://tstrs.me/search?search_type=default&q={{query}}",
-          "timeout": 10000,
+          "timeout": 15000,
           "description": "导航到搜索结果页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 1500,
+          "duration": 2000,
           "description": "等待DOM渲染完成"
         },
         {
@@ -70,12 +70,12 @@
         {
           "type": "wait",
           "condition": "time",
-          "duration": 500,
+          "duration": 1000,
           "description": "等待懒加载"
         },
         {
           "type": "script",
-          "code": "(() => { const books = []; const items = document.querySelectorAll('.book-item, .search-result-item, article, .card'); items.forEach((item, index) => { const link = item.querySelector('a[href*=\"/book/\"], a[href*=\"/detail/\"]'); const img = item.querySelector('img'); const title = item.querySelector('h2, h3, .title, .book-title'); const author = item.querySelector('.author, .book-author, .meta'); if (link && title) { books.push({ id: link.getAttribute('href'), title: title.textContent.trim(), cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author ? author.textContent.trim() : '' }); } }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const container = link.closest('.text-left') || link.closest('div'); const img = container?.querySelector('img'); const text = link.textContent || ''; const lines = text.split('\\n').map(s => s.trim()).filter(s => s); const title = lines[0] || ''; let author = ''; let publisher = ''; lines.forEach(line => { if (line.startsWith('作者：')) author = line.replace('作者：', '').trim(); if (line.startsWith('出版社：')) publisher = line.replace('出版社：', '').trim(); }); const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取搜索结果"
         }
       ]
@@ -87,13 +87,13 @@
         {
           "type": "navigate",
           "url": "{{categoryUrl}}",
-          "timeout": 10000,
+          "timeout": 15000,
           "description": "导航到分类页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 1500,
+          "duration": 2000,
           "description": "等待DOM渲染完成"
         },
         {
@@ -104,12 +104,12 @@
         {
           "type": "wait",
           "condition": "time",
-          "duration": 500,
+          "duration": 1000,
           "description": "等待懒加载"
         },
         {
           "type": "script",
-          "code": "(() => { const books = []; const items = document.querySelectorAll('.book-item, article, .card, .list-item'); items.forEach((item, index) => { const link = item.querySelector('a[href]'); const img = item.querySelector('img'); const title = item.querySelector('h2, h3, .title, .book-title'); const author = item.querySelector('.author, .book-author, .meta'); if (link && title) { const href = link.getAttribute('href'); if (href && !href.includes('/class/') && !href.includes('/tag/')) { books.push({ id: href, title: title.textContent.trim(), cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author ? author.textContent.trim() : '' }); } } }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const img = link.querySelector('img'); const spans = link.querySelectorAll('.text-center span'); const title = spans[0]?.textContent?.trim() || ''; const author = spans[1]?.textContent?.trim() || ''; const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取分类下的电子书"
         }
       ]
@@ -120,43 +120,223 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://tstrs.me{{bookId}}",
-          "timeout": 10000,
+          "url": "https://tstrs.me/book/{{bookId}}",
+          "timeout": 30000,
           "description": "导航到电子书详情页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 1500,
-          "description": "等待详情页加载"
+          "duration": 5000,
+          "description": "等待详情页完全加载"
         },
         {
           "type": "script",
-          "code": "(() => { const result = { id: '{{bookId}}', title: document.querySelector('h1, .book-title, .title')?.textContent?.trim() || '', cover: document.querySelector('.book-cover img, .cover img, article img')?.src || '', author: document.querySelector('.author, .book-author, [class*=\"author\"]')?.textContent?.trim() || '', publisher: document.querySelector('.publisher, [class*=\"publisher\"]')?.textContent?.trim() || '', publishDate: document.querySelector('.publish-date, .date, [class*=\"date\"]')?.textContent?.trim() || '', description: document.querySelector('.description, .intro, .book-intro, .content p')?.textContent?.trim() || '', categories: Array.from(document.querySelectorAll('.category a, .tag a, .tags a')).map(a => a.textContent?.trim()).filter(t => t).join(','), isbn: document.querySelector('.isbn, [class*=\"isbn\"]')?.textContent?.trim() || '', fileSize: document.querySelector('.file-size, [class*=\"size\"]')?.textContent?.trim() || '', downloadLinks: [] }; const downloadBtns = document.querySelectorAll('a[href*=\"download\"], a[href*=\".epub\"], a[href*=\".pdf\"], a[href*=\".mobi\"], .download-btn a'); downloadBtns.forEach(btn => { const href = btn.getAttribute('href'); const text = btn.textContent?.trim() || ''; if (href) { result.downloadLinks.push({ url: href, format: text }); } }); console.log('[电子书详情] 提取结果:', result); return JSON.stringify(result); })();",
+          "code": "(() => { const result = { id: location.pathname.replace('/book/', ''), title: '', cover: '', author: '', publisher: '', publishDate: '', description: '', category: '', isbn: '', rating: '', formats: [] }; const h1 = document.querySelector('h1'); if (h1) result.title = h1.textContent?.trim() || ''; const imgs = document.querySelectorAll('img'); for (let img of imgs) { const src = img.src || img.getAttribute('data-src') || ''; if (src && !src.includes('logo') && !src.includes('icon') && img.width > 50) { result.cover = src; break; } } const allText = document.body.innerText || ''; const authorMatch = allText.match(/作者[：:]\\s*([^\\n]+)/); if (authorMatch) result.author = authorMatch[1].trim(); const publisherMatch = allText.match(/出版社[：:]\\s*([^\\n]+)/); if (publisherMatch) result.publisher = publisherMatch[1].trim(); const categoryMatch = allText.match(/分类[：:]\\s*([^\\n]+)/); if (categoryMatch) result.category = categoryMatch[1].trim(); const dateMatch = allText.match(/出版时间[：:]\\s*([^\\n]+)/); if (dateMatch) result.publishDate = dateMatch[1].trim(); const isbnMatch = allText.match(/ISBN[：:]\\s*([^\\n]+)/); if (isbnMatch) result.isbn = isbnMatch[1].trim(); const ratingMatch = allText.match(/评分[：:]\\s*([^\\n]+)/); if (ratingMatch) result.rating = ratingMatch[1].trim(); const formatMatch = allText.match(/格式[：:]\\s*([^\\n]+)/); if (formatMatch) result.formats = formatMatch[1].trim().split(/[\\s,，]+/).filter(f => f); const descMatch = allText.match(/简介[：:]?\\s*([\\s\\S]{10,500}?)(?=\\n\\n|下载|格式|$)/); if (descMatch) { let desc = descMatch[1].trim(); desc = desc.replace(/[{}@#$%^&*()\\[\\]<>]/g, '').replace(/\\s+/g, ' '); if (desc.length > 20 && !desc.includes('css') && !desc.includes('style')) result.description = desc.substring(0, 300); } if (!result.description) { const articleEl = document.querySelector('article p'); if (articleEl) { let desc = articleEl.textContent?.trim() || ''; desc = desc.replace(/[{}@#$%^&*()\\[\\]<>]/g, '').replace(/\\s+/g, ' '); if (desc.length > 20 && !desc.includes('css') && !desc.includes('style')) result.description = desc.substring(0, 300); } } console.log('[电子书详情]', JSON.stringify(result)); return JSON.stringify(result); })();",
           "description": "提取电子书详情"
         }
       ]
     },
 
     "getDownloadUrl": {
-      "description": "获取下载链接",
+      "description": "获取下载链接（已废弃，使用tasks系统）",
+      "actions": []
+    },
+
+    "clickSearchButton": {
+      "description": "点击全网查询按钮",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{downloadPageUrl}}",
-          "timeout": 10000,
-          "description": "导航到下载页"
+          "url": "https://tstrs.me/book/{{bookId}}",
+          "waitAfterLoad": 2000,
+          "description": "导航到书籍详情页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 1000,
+          "duration": 2000,
           "description": "等待页面加载"
         },
         {
           "type": "script",
-          "code": "(() => { const links = []; const downloadBtns = document.querySelectorAll('a[href*=\"download\"], a[href*=\".epub\"], a[href*=\".pdf\"], a[href*=\".mobi\"], a[href*=\".azw3\"]'); downloadBtns.forEach(btn => { const href = btn.getAttribute('href'); if (href && !links.includes(href)) { links.push(href); } }); return JSON.stringify(links); })();",
-          "description": "提取下载链接"
+          "code": "(() => { const btn = document.querySelector('.gets-pill-card.dynamic-button[data-book-id]'); if (btn) { btn.click(); return JSON.stringify({ success: true, bookId: btn.getAttribute('data-book-id') }); } return JSON.stringify({ success: false, error: '未找到查询按钮' }); })();",
+          "description": "点击全网查询按钮"
+        }
+      ]
+    },
+
+    "waitForDownloadSources": {
+      "description": "等待下载源列表加载并提交ManyBooks表单（增强验证）",
+      "actions": [
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 15000,
+          "description": "等待页面跳转和搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const debug = { url: location.href, phase: 'init', hasFindResults: false, formCount: 0, manyBooksFormFound: false, formSubmitted: false, submitMethod: '', error: null }; const sources = []; const seen = new Set(); debug.phase = 'check_find_results'; const findResults = document.querySelector('#find_results'); if (!findResults) { debug.error = 'find_results元素不存在'; debug.bodyText = document.body.innerText.substring(0, 300); return JSON.stringify({ sources: [], formSubmitted: false, error: debug.error, debug: debug }); } debug.hasFindResults = true; debug.phase = 'find_forms'; const allForms = findResults.querySelectorAll('form'); debug.formCount = allForms.length; if (allForms.length === 0) { debug.error = '未找到任何表单'; return JSON.stringify({ sources: [], formSubmitted: false, error: debug.error, debug: debug }); } debug.phase = 'find_manybooks'; let manyBooksForm = null; let manyBooksButton = null; allForms.forEach((form, index) => { const card = form.closest('div'); const img = card?.querySelector('img') || form.querySelector('img'); const title = card?.querySelector('.card-title, h5, .title, strong') || form.querySelector('.card-title, h5, .title, strong'); const name = title?.textContent?.trim() || ''; if (form.action && name && !seen.has(name)) { seen.add(name); if (name.toLowerCase().includes('manybooks') && !manyBooksForm) { manyBooksForm = form; manyBooksButton = form.querySelector('button[type=submit], button, input[type=submit]'); debug.manyBooksFormFound = true; debug.manyBooksFormAction = form.action; debug.manyBooksFormMethod = form.method || 'GET'; debug.hasSubmitButton = !!manyBooksButton; } sources.push({ id: String(index), name: name, icon: img?.src || '', url: form.action, recommended: false }); } }); if (!manyBooksForm) { debug.error = '未找到ManyBooks表单'; debug.phase = 'no_manybooks'; return JSON.stringify({ sources: sources, formSubmitted: false, error: debug.error, debug: debug }); } debug.phase = 'submit_form'; try { if (manyBooksButton) { debug.submitMethod = 'button_click'; console.log('[tstrs] Clicking ManyBooks submit button...'); manyBooksButton.click(); debug.formSubmitted = true; } else { debug.submitMethod = 'form_submit'; console.log('[tstrs] Submitting ManyBooks form directly...'); manyBooksForm.submit(); debug.formSubmitted = true; } debug.phase = 'submitted'; } catch(e) { debug.error = 'submit_error: ' + e.message; debug.formSubmitted = false; debug.phase = 'submit_failed'; } return JSON.stringify({ sources: sources, formSubmitted: debug.formSubmitted, error: debug.error, debug: debug }); })();",
+          "description": "提取下载源列表并提交ManyBooks表单（增强验证：检查每一步状态）"
+        }
+      ]
+    },
+
+    "selectDownloadSource": {
+      "description": "选择下载源并跳转",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{sourceUrl}}",
+          "waitAfterLoad": 3000,
+          "timeout": 30000,
+          "description": "导航到下载源页面（ManyBooks等外部站点）"
+        }
+      ]
+    },
+
+    "extractFileList": {
+      "description": "提取文件下载列表",
+      "actions": [
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const debug = { url: location.href, host: location.host, pathname: location.pathname, isTemporaryLink: location.href.includes('temporary_link'), isManyBooks: location.href.includes('manybooks'), isTstrs: location.href.includes('tstrs.me'), hasFileList: !!document.querySelector('.file-list'), title: document.title, bodyTextPreview: document.body.innerText.substring(0, 300).replace(/\\s+/g, ' ') }; console.log('[extractFileList] Debug:', JSON.stringify(debug)); const files = []; const items = document.querySelectorAll('.file-item, .file-list li'); debug.fileItemCount = items.length; debug.allLinks = []; document.querySelectorAll('a[href]').forEach((a, i) => { if (i < 20) { const href = a.getAttribute('href') || ''; const text = a.textContent?.trim().substring(0, 50) || ''; if (href.match(/\\.(epub|mobi|pdf|azw3|txt)/i) || text.match(/\\.(epub|mobi|pdf|azw3|txt)/i)) { debug.allLinks.push({ href: href.substring(0, 100), text: text }); } } }); if (items.length === 0) { return JSON.stringify({ debug: debug, files: [], error: 'No file items found. URL: ' + location.href }); } items.forEach(item => { const span = item.querySelector('span'); const btn = item.querySelector('button'); if (span && btn) { const text = span.textContent || ''; const onclick = btn.getAttribute('onclick') || ''; const urlMatch = onclick.match(/href='([^']+)'/); const sizeMatch = text.match(/\\(([\\.\\d]+\\s*[KMGT]?B)\\)/i); const formatMatch = text.match(/\\.(epub|mobi|pdf|azw3|txt)/i); files.push({ name: text.replace(/\\s*\\([^)]+\\)\\s*/g, '').trim(), format: formatMatch ? formatMatch[1].toLowerCase() : '', size: sizeMatch ? sizeMatch[1] : '', url: urlMatch ? urlMatch[1] : '' }); } }); return JSON.stringify({ debug: debug, files: files }); })();",
+          "description": "提取文件下载列表（增强调试）"
+        }
+      ]
+    }
+  },
+
+  "tasks": {
+    "downloadEbook": {
+      "id": "downloadEbook",
+      "name": "下载电子书",
+      "description": "完整的电子书下载流程",
+      "mode": "sequential",
+      "steps": [
+        {
+          "id": "step1_clickSearch",
+          "name": "点击全网查询",
+          "workflow": "clickSearchButton",
+          "inputMapping": {
+            "bookId": "${bookId}"
+          },
+          "outputMapping": {
+            "searchResult": "$.scriptResult"
+          },
+          "timeout": 35000
+        },
+        {
+          "id": "step2_waitSources",
+          "name": "等待下载源",
+          "workflow": "waitForDownloadSources",
+          "outputMapping": {
+            "downloadSources": "$.scriptResult"
+          },
+          "timeout": 15000
+        },
+        {
+          "id": "step3_selectSource",
+          "name": "选择下载源",
+          "workflow": "selectDownloadSource",
+          "inputMapping": {
+            "sourceUrl": "${selectedSourceUrl}"
+          },
+          "waitForUserInteraction": true,
+          "userInteractionPrompt": "请选择一个下载源",
+          "timeout": 60000
+        },
+        {
+          "id": "step4_extractFiles",
+          "name": "提取文件列表",
+          "workflow": "extractFileList",
+          "outputMapping": {
+            "fileList": "$.scriptResult"
+          },
+          "timeout": 15000
+        }
+      ],
+      "initialParams": {
+        "bookId": ""
+      },
+      "timeout": 180000
+    },
+
+    "getDownloadSources": {
+      "id": "getDownloadSources",
+      "name": "获取下载源列表",
+      "description": "获取可用的下载源",
+      "mode": "sequential",
+      "steps": [
+        {
+          "id": "step1_clickSearch",
+          "name": "点击全网查询",
+          "workflow": "clickSearchButton",
+          "inputMapping": {
+            "bookId": "${bookId}"
+          },
+          "timeout": 35000
+        },
+        {
+          "id": "step2_waitSources",
+          "name": "等待下载源",
+          "workflow": "waitForDownloadSources",
+          "outputMapping": {
+            "result": "$.scriptResult"
+          },
+          "timeout": 15000
+        }
+      ]
+    },
+
+    "getFileListFromSource": {
+      "id": "getFileListFromSource",
+      "name": "从下载源获取文件列表",
+      "description": "导航到下载源并提取文件列表",
+      "mode": "sequential",
+      "steps": [
+        {
+          "id": "step1_navigate",
+          "name": "导航到下载源",
+          "workflow": "selectDownloadSource",
+          "inputMapping": {
+            "sourceUrl": "${sourceUrl}"
+          },
+          "timeout": 35000
+        },
+        {
+          "id": "step2_extractFiles",
+          "name": "提取文件列表",
+          "workflow": "extractFileList",
+          "outputMapping": {
+            "result": "$.scriptResult"
+          },
+          "timeout": 15000
+        }
+      ]
+    },
+
+    "extractFileListOnly": {
+      "id": "extractFileListOnly",
+      "name": "仅提取文件列表",
+      "description": "在当前页面提取文件列表（不导航）",
+      "mode": "sequential",
+      "steps": [
+        {
+          "id": "step1_extractFiles",
+          "name": "提取文件列表",
+          "workflow": "extractFileList",
+          "outputMapping": {
+            "result": "$.scriptResult"
+          },
+          "timeout": 15000
         }
       ]
     }
