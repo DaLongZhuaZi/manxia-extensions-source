@@ -196,5 +196,41 @@
         "baseUrl": "https://tstrs.me"
       }
     ]
+  },
+  {
+    "name": "ManXia: Jinmantiantang",
+    "pkg": "com.manxia.extension.zh.jinmantiantang",
+    "type": "manga",
+    "lang": "zh",
+    "code": 15,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "禁漫天堂",
+        "lang": "zh",
+        "id": "1372475187360186908",
+        "baseUrl": "https://18comic.vip"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Bakamh",
+    "pkg": "com.manxia.extension.zh.bakamh",
+    "type": "manga",
+    "lang": "zh",
+    "code": 16,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "巴卡漫画",
+        "lang": "zh",
+        "id": "1472475187360186909",
+        "baseUrl": "https://bakamh.ru"
+      }
+    ]
   }
 ]

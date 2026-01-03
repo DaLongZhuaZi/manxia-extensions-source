@@ -1,0 +1,296 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.bakamh",
+    "name": "(用不了)巴卡漫画",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "zh-CN",
+    "baseUrl": "https://bakamh.ru",
+    "description": "巴卡漫画 - 基于Madara主题的中文漫画网站",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "free", "madara"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 500
+  },
+
+  "_TODO": [
+    "1. [日期解析] 原版使用 'yyyy 年 M 月 d 日' 格式解析日期"
+  ],
+
+  "_MIRRORS": [
+    "bakamh.ru (主站)",
+    "bakamh.com",
+    "baka3.me",
+    "baka1.my",
+    "baka2.de"
+  ],
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画（按浏览量排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/manga/page/{{page}}/?m_orderby=views",
+          "timeout": 15000,
+          "description": "导航到热门漫画页面"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "interactive",
+          "maxWaitTime": 60000,
+          "description": "处理Cloudflare验证（需要用户手动点击）"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.page-item-detail, .manga__item",
+          "timeout": 15000,
+          "description": "等待漫画卡片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.page-item-detail:not(:has(a[href*=\"bilibilicomics.com\"])), .manga__item'); const hasNextPage = document.querySelector('div.nav-previous a, nav.navigation-ajax, a.nextpostslink') !== null; return JSON.stringify({ hasNextPage: hasNextPage, totalItems: cards.length }); })();",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.page-item-detail:not(:has(a[href*=\"bilibilicomics.com\"])), .manga__item'); const results = []; cards.forEach((card) => { const titleEl = card.querySelector('div.post-title a, .post-title a'); const imgEl = card.querySelector('img'); if (titleEl) { const href = titleEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新更新",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/manga/page/{{page}}/?m_orderby=latest",
+          "timeout": 15000,
+          "description": "导航到最新更新页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.page-item-detail, .manga__item",
+          "timeout": 10000,
+          "description": "等待漫画卡片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.page-item-detail:not(:has(a[href*=\"bilibilicomics.com\"])), .manga__item'); const hasNextPage = document.querySelector('div.nav-previous a, nav.navigation-ajax, a.nextpostslink') !== null; return JSON.stringify({ hasNextPage: hasNextPage, totalItems: cards.length }); })();",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.page-item-detail:not(:has(a[href*=\"bilibilicomics.com\"])), .manga__item'); const results = []; cards.forEach((card) => { const titleEl = card.querySelector('div.post-title a, .post-title a'); const imgEl = card.querySelector('img'); if (titleEl) { const href = titleEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取最新更新漫画"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/page/{{page}}/?s={{query}}&post_type=wp-manga",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.c-tabs-item__content, div.page-item-detail",
+          "timeout": 10000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.c-tabs-item__content'); const results = []; cards.forEach((card) => { const titleEl = card.querySelector('.post-title a'); const imgEl = card.querySelector('.tab-thumb img, img'); if (titleEl) { const href = titleEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".post-title h1, h1",
+          "timeout": 10000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const title = document.querySelector('.post-title h1')?.textContent?.trim() || document.querySelector('h1')?.textContent?.trim() || ''; const cover = document.querySelector('.summary_image img')?.getAttribute('data-src') || document.querySelector('.summary_image img')?.getAttribute('src') || ''; const author = document.querySelector('.author-content a')?.textContent?.trim() || ''; const artist = document.querySelector('.artist-content a')?.textContent?.trim() || ''; const statusEl = document.querySelector('.post-content_item:has(.summary-heading:contains(\"状态\")) .summary-content, .post-content_item .summary-content'); let status = '未知'; if (statusEl) { const statusText = statusEl.textContent?.trim() || ''; if (statusText.includes('连载') || statusText.includes('進行中')) status = '连载中'; else if (statusText.includes('完结') || statusText.includes('完結')) status = '已完结'; } const description = document.querySelector('.summary__content p, .description-summary p')?.textContent?.trim() || ''; const genres = []; document.querySelectorAll('.genres-content a').forEach(el => { const g = el.textContent?.trim(); if (g) genres.push(g); }); return JSON.stringify({ title, cover, author, artist, status, description, genres: genres.join(', ') }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".post-title h1, h1",
+          "timeout": 10000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const title = document.querySelector('.post-title h1')?.textContent?.trim() || document.querySelector('h1')?.textContent?.trim() || ''; const cover = document.querySelector('.summary_image img')?.getAttribute('data-src') || document.querySelector('.summary_image img')?.getAttribute('src') || ''; const author = document.querySelector('.author-content a')?.textContent?.trim() || ''; const artist = document.querySelector('.artist-content a')?.textContent?.trim() || ''; const statusEl = document.querySelector('.post-content_item:has(.summary-heading:contains(\"状态\")) .summary-content, .post-content_item .summary-content'); let status = '未知'; if (statusEl) { const statusText = statusEl.textContent?.trim() || ''; if (statusText.includes('连载') || statusText.includes('進行中')) status = '连载中'; else if (statusText.includes('完结') || statusText.includes('完結')) status = '已完结'; } const description = document.querySelector('.summary__content p, .description-summary p')?.textContent?.trim() || ''; return JSON.stringify({ title, cover, author, artist, status, description }); })();",
+          "description": "提取漫画详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const mangaUrl = window.location.href.toLowerCase(); const chapterEls = document.querySelectorAll('.chapter-loveYou a, li:not(.menu-item) a[onclick], li:not(.menu-item) a'); chapterEls.forEach((el) => { let href = ''; if (el.hasAttribute('storage-chapter-url')) { href = el.getAttribute('storage-chapter-url'); } else { const attrs = el.attributes; for (let i = 0; i < attrs.length; i++) { const val = attrs[i].value.toLowerCase(); if (val.startsWith(mangaUrl) && val !== mangaUrl && !val.startsWith(mangaUrl + '#comment')) { href = el.getAttribute(attrs[i].name); break; } } } if (href) { const title = el.textContent?.trim() || ''; const dateEl = el.closest('li')?.querySelector('.chapter-release-date, span.chapter-release-date'); const date = dateEl?.textContent?.trim() || ''; chapters.push({ id: href, title: title, date: date }); } }); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表（支持storage-chapter-url属性）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".chapter-loveYou a, li a",
+          "timeout": 10000,
+          "description": "等待章节列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const mangaUrl = window.location.href.toLowerCase(); const chapterEls = document.querySelectorAll('.chapter-loveYou a, li:not(.menu-item) a[onclick], li:not(.menu-item) a'); chapterEls.forEach((el) => { let href = ''; if (el.hasAttribute('storage-chapter-url')) { href = el.getAttribute('storage-chapter-url'); } else { const attrs = el.attributes; for (let i = 0; i < attrs.length; i++) { const val = attrs[i].value.toLowerCase(); if (val.startsWith(mangaUrl) && val !== mangaUrl && !val.startsWith(mangaUrl + '#comment')) { href = el.getAttribute(attrs[i].name); break; } } } if (href) { const title = el.textContent?.trim() || ''; const dateEl = el.closest('li')?.querySelector('.chapter-release-date, span.chapter-release-date'); const date = dateEl?.textContent?.trim() || ''; chapters.push({ id: href, title: title, date: date }); } }); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{chapterUrl}}",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "cloudflareBypass",
+          "method": "wait",
+          "maxWaitTime": 30000,
+          "description": "处理Cloudflare验证"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".page-break img, .reading-content img",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const images = []; const imgEls = document.querySelectorAll('.page-break img, .reading-content img'); imgEls.forEach((img, index) => { let src = img.getAttribute('data-src') || img.getAttribute('src') || ''; src = src.trim(); if (src && !src.includes('loading') && !src.includes('placeholder')) { images.push({ index: index, url: src }); } }); return JSON.stringify(images); })();",
+          "description": "提取章节图片列表"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return '{{imageUrl}}'; })();",
+          "description": "返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-03",
+      "changes": [
+        "初始版本，移植自keiyoushi Bakamh扩展",
+        "支持热门、最新、搜索功能",
+        "支持漫画详情和章节列表",
+        "支持图片页面解析"
+      ]
+    }
+  ]
+}
