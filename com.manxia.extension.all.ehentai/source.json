@@ -1,0 +1,394 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.ehentai",
+    "name": "E-Hentai",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://e-hentai.org",
+    "description": "E-Hentai / ExHentai - 同人志和漫画画廊",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["doujinshi", "manga", "webview", "free", "login"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": true,
+    "advancedFilters": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 1000
+  },
+
+  "settings": {
+    "forceEhentai": {
+      "type": "boolean",
+      "title": "强制使用E-Hentai",
+      "description": "即使有ExHentai Cookie也使用E-Hentai",
+      "default": true
+    },
+    "enforceLanguage": {
+      "type": "boolean",
+      "title": "强制语言过滤",
+      "description": "只显示匹配当前语言的画廊",
+      "default": false
+    },
+    "preferredLanguage": {
+      "type": "select",
+      "title": "首选语言",
+      "description": "搜索时优先显示的语言",
+      "options": [
+        {"value": "all", "label": "全部语言"},
+        {"value": "chinese", "label": "中文"},
+        {"value": "japanese", "label": "日语"},
+        {"value": "english", "label": "英语"},
+        {"value": "korean", "label": "韩语"}
+      ],
+      "default": "chinese"
+    },
+    "ipbMemberId": {
+      "type": "string",
+      "title": "ipb_member_id",
+      "description": "ExHentai登录Cookie (可选)",
+      "default": ""
+    },
+    "ipbPassHash": {
+      "type": "string",
+      "title": "ipb_pass_hash",
+      "description": "ExHentai登录Cookie (可选)",
+      "default": ""
+    },
+    "igneous": {
+      "type": "string",
+      "title": "igneous",
+      "description": "ExHentai登录Cookie (可选)",
+      "default": ""
+    }
+  },
+
+  "filters": {
+    "genres": {
+      "type": "multiSelect",
+      "title": "类型",
+      "options": [
+        {"id": "doujinshi", "name": "Dōjinshi", "param": "f_doujinshi"},
+        {"id": "manga", "name": "Manga", "param": "f_manga"},
+        {"id": "artistcg", "name": "Artist CG", "param": "f_artistcg"},
+        {"id": "gamecg", "name": "Game CG", "param": "f_gamecg"},
+        {"id": "western", "name": "Western", "param": "f_western"},
+        {"id": "non-h", "name": "Non-H", "param": "f_non-h"},
+        {"id": "imageset", "name": "Image Set", "param": "f_imageset"},
+        {"id": "cosplay", "name": "Cosplay", "param": "f_cosplay"},
+        {"id": "asianporn", "name": "Asian Porn", "param": "f_asianporn"},
+        {"id": "misc", "name": "Misc", "param": "f_misc"}
+      ],
+      "default": ["doujinshi", "manga"]
+    },
+    "minRating": {
+      "type": "select",
+      "title": "最低评分",
+      "options": [
+        {"id": "0", "name": "任意"},
+        {"id": "2", "name": "2星以上"},
+        {"id": "3", "name": "3星以上"},
+        {"id": "4", "name": "4星以上"},
+        {"id": "5", "name": "5星"}
+      ],
+      "default": "0"
+    },
+    "minPages": {
+      "type": "text",
+      "title": "最少页数",
+      "default": ""
+    },
+    "maxPages": {
+      "type": "text",
+      "title": "最多页数",
+      "default": ""
+    }
+  },
+
+  "languageMappings": {
+    "chinese": ["10", "1034", "2058"],
+    "japanese": ["0", "1024", "2048"],
+    "english": ["1", "1025", "2049"],
+    "korean": ["70", "1094", "2118"],
+    "french": ["30", "1054", "2078"],
+    "german": ["40", "1064", "2088"],
+    "spanish": ["110", "1134", "2158"],
+    "russian": ["100", "1124", "2148"]
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门画廊（按评分排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/?f_search=language:chinese&f_srdd=5&f_sr=on",
+          "timeout": 30000,
+          "description": "导航到热门画廊页面（中文，按评分排序）"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "table.itg td.glname, table.itg .gl3c, table.itg .gl4c",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNextPage = document.querySelector('a#unext[href]')?.textContent?.trim() === '>'; const lastItem = document.querySelector('table.itg td.glname:last-child a, table.itg .gl3c:last-child a'); let lastId = ''; if (lastItem) { const href = lastItem.getAttribute('href') || ''; const match = href.match(/\\/g\\/(\\d+)\\//); if (match) lastId = match[1]; } return JSON.stringify({ hasNextPage: hasNextPage, lastId: lastId }); })();",
+          "saveAs": "pagination",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const rows = document.querySelectorAll('table.itg td.glname, table.itg .gl3c'); const results = []; rows.forEach((row) => { const linkEl = row.querySelector('a'); const titleEl = row.querySelector('.glink'); const thumbEl = row.closest('tr')?.querySelector('.glthumb img') || row.closest('.gl1t')?.querySelector('img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = thumbEl?.getAttribute('data-src') || thumbEl?.getAttribute('src') || ''; const idMatch = href.match(/\\/g\\/(\\d+)\\/([a-f0-9]+)/); const id = idMatch ? idMatch[1] + '/' + idMatch[2] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门画廊列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/",
+          "timeout": 30000,
+          "description": "导航到首页（最新更新）"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "table.itg td.glname, table.itg .gl3c",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNextPage = document.querySelector('a#unext[href]')?.textContent?.trim() === '>'; const lastItem = document.querySelector('table.itg td.glname:last-child a, table.itg .gl3c:last-child a'); let lastId = ''; if (lastItem) { const href = lastItem.getAttribute('href') || ''; const match = href.match(/\\/g\\/(\\d+)\\//); if (match) lastId = match[1]; } return JSON.stringify({ hasNextPage: hasNextPage, lastId: lastId }); })();",
+          "saveAs": "pagination",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const rows = document.querySelectorAll('table.itg td.glname, table.itg .gl3c'); const results = []; rows.forEach((row) => { const linkEl = row.querySelector('a'); const titleEl = row.querySelector('.glink'); const thumbEl = row.closest('tr')?.querySelector('.glthumb img') || row.closest('.gl1t')?.querySelector('img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = thumbEl?.getAttribute('data-src') || thumbEl?.getAttribute('src') || ''; const idMatch = href.match(/\\/g\\/(\\d+)\\/([a-f0-9]+)/); const id = idMatch ? idMatch[1] + '/' + idMatch[2] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取最新画廊列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/?f_search={{query}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "table.itg td.glname, table.itg .gl3c, .itg.gltc",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const rows = document.querySelectorAll('table.itg td.glname, table.itg .gl3c'); const results = []; rows.forEach((row) => { const linkEl = row.querySelector('a'); const titleEl = row.querySelector('.glink'); const thumbEl = row.closest('tr')?.querySelector('.glthumb img') || row.closest('.gl1t')?.querySelector('img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.trim() || ''; let cover = thumbEl?.getAttribute('data-src') || thumbEl?.getAttribute('src') || ''; const idMatch = href.match(/\\/g\\/(\\d+)\\/([a-f0-9]+)/); const id = idMatch ? idMatch[1] + '/' + idMatch[2] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取画廊详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到画廊详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gn, #gd1",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const title = document.querySelector('#gn')?.textContent?.trim() || ''; const altTitle = document.querySelector('#gj')?.textContent?.trim() || ''; const coverStyle = document.querySelector('#gd1 div')?.getAttribute('style') || ''; let cover = ''; const coverMatch = coverStyle.match(/url\\(([^)]+)\\)/); if (coverMatch) cover = coverMatch[1].replace(/\\x22|\\x27/g, ''); const genre = document.querySelector('#gdc div')?.textContent?.trim()?.toLowerCase() || ''; const uploader = document.querySelector('#gdn')?.textContent?.trim() || ''; let posted = ''; let language = ''; let fileSize = ''; let pageCount = 0; let favorites = 0; document.querySelectorAll('#gdd tr').forEach(tr => { const label = tr.querySelector('.gdt1')?.textContent?.trim()?.replace(':', '')?.toLowerCase() || ''; const value = tr.querySelector('.gdt2')?.textContent?.trim() || ''; if (label === 'posted') posted = value; else if (label === 'language') language = value.replace(/\\s*TR$/i, '').trim(); else if (label === 'file size') fileSize = value; else if (label === 'length') { const m = value.match(/(\\d+)/); if (m) pageCount = parseInt(m[1]); } else if (label === 'favorited') { const m = value.match(/(\\d+)/); if (m) favorites = parseInt(m[1]); } }); const rating = document.querySelector('#rating_label')?.textContent?.replace('Average:', '').trim() || ''; const tags = {}; document.querySelectorAll('#taglist tr').forEach(tr => { const ns = tr.querySelector('.tc')?.textContent?.replace(':', '').trim() || 'misc'; const tagEls = tr.querySelectorAll('div'); const tagList = []; tagEls.forEach(el => tagList.push(el.textContent?.trim() || '')); if (tagList.length > 0) tags[ns] = tagList; }); return JSON.stringify({ title, altTitle, cover, genre, uploader, posted, language, fileSize, pageCount, favorites, rating, tags }); })();",
+          "description": "提取画廊详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取画廊详情和章节（E-Hentai每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到画廊详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gn, #gd1",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const title = document.querySelector('#gn')?.textContent?.trim() || ''; const altTitle = document.querySelector('#gj')?.textContent?.trim() || ''; const coverStyle = document.querySelector('#gd1 div')?.getAttribute('style') || ''; let cover = ''; const coverMatch = coverStyle.match(/url\\(([^)]+)\\)/); if (coverMatch) cover = coverMatch[1].replace(/\\x22|\\x27/g, ''); const genre = document.querySelector('#gdc div')?.textContent?.trim()?.toLowerCase() || ''; const uploader = document.querySelector('#gdn')?.textContent?.trim() || ''; let posted = ''; let language = ''; let fileSize = ''; let pageCount = 0; document.querySelectorAll('#gdd tr').forEach(tr => { const label = tr.querySelector('.gdt1')?.textContent?.trim()?.replace(':', '')?.toLowerCase() || ''; const value = tr.querySelector('.gdt2')?.textContent?.trim() || ''; if (label === 'posted') posted = value; else if (label === 'language') language = value.replace(/\\s*TR$/i, '').trim(); else if (label === 'file size') fileSize = value; else if (label === 'length') { const m = value.match(/(\\d+)/); if (m) pageCount = parseInt(m[1]); } }); const rating = document.querySelector('#rating_label')?.textContent?.replace('Average:', '').trim() || ''; return JSON.stringify({ title, altTitle, cover, genre, uploader, posted, language, fileSize, pageCount, rating }); })();",
+          "saveAs": "detail",
+          "description": "提取画廊详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const url = window.location.href; const chapters = [{ id: url, title: 'Chapter', url: url, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节（E-Hentai每个画廊只有一个章节）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表（E-Hentai每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const url = '{{mangaUrl}}'; const chapters = [{ id: url, title: 'Chapter', url: url, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取画廊所有图片页面（递归分页获取）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{chapterUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到画廊页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gdt a, .gdtm a, .gdtl a",
+          "timeout": 15000,
+          "description": "等待缩略图加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const allPages = []; const thumbs = document.querySelectorAll('#gdt a, .gdtm a, .gdtl a'); thumbs.forEach((a, i) => { const href = a.getAttribute('href') || ''; if (href && href.includes('/s/')) { allPages.push({ index: i, pageUrl: href }); } }); const nextPageLink = document.querySelector('a[onclick=\"return false\"]:last-child'); let nextUrl = null; if (nextPageLink && nextPageLink.textContent?.trim() === '>') { nextUrl = nextPageLink.getAttribute('href'); } return JSON.stringify({ pages: allPages, nextUrl: nextUrl, currentCount: allPages.length }); })();",
+          "saveAs": "pageData",
+          "description": "提取当前页的图片页面链接"
+        },
+        {
+          "type": "loop",
+          "condition": "{{pageData.nextUrl}}",
+          "maxIterations": 50,
+          "actions": [
+            {
+              "type": "navigate",
+              "url": "{{pageData.nextUrl}}",
+              "timeout": 30000
+            },
+            {
+              "type": "wait",
+              "condition": "element",
+              "selector": "#gdt a",
+              "timeout": 10000
+            },
+            {
+              "type": "script",
+              "code": "(() => { const existingPages = JSON.parse('{{pageData.pages}}' || '[]'); const startIndex = existingPages.length; const thumbs = document.querySelectorAll('#gdt a, .gdtm a, .gdtl a'); const newPages = []; thumbs.forEach((a, i) => { const href = a.getAttribute('href') || ''; if (href && href.includes('/s/')) { newPages.push({ index: startIndex + i, pageUrl: href }); } }); const allPages = existingPages.concat(newPages); const nextPageLink = document.querySelector('a[onclick=\"return false\"]:last-child'); let nextUrl = null; if (nextPageLink && nextPageLink.textContent?.trim() === '>') { nextUrl = nextPageLink.getAttribute('href'); } return JSON.stringify({ pages: allPages, nextUrl: nextUrl, currentCount: allPages.length }); })();",
+              "saveAs": "pageData"
+            }
+          ],
+          "description": "递归获取所有分页的图片"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = JSON.parse('{{pageData.pages}}' || '[]'); return JSON.stringify(pages); })();",
+          "description": "返回所有图片页面"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取单张图片的实际URL（支持备用URL）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{pageUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到图片页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#img",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const imgEl = document.querySelector('#img'); const imgUrl = imgEl?.getAttribute('src') || ''; const loadfailEl = document.querySelector('#loadfail'); let bakUrl = null; if (loadfailEl) { const onclick = loadfailEl.getAttribute('onclick') || ''; const nlMatch = onclick.match(/nl\\('([^']+)'\\)/); if (nlMatch) { const nlValue = nlMatch[1]; const currentUrl = new URL(window.location.href); currentUrl.searchParams.set('nl', nlValue); bakUrl = currentUrl.toString(); } } return JSON.stringify({ imageUrl: imgUrl, backupUrl: bakUrl }); })();",
+          "description": "提取图片URL和备用URL"
+        }
+      ]
+    }
+  },
+
+  "cookieConfig": {
+    "domain": ".e-hentai.org",
+    "exhentaiDomain": ".exhentai.org",
+    "requiredCookies": ["ipb_member_id", "ipb_pass_hash"],
+    "optionalCookies": ["igneous"],
+    "defaultCookies": {
+      "nw": "1"
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-04",
+      "changes": [
+        "初始版本，移植自keiyoushi E-Hentai扩展",
+        "支持热门、最新、搜索功能",
+        "支持类型过滤（Dōjinshi, Manga, Artist CG等）",
+        "支持语言过滤",
+        "支持评分和页数过滤",
+        "支持ExHentai登录Cookie",
+        "支持图片分页递归获取",
+        "支持备用图片URL处理"
+      ]
+    }
+  ]
+}

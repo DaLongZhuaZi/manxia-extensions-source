@@ -232,5 +232,41 @@
         "baseUrl": "https://bakamh.ru"
       }
     ]
+  },
+  {
+    "name": "ManXia: E-Hentai",
+    "pkg": "com.manxia.extension.all.ehentai",
+    "type": "manga",
+    "lang": "all",
+    "code": 17,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "E-Hentai",
+        "lang": "all",
+        "id": "1572475187360186910",
+        "baseUrl": "https://e-hentai.org"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Photos18",
+    "pkg": "com.manxia.extension.all.photos18",
+    "type": "manga",
+    "lang": "all",
+    "code": 18,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "(AVIF暂不支持)Photos18",
+        "lang": "all",
+        "id": "1672475187360186911",
+        "baseUrl": "https://www.photos18.com"
+      }
+    ]
   }
 ]

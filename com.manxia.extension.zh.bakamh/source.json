@@ -1,7 +1,7 @@
 {
   "metadata": {
     "id": "com.manxia.extension.zh.bakamh",
-    "name": "(用不了)巴卡漫画",
+    "name": "巴卡漫画",
     "type": "manga",
     "version": "1.0.0",
     "language": "zh-CN",
@@ -119,7 +119,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/page/{{page}}/?s={{query}}&post_type=wp-manga",
+          "url": "{{baseUrl}}/?s={{query}}&post_type=wp-manga&op=&author=&artist=&release=&adult=",
           "timeout": 15000,
           "description": "导航到搜索结果页"
         },

@@ -1,0 +1,226 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.photos18",
+    "name": "(AVIF暂不支持)Photos18",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://www.photos18.com",
+    "description": "Photos18 - 图片画廊网站",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["gallery", "photos", "webview", "free"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.photos18.com"
+    }
+  },
+
+  "settings": {
+    "useTraditionalChinese": {
+      "type": "boolean",
+      "title": "使用繁体中文",
+      "description": "开启后使用繁体中文界面，关闭则使用简体中文",
+      "default": false
+    }
+  },
+
+  "filters": {
+    "sort": {
+      "type": "select",
+      "title": "排序方式",
+      "options": [
+        {"id": "views", "name": "趋势", "param": "views"},
+        {"id": "created", "name": "最新", "param": "created"},
+        {"id": "hits", "name": "热门", "param": "hits"},
+        {"id": "score", "name": "推荐", "param": "score"},
+        {"id": "likes", "name": "最佳", "param": "likes"}
+      ],
+      "default": "views"
+    }
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门画廊（按浏览量排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/zh-hans/sort/views?page={{page}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到热门页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#videos",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "description": "提取画廊列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/zh-hans?page={{page}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到最新页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#videos",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "description": "提取画廊列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/zh-hans?q={{query}}&page={{page}}&sort=views",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#videos",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取画廊详情（Photos18的详情在列表页已获取）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const url = '{{mangaUrl}}'; const urlParts = url.split('/'); const title = decodeURIComponent(urlParts[urlParts.length - 1] || ''); return JSON.stringify({ title: title, status: 'completed' }); })();",
+          "description": "返回基本详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取画廊详情和章节（Photos18每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const url = '{{mangaUrl}}'; return JSON.stringify({ title: '', status: 'completed' }); })();",
+          "saveAs": "detail",
+          "description": "返回基本详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const url = '{{mangaUrl}}'; const chapters = [{ id: url, title: 'Gallery', url: url, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表（Photos18每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const url = '{{mangaUrl}}'; const chapters = [{ id: url, title: 'Gallery', url: url, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取画廊所有图片",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{chapterUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到画廊页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#content img",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const images = document.querySelectorAll('#content img'); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; if (src) { pages.push({ index: index, imageUrl: src }); } }); return JSON.stringify(pages); })();",
+          "description": "提取所有图片URL"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取单张图片URL（Photos18图片URL在getPageList中已获取）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{pageUrl}}' }); })();",
+          "description": "返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-04",
+      "changes": [
+        "初始版本，移植自keiyoushi Photos18扩展",
+        "支持热门、最新、搜索功能",
+        "支持排序过滤（趋势、最新、热门、推荐、最佳）",
+        "支持繁体/简体中文切换"
+      ]
+    }
+  ]
+}
