@@ -52,6 +52,24 @@
     "outputQuality": 90
   },
 
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入漫画名称或标签",
+        "description": "搜索漫画",
+        "isDefault": true
+      },
+      {
+        "id": "searchById",
+        "label": "作品ID",
+        "placeholder": "输入作品ID：1234567 或 jm1234567",
+        "description": "直接访问作品详情页"
+      }
+    ]
+  },
+
   "workflows": {
     "popular": {
       "description": "获取热门漫画（按浏览量排序）",
@@ -201,6 +219,17 @@
           "type": "script",
           "code": "(() => { return '{{imageUrl}}'; })();",
           "description": "返回图片URL"
+        }
+      ]
+    },
+
+    "directSearch": {
+      "description": "直达搜索 - 提取作品ID并返回",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(function() { const query = '{{query}}'; let albumId = query.trim(); if (albumId.toLowerCase().startsWith('jm')) { albumId = albumId.substring(2); } console.log('[JM DirectSearch] 提取albumId: ' + albumId); const result = { type: 'detail', manga: { id: albumId, title: '', url: '{{baseUrl}}/album/' + albumId + '/', cover: '' }, error: null }; return JSON.stringify(result); })();",
+          "description": "提取作品ID并返回，后续由getMangaDetail工作流处理"
         }
       ]
     }

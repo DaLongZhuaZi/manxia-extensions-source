@@ -268,5 +268,23 @@
         "baseUrl": "https://www.photos18.com"
       }
     ]
+  },
+  {
+    "name": "再漫画",
+    "pkg": "com.manxia.extension.zh.zaimanhua",
+    "type": "manga",
+    "lang": "zh",
+    "code": 19,
+    "version": "3.1.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "再漫画",
+        "lang": "zh",
+        "id": "1672475187360186912",
+        "baseUrl": "https://manhua.zaimanhua.com"
+      }
+    ]
   }
 ]
