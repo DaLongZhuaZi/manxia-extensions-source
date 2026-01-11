@@ -1,7 +1,7 @@
 {
   "metadata": {
     "id": "com.manxia.extension.all.photos18",
-    "name": "(AVIF暂不支持)Photos18",
+    "name": "Photos18",
     "type": "manga",
     "version": "1.0.0",
     "language": "all",
@@ -77,7 +77,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) {  if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
           "description": "提取画廊列表"
         }
       ]
@@ -103,7 +103,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) {  if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
           "description": "提取画廊列表"
         }
       ]
@@ -129,36 +129,33 @@
         },
         {
           "type": "script",
-          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) { cover = cover.replace('.avif', '.webp'); if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) {  if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
           "description": "提取搜索结果"
         }
       ]
     },
 
     "getMangaDetail": {
-      "description": "获取画廊详情（Photos18的详情在列表页已获取）",
+      "description": "获取画廊详情（导航到画廊页面获取标题）",
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const url = '{{mangaUrl}}'; const urlParts = url.split('/'); const title = decodeURIComponent(urlParts[urlParts.length - 1] || ''); return JSON.stringify({ title: title, status: 'completed' }); })();",
-          "description": "返回基本详情"
-        }
-      ]
-    },
-
-    "getMangaDetailWithChapters": {
-      "description": "获取画廊详情和章节（Photos18每个画廊只有一个章节）",
-      "actions": [
+          "type": "navigate",
+          "url": "https://www.photos18.com/v/{{mangaId}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到画廊页面"
+        },
         {
-          "type": "script",
-          "code": "(() => { const url = '{{mangaUrl}}'; return JSON.stringify({ title: '', status: 'completed' }); })();",
-          "saveAs": "detail",
-          "description": "返回基本详情"
+          "type": "wait",
+          "condition": "element",
+          "selector": "h1",
+          "timeout": 5000,
+          "description": "等待标题加载"
         },
         {
           "type": "script",
-          "code": "(() => { const url = '{{mangaUrl}}'; const chapters = [{ id: url, title: 'Gallery', url: url, date: '' }]; return JSON.stringify(chapters); })();",
-          "description": "返回单章节"
+          "code": "(() => { const h1 = document.querySelector('h1'); const title = h1 ? h1.textContent.trim() : ''; const cover = document.querySelector('#content img')?.getAttribute('src') || ''; return JSON.stringify({ title: title, cover: cover, status: 'completed' }); })();",
+          "description": "提取画廊详情"
         }
       ]
     },
@@ -168,8 +165,8 @@
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const url = '{{mangaUrl}}'; const chapters = [{ id: url, title: 'Gallery', url: url, date: '' }]; return JSON.stringify(chapters); })();",
-          "description": "返回单章节"
+          "code": "(() => { const mangaId = '{{mangaId}}'; const chapters = [{ id: mangaId, title: 'Gallery', url: 'https://www.photos18.com' + mangaId, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节（使用mangaId作为chapterId）"
         }
       ]
     },
@@ -179,7 +176,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{chapterUrl}}",
+          "url": "https://www.photos18.com/v/{{chapterId}}",
           "timeout": 30000,
           "waitAfterLoad": 3000,
           "description": "导航到画廊页面"
@@ -188,7 +185,7 @@
           "type": "wait",
           "condition": "element",
           "selector": "#content img",
-          "timeout": 15000,
+          "timeout": 5000,
           "description": "等待图片加载"
         },
         {
