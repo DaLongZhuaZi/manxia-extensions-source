@@ -66,6 +66,12 @@
         "label": "作品ID",
         "placeholder": "输入作品ID：1234567 或 jm1234567",
         "description": "直接访问作品详情页"
+      },
+      {
+        "id": "searchByTag",
+        "label": "标签搜索",
+        "placeholder": "输入标签名称，如：全彩、同人、NTR",
+        "description": "按标签搜索漫画"
       }
     ]
   },
@@ -230,6 +236,30 @@
           "type": "script",
           "code": "(function() { const query = '{{query}}'; let albumId = query.trim(); if (albumId.toLowerCase().startsWith('jm')) { albumId = albumId.substring(2); } console.log('[JM DirectSearch] 提取albumId: ' + albumId); const result = { type: 'detail', manga: { id: albumId, title: '', url: '{{baseUrl}}/album/' + albumId + '/', cover: '' }, error: null }; return JSON.stringify(result); })();",
           "description": "提取作品ID并返回，后续由getMangaDetail工作流处理"
+        }
+      ]
+    },
+
+    "searchByTag": {
+      "description": "按标签/分类搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/search/photos?search_query={{tagId}}&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到标签搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待5秒让页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.list-col > div.p-b-15:not([data-group])'); items.forEach((item) => { const thumbDiv = item.querySelector('.thumb-overlay'); const linkEl = thumbDiv?.querySelector('a') || item.querySelector('a[href*=\"/album/\"]'); const imgEl = thumbDiv?.querySelector('img') || item.querySelector('img'); const titleEl = item.querySelector('.video-title'); const authorEl = item.querySelector('.title-truncate.hidden-xs'); const tagsEl = item.querySelector('.title-truncate.tags'); if (linkEl) { const href = linkEl.getAttribute('href') || ''; const match = href.match(/\\/album\\/(\\d+)/); const albumId = match ? match[1] : href; const title = titleEl?.textContent?.trim() || ''; const cover = imgEl?.getAttribute('data-original') || imgEl?.getAttribute('src') || ''; const author = authorEl ? Array.from(authorEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; const genre = tagsEl ? Array.from(tagsEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; mangas.push({ id: albumId, title: title, cover: cover, author: author, genre: genre }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取标签搜索结果"
         }
       ]
     }

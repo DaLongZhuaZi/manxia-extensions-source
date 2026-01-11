@@ -42,6 +42,12 @@
         "placeholder": "输入Pixiv用户ID，如 67890",
         "urlTemplate": "https://www.pixiv.net/users/{{query}}/manga",
         "directType": "webview"
+      },
+      {
+        "id": "searchByTag",
+        "label": "标签搜索",
+        "placeholder": "输入标签名称，如：漫画、オリジナル",
+        "description": "按标签搜索漫画"
       }
     ]
   },
@@ -390,6 +396,30 @@
           "type": "script",
           "code": "(function() { const searchType = '{{searchType}}'; const query = '{{query}}'; console.log('[Pixiv DirectSearch] type=' + searchType + ', query=' + query); const result = { type: 'redirect', manga: null, mangas: [], redirectUrl: '', error: null }; if (searchType === 'searchById') { result.redirectUrl = 'https://www.pixiv.net/artworks/' + query; console.log('[Pixiv DirectSearch] 返回重定向URL: ' + result.redirectUrl); } else if (searchType === 'searchByAuthor') { result.redirectUrl = 'https://www.pixiv.net/users/' + query; console.log('[Pixiv DirectSearch] 返回重定向URL: ' + result.redirectUrl); } return JSON.stringify(result); })();",
           "description": "提取ID并返回重定向URL，后续由页面处理跳转"
+        }
+      ]
+    },
+
+    "searchByTag": {
+      "description": "按标签搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.pixiv.net/tags/{{tagId}}/manga?lang=zh&p={{page}}",
+          "timeout": 15000,
+          "description": "导航到标签搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('ul li a[href*=\"/artworks/\"]'); const seen = new Set(); items.forEach(item => { const href = item.getAttribute('href') || ''; const match = href.match(/\\/artworks\\/(\\d+)/); if (match && !seen.has(match[1])) { seen.add(match[1]); const img = item.querySelector('img'); const title = img?.getAttribute('alt') || ''; const cover = img?.getAttribute('src') || ''; mangas.push({ id: match[1], title: title, cover: cover, author: '' }); } }); console.log('[Pixiv Tag] 找到作品数:', mangas.length); return JSON.stringify(mangas); })();",
+          "description": "提取标签搜索结果"
         }
       ]
     }

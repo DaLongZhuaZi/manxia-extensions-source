@@ -114,6 +114,12 @@
         "label": "作品ID",
         "placeholder": "输入作品ID（如：84784）",
         "description": "直接访问作品详情页"
+      },
+      {
+        "id": "searchByTag",
+        "label": "分类搜索",
+        "placeholder": "输入分类ID（如：1、2、3）",
+        "description": "按分类筛选漫画"
       }
     ]
   },
@@ -345,6 +351,41 @@
           "type": "script",
           "code": "(function() { const query = '{{query}}'; const mangaId = query.trim(); console.log('[Zaimanhua DirectSearch] 提取mangaId: ' + mangaId); const result = { type: 'detail', manga: { id: mangaId, title: '', url: '{{baseUrl}}/details/' + mangaId, cover: '' }, error: null }; return JSON.stringify(result); })();",
           "description": "提取作品ID并返回，后续由getMangaDetail工作流处理"
+        }
+      ]
+    },
+
+    "searchByTag": {
+      "description": "按分类/标签筛选漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "api",
+          "method": "GET",
+          "url": "https://v4api.zaimanhua.com/app/v1/comic/filter/list",
+          "params": {
+            "tag_id": "{{tagId}}",
+            "page": "{{page}}",
+            "size": "20"
+          },
+          "headers": {
+            "Authorization": "Bearer {{token}}"
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.list",
+            "fields": {
+              "id": "comic_id",
+              "title": "name",
+              "cover": "cover",
+              "author": "author"
+            }
+          },
+          "pagination": {
+            "enabled": true,
+            "type": "page",
+            "pageParam": "page"
+          }
         }
       ]
     }

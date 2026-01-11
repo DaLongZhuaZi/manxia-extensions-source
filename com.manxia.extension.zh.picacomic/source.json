@@ -87,6 +87,12 @@
         "label": "作品ID",
         "placeholder": "输入作品ID，如：5821859c5f6b9a4f93dbf6eb",
         "description": "直接访问作品详情页"
+      },
+      {
+        "id": "searchByTag",
+        "label": "分类搜索",
+        "placeholder": "输入分类名称，如：全彩、同人、百合花園",
+        "description": "按分类筛选漫画"
       }
     ]
   },
@@ -586,6 +592,57 @@
           "type": "script",
           "code": "(function() { const query = '{{query}}'; const comicId = query.trim(); console.log('[Pica DirectSearch] 提取comicId: ' + comicId); const result = { type: 'detail', manga: { id: comicId, title: '', url: '', cover: '' }, error: null }; return JSON.stringify(result); })();",
           "description": "提取作品ID并返回，后续由getMangaDetail工作流处理"
+        }
+      ]
+    },
+
+    "searchByTag": {
+      "description": "按分类/标签搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "api",
+          "method": "GET",
+          "url": "https://picaapi.picacomic.com/comics",
+          "params": {
+            "page": "{{page}}",
+            "c": "{{tagId}}",
+            "s": "dd"
+          },
+          "headers": {
+            "api-key": "C69BAF41DA5ABD1FFEDC6D2FEA56B",
+            "app-channel": "{{appChannel}}",
+            "app-version": "2.2.1.3.3.4",
+            "app-uuid": "defaultUuid",
+            "app-platform": "android",
+            "app-build-version": "44",
+            "accept": "application/vnd.picacomic.com.v1+json",
+            "Content-Type": "application/json; charset=UTF-8",
+            "User-Agent": "okhttp/3.8.1",
+            "authorization": "{{token}}",
+            "image-quality": "{{imageQuality}}",
+            "time": "{{timestamp}}",
+            "nonce": "{{nonce}}",
+            "signature": "{{computeSignature}}"
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.comics.docs",
+            "fields": {
+              "id": "_id",
+              "title": "title",
+              "author": "author",
+              "thumb": "thumb",
+              "categories": "categories",
+              "tags": "tags"
+            }
+          },
+          "pagination": {
+            "enabled": true,
+            "type": "page",
+            "pageParam": "page",
+            "hasMorePath": "data.comics.page < data.comics.pages"
+          }
         }
       ]
     }
