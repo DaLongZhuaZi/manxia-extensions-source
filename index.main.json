@@ -286,5 +286,23 @@
         "baseUrl": "https://manhua.zaimanhua.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: Z-Library",
+    "pkg": "com.manxia.extension.all.zlibrary",
+    "type": "ebook",
+    "lang": "all",
+    "code": 20,
+    "version": "1.0.0",
+    "nsfw": 0,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Z-Library",
+        "lang": "all",
+        "id": "1772475187360186913",
+        "baseUrl": "https://zh.chris101.ru"
+      }
+    ]
   }
 ]
