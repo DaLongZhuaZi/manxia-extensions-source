@@ -304,5 +304,23 @@
         "baseUrl": "https://zh.chris101.ru"
       }
     ]
+  },
+  {
+    "name": "ManXia: NHentai",
+    "pkg": "com.manxia.extension.all.nhentai",
+    "type": "manga",
+    "lang": "all",
+    "code": 21,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "NHentai",
+        "lang": "all",
+        "id": "7309872737163460316",
+        "baseUrl": "https://nhentai.net"
+      }
+    ]
   }
 ]

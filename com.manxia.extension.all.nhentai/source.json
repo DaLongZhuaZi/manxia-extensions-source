@@ -1,0 +1,334 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.nhentai",
+    "name": "NHentai",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://nhentai.net",
+    "description": "NHentai - 同人志和漫画画廊",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["doujinshi", "manga", "free"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 250
+  },
+
+  "settings": {
+    "displayTitle": {
+      "type": "select",
+      "title": "标题显示方式",
+      "description": "选择显示完整标题或简短标题",
+      "options": [
+        {"value": "full", "label": "完整标题"},
+        {"value": "short", "label": "简短标题"}
+      ],
+      "default": "full"
+    }
+  },
+
+  "filters": {
+    "tags": {
+      "type": "text",
+      "title": "标签",
+      "description": "多个标签用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "categories": {
+      "type": "text",
+      "title": "分类",
+      "description": "多个分类用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "groups": {
+      "type": "text",
+      "title": "社团",
+      "description": "多个社团用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "artists": {
+      "type": "text",
+      "title": "作者",
+      "description": "多个作者用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "parodies": {
+      "type": "text",
+      "title": "原作",
+      "description": "多个原作用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "characters": {
+      "type": "text",
+      "title": "角色",
+      "description": "多个角色用逗号分隔，前缀-表示排除",
+      "default": ""
+    },
+    "uploaded": {
+      "type": "text",
+      "title": "上传时间",
+      "description": "例如: >20d (h=小时, d=天, w=周, m=月, y=年)",
+      "default": ""
+    },
+    "pages": {
+      "type": "text",
+      "title": "页数",
+      "description": "例如: >20 或 <100",
+      "default": ""
+    },
+    "sort": {
+      "type": "select",
+      "title": "排序方式",
+      "options": [
+        {"id": "popular", "name": "热门 - 全部时间"},
+        {"id": "popular-month", "name": "热门 - 本月"},
+        {"id": "popular-week", "name": "热门 - 本周"},
+        {"id": "popular-today", "name": "热门 - 今日"},
+        {"id": "date", "name": "最新"}
+      ],
+      "default": "popular"
+    },
+    "offsetPage": {
+      "type": "text",
+      "title": "页面偏移",
+      "description": "跳过指定页数",
+      "default": ""
+    }
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门画廊（按热度排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/search/?q=\"\"&sort=popular&page={{page}}",
+          "timeout": 30000,
+          "description": "导航到热门画廊页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#content .container:not(.index-popular) .gallery",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNextPage = !!document.querySelector('#content > section.pagination > a.next'); return JSON.stringify({ hasNextPage: hasNextPage }); })();",
+          "saveAs": "pagination",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const galleries = document.querySelectorAll('#content .container:not(.index-popular) .gallery'); const results = []; galleries.forEach((gallery) => { const linkEl = gallery.querySelector('a'); const titleEl = gallery.querySelector('a > div'); const imgEl = gallery.querySelector('.cover img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.replace(/\"/g, '').trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; if (cover && cover.startsWith('//')) { cover = 'https:' + cover; } const idMatch = href.match(/\\/g\\/(\\d+)\\//); const id = idMatch ? idMatch[1] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门画廊列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/?page={{page}}",
+          "timeout": 30000,
+          "description": "导航到首页（最新更新）"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#content .container:not(.index-popular) .gallery",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNextPage = !!document.querySelector('#content > section.pagination > a.next'); return JSON.stringify({ hasNextPage: hasNextPage }); })();",
+          "saveAs": "pagination",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const galleries = document.querySelectorAll('#content .container:not(.index-popular) .gallery'); const results = []; galleries.forEach((gallery) => { const linkEl = gallery.querySelector('a'); const titleEl = gallery.querySelector('a > div'); const imgEl = gallery.querySelector('.cover img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.replace(/\"/g, '').trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; if (cover && cover.startsWith('//')) { cover = 'https:' + cover; } const idMatch = href.match(/\\/g\\/(\\d+)\\//); const id = idMatch ? idMatch[1] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取最新画廊列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索画廊",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const query = '{{query}}'; const filters = JSON.parse('{{filters}}' || '{}'); let searchQuery = query; const buildFilterQuery = (filterName, filterValue) => { if (!filterValue) return ''; return filterValue.split(',').map(v => v.trim()).filter(v => v).map(tag => { const isExclude = tag.startsWith('-'); const cleanTag = isExclude ? tag.substring(1) : tag; const needQuotes = !['pages', 'uploaded'].includes(filterName.toLowerCase()); let result = isExclude ? '-' : ''; result += filterName + ':'; if (needQuotes) result += '\"'; result += cleanTag; if (needQuotes) result += '\"'; return result; }).join(' '); }; const filterParts = []; if (filters.tags) filterParts.push(buildFilterQuery('tags', filters.tags)); if (filters.categories) filterParts.push(buildFilterQuery('categories', filters.categories)); if (filters.groups) filterParts.push(buildFilterQuery('groups', filters.groups)); if (filters.artists) filterParts.push(buildFilterQuery('artists', filters.artists)); if (filters.parodies) filterParts.push(buildFilterQuery('parodies', filters.parodies)); if (filters.characters) filterParts.push(buildFilterQuery('characters', filters.characters)); if (filters.uploaded) filterParts.push(buildFilterQuery('uploaded', filters.uploaded)); if (filters.pages) filterParts.push(buildFilterQuery('pages', filters.pages)); if (filterParts.length > 0) { searchQuery = searchQuery + ' ' + filterParts.join(' '); } searchQuery = searchQuery.trim() || '\"\"'; const sort = filters.sort || 'popular'; const offsetPage = parseInt(filters.offsetPage || '0') || 0; const actualPage = {{page}} + offsetPage; const url = '{{baseUrl}}/search/?q=' + encodeURIComponent(searchQuery) + '&sort=' + sort + '&page=' + actualPage; return JSON.stringify({ url: url }); })();",
+          "saveAs": "searchUrl",
+          "description": "构建搜索URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{searchUrl.url}}",
+          "timeout": 30000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#content .container:not(.index-popular) .gallery",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const hasNextPage = !!document.querySelector('#content > section.pagination > a.next'); return JSON.stringify({ hasNextPage: hasNextPage }); })();",
+          "saveAs": "pagination",
+          "description": "检查分页信息"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const galleries = document.querySelectorAll('#content .container:not(.index-popular) .gallery'); const results = []; galleries.forEach((gallery) => { const linkEl = gallery.querySelector('a'); const titleEl = gallery.querySelector('a > div'); const imgEl = gallery.querySelector('.cover img'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const title = titleEl.textContent?.replace(/\"/g, '').trim() || ''; let cover = imgEl?.getAttribute('data-src') || imgEl?.getAttribute('src') || ''; if (cover && cover.startsWith('//')) { cover = 'https:' + cover; } const idMatch = href.match(/\\/g\\/(\\d+)\\//); const id = idMatch ? idMatch[1] : href; results.push({ id: id, title: title, cover: cover, url: href }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取画廊详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/g/{{mangaUrl}}/",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到画廊详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "script:not([src])",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const scripts = document.querySelectorAll('script:not([src])'); let hentaiData = null; for (const script of scripts) { const content = script.textContent || ''; if (content.includes('JSON.parse') && !content.includes('media_server') && !content.includes('avatar_url')) { const match = content.match(/JSON\\.parse\\(\\s*\"(.*)\"\\s*\\)/); if (match) { try { const jsonStr = match[1].replace(/\\\\u([0-9A-Fa-f]{4})/g, (m, p1) => String.fromCharCode(parseInt(p1, 16))); hentaiData = JSON.parse(jsonStr); break; } catch (e) {} } } } if (!hentaiData) return JSON.stringify({ error: 'Failed to parse hentai data' }); const cdnRegex = /thumb_cdn_urls:\\s*(\\[.*?\\])/; const cdnMatch = document.body.innerHTML.match(cdnRegex); let cdnUrls = ['t.nhentai.net', 't2.nhentai.net', 't3.nhentai.net']; if (cdnMatch) { try { cdnUrls = JSON.parse(cdnMatch[1]); } catch (e) {} } const getImageExt = (t) => { if (t === 'w') return 'webp'; if (t === 'p') return 'png'; if (t === 'g') return 'gif'; return 'jpg'; }; const firstPageExt = hentaiData.images?.pages?.[0]?.t ? getImageExt(hentaiData.images.pages[0].t) : 'jpg'; const cdnUrl = cdnUrls[Math.floor(Math.random() * cdnUrls.length)]; const cover = 'https://' + cdnUrl + '/galleries/' + hentaiData.media_id + '/1t.' + firstPageExt; const title = hentaiData.title?.english || hentaiData.title?.japanese || hentaiData.title?.pretty || ''; const altTitle = hentaiData.title?.japanese || ''; const artists = hentaiData.tags?.filter(t => t.type === 'artist').map(t => t.name).join(', ') || ''; const groups = hentaiData.tags?.filter(t => t.type === 'group').map(t => t.name).join(', ') || ''; const tags = hentaiData.tags?.filter(t => t.type === 'tag').map(t => t.name).join(', ') || ''; const categories = hentaiData.tags?.filter(t => t.type === 'category').map(t => t.name).join(', ') || ''; const parodies = hentaiData.tags?.filter(t => t.type === 'parody').map(t => t.name).join(', ') || ''; const characters = hentaiData.tags?.filter(t => t.type === 'character').map(t => t.name).join(', ') || ''; const pageCount = hentaiData.images?.pages?.length || 0; const favorites = hentaiData.num_favorites || 0; const uploadDate = hentaiData.upload_date || 0; let description = 'Full English and Japanese titles:\\n'; description += (hentaiData.title?.english || hentaiData.title?.japanese || hentaiData.title?.pretty || '') + '\\n'; description += (hentaiData.title?.japanese || '') + '\\n\\n'; description += 'Pages: ' + pageCount + '\\n'; description += 'Favorited by: ' + favorites + '\\n'; if (categories) description += 'Categories: ' + categories + '\\n'; if (parodies) description += 'Parodies: ' + parodies + '\\n'; if (characters) description += 'Characters: ' + characters + '\\n'; return JSON.stringify({ title: title, altTitle: altTitle, cover: cover, artist: artists, author: groups || artists, genre: tags, description: description, status: 'completed', pageCount: pageCount, uploadDate: uploadDate, hentaiData: hentaiData }); })();",
+          "description": "提取画廊详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取画廊详情和章节（NHentai每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/g/{{mangaUrl}}/",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到画廊详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "script:not([src])",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const scripts = document.querySelectorAll('script:not([src])'); let hentaiData = null; for (const script of scripts) { const content = script.textContent || ''; if (content.includes('JSON.parse') && !content.includes('media_server') && !content.includes('avatar_url')) { const match = content.match(/JSON\\.parse\\(\\s*\"(.*)\"\\s*\\)/); if (match) { try { const jsonStr = match[1].replace(/\\\\u([0-9A-Fa-f]{4})/g, (m, p1) => String.fromCharCode(parseInt(p1, 16))); hentaiData = JSON.parse(jsonStr); break; } catch (e) {} } } } if (!hentaiData) return JSON.stringify({ error: 'Failed to parse hentai data' }); const cdnRegex = /thumb_cdn_urls:\\s*(\\[.*?\\])/; const cdnMatch = document.body.innerHTML.match(cdnRegex); let cdnUrls = ['t.nhentai.net', 't2.nhentai.net', 't3.nhentai.net']; if (cdnMatch) { try { cdnUrls = JSON.parse(cdnMatch[1]); } catch (e) {} } const getImageExt = (t) => { if (t === 'w') return 'webp'; if (t === 'p') return 'png'; if (t === 'g') return 'gif'; return 'jpg'; }; const firstPageExt = hentaiData.images?.pages?.[0]?.t ? getImageExt(hentaiData.images.pages[0].t) : 'jpg'; const cdnUrl = cdnUrls[Math.floor(Math.random() * cdnUrls.length)]; const cover = 'https://' + cdnUrl + '/galleries/' + hentaiData.media_id + '/1t.' + firstPageExt; const title = hentaiData.title?.english || hentaiData.title?.japanese || hentaiData.title?.pretty || ''; const altTitle = hentaiData.title?.japanese || ''; const artists = hentaiData.tags?.filter(t => t.type === 'artist').map(t => t.name).join(', ') || ''; const groups = hentaiData.tags?.filter(t => t.type === 'group').map(t => t.name).join(', ') || ''; const tags = hentaiData.tags?.filter(t => t.type === 'tag').map(t => t.name).join(', ') || ''; const pageCount = hentaiData.images?.pages?.length || 0; const favorites = hentaiData.num_favorites || 0; const uploadDate = hentaiData.upload_date || 0; let description = 'Pages: ' + pageCount + '\\nFavorited by: ' + favorites; return JSON.stringify({ title: title, altTitle: altTitle, cover: cover, artist: artists, author: groups || artists, genre: tags, description: description, status: 'completed', pageCount: pageCount, uploadDate: uploadDate, hentaiData: hentaiData }); })();",
+          "saveAs": "detail",
+          "description": "提取画廊详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const url = window.location.pathname; const detail = JSON.parse('{{detail}}' || '{}'); const groups = detail.hentaiData?.tags?.filter(t => t.type === 'group').map(t => t.name).join(', ') || ''; const uploadDate = detail.uploadDate || 0; const chapters = [{ id: url, title: 'Chapter', url: url, scanlator: groups, date: uploadDate * 1000 }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节（NHentai每个画廊只有一个章节）"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表（NHentai每个画廊只有一个章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const mangaId = '{{mangaUrl}}'; const chapterUrl = '/g/' + mangaId + '/'; const chapters = [{ id: chapterUrl, title: 'Chapter', url: chapterUrl, date: '' }]; return JSON.stringify(chapters); })();",
+          "description": "返回单章节"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取画廊所有图片页面",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}{{chapterUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到画廊页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "script:not([src])",
+          "timeout": 15000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const scripts = document.querySelectorAll('script:not([src])'); let hentaiData = null; for (const script of scripts) { const content = script.textContent || ''; if (content.includes('JSON.parse') && !content.includes('media_server') && !content.includes('avatar_url')) { const match = content.match(/JSON\\.parse\\(\\s*\"(.*)\"\\s*\\)/); if (match) { try { const jsonStr = match[1].replace(/\\\\u([0-9A-Fa-f]{4})/g, (m, p1) => String.fromCharCode(parseInt(p1, 16))); hentaiData = JSON.parse(jsonStr); break; } catch (e) {} } } } if (!hentaiData) return JSON.stringify({ error: 'Failed to parse hentai data' }); const cdnRegex = /image_cdn_urls:\\s*(\\[.*?\\])/; const cdnMatch = document.body.innerHTML.match(cdnRegex); let cdnUrls = ['i.nhentai.net', 'i2.nhentai.net', 'i3.nhentai.net']; if (cdnMatch) { try { cdnUrls = JSON.parse(cdnMatch[1]); } catch (e) {} } const getImageExt = (t) => { if (t === 'w') return 'webp'; if (t === 'p') return 'png'; if (t === 'g') return 'gif'; return 'jpg'; }; const pages = hentaiData.images?.pages?.map((page, index) => { const ext = getImageExt(page.t); const cdnUrl = cdnUrls[Math.floor(Math.random() * cdnUrls.length)]; const imageUrl = 'https://' + cdnUrl + '/galleries/' + hentaiData.media_id + '/' + (index + 1) + '.' + ext; return { index: index, imageUrl: imageUrl }; }) || []; return JSON.stringify(pages); })();",
+          "description": "提取所有图片URL"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取单张图片的实际URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{pageUrl}}' }); })();",
+          "description": "直接返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-29",
+      "changes": [
+        "初始版本，移植自keiyoushi NHentai扩展",
+        "支持热门、最新、搜索功能",
+        "支持高级过滤（标签、分类、社团、作者、原作、角色等）",
+        "支持页数和上传时间过滤",
+        "支持多种排序方式（热门全部/月/周/今日、最新）",
+        "支持页面偏移",
+        "自动解析JSON数据获取画廊信息",
+        "支持多CDN随机选择提高稳定性"
+      ]
+    }
+  ]
+}
