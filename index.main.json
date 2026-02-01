@@ -322,5 +322,59 @@
         "baseUrl": "https://nhentai.net"
       }
     ]
+  },
+  {
+    "name": "ManXia: Bilimanga",
+    "pkg": "com.manxia.extension.zh.bilimanga",
+    "type": "manga",
+    "lang": "zh",
+    "code": 22,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Bilimanga.net",
+        "lang": "zh",
+        "id": "1872475187360186914",
+        "baseUrl": "https://www.bilimanga.net"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: 92Manhua",
+    "pkg": "com.manxia.extension.zh.jiuermanhua",
+    "type": "manga",
+    "lang": "zh",
+    "code": 23,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "92漫画",
+        "lang": "zh",
+        "id": "1972475187360186915",
+        "baseUrl": "http://www.92mh.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Hanime1",
+    "pkg": "com.manxia.extension.zh.hanime1",
+    "type": "manga",
+    "lang": "zh",
+    "code": 24,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Hanime1.me",
+        "lang": "zh",
+        "id": "2072475187360186916",
+        "baseUrl": "https://hanime1.me"
+      }
+    ]
   }
 ]

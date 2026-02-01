@@ -1,0 +1,239 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.jiuermanhua",
+    "name": "92漫画",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh-CN",
+    "baseUrl": "https://wap.92mh.com",
+    "description": "92漫画 - 漫画在线阅读",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "manga"],
+    "Internet": false
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 500,
+    "headers": {
+      "Referer": "https://wap.92mh.com/"
+    }
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入漫画名称",
+        "description": "搜索漫画",
+        "isDefault": true
+      }
+    ]
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画（按点击排序）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/list/click/?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到热门漫画页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('li.list-comic'); items.forEach((item) => { const titleLink = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); const infoEl = item.querySelector('span.info'); if (titleLink) { const title = titleLink.textContent?.trim() || ''; const href = titleLink.getAttribute('href') || ''; const cover = imgEl ? imgEl.getAttribute('src') || '' : ''; const author = infoEl ? infoEl.textContent?.replace('作者:', '').trim() : ''; const idMatch = href.match(/\\/manhua\\/([^\\/]+)/); const id = idMatch ? idMatch[1] : href; mangas.push({ id: id, title: title, cover: cover, author: author, genre: '' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新更新",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/list/update/?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到最新更新页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('li.list-comic'); items.forEach((item) => { const titleLink = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); const infoEl = item.querySelector('span.info'); if (titleLink) { const title = titleLink.textContent?.trim() || ''; const href = titleLink.getAttribute('href') || ''; const cover = imgEl ? imgEl.getAttribute('src') || '' : ''; const author = infoEl ? infoEl.textContent?.replace('作者:', '').trim() : ''; const idMatch = href.match(/\\/manhua\\/([^\\/]+)/); const id = idMatch ? idMatch[1] : href; mangas.push({ id: id, title: title, cover: cover, author: author, genre: '' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取最新漫画列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/search/?keywords={{query}}&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('.itemBox'); items.forEach((item) => { const titleEl = item.querySelector('.title a, .title'); const imgEl = item.querySelector('img'); const linkEl = item.querySelector('a'); if (linkEl) { const title = titleEl?.textContent?.trim() || ''; const href = linkEl.getAttribute('href') || ''; const cover = imgEl ? imgEl.getAttribute('src') || '' : ''; const idMatch = href.match(/\\/manhua\\/([^\\/]+)/); const id = idMatch ? idMatch[1] : href; mangas.push({ id: id, title: title, cover: cover, author: '', genre: '' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/manhua/{{mangaId}}/",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const firstImg = document.querySelector('img'); const title = firstImg?.getAttribute('alt') || document.title.split('漫画')[0] || ''; const cover = firstImg?.getAttribute('src') || ''; const infoEl = document.querySelector('.info'); const author = infoEl ? infoEl.textContent?.replace('作者:', '').trim() : ''; const statusText = document.body.innerText || ''; let status = 0; if (statusText.includes('连载中') || statusText.includes('连载')) status = 1; else if (statusText.includes('完结')) status = 2; const descEl = document.querySelector('.Introduct_Sub, .desc, .description'); const description = descEl ? descEl.textContent?.trim() : ''; return JSON.stringify({ title: title, cover: cover, author: author, status: status, description: description || '', genre: '', updateTime: '' }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/manhua/{{mangaId}}/",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const chapterLinks = document.querySelectorAll('a[href$=\".html\"]'); chapterLinks.forEach((a) => { const href = a.getAttribute('href') || ''; const text = a.textContent?.trim() || ''; const urlMatch = href.match(/\\/manhua\\/([^\\/]+)\\/(\\d+)\\.html/); if (urlMatch && text) { const mangaId = urlMatch[1]; const chapNum = urlMatch[2]; chapters.push({ id: mangaId + '/' + chapNum, title: text, date: '' }); } }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/manhua/{{chapterId}}.html",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const seen = new Set(); const getPageImgs = (doc) => { const imgs = []; doc.querySelectorAll('img').forEach(img => { const src = img.src || img.getAttribute('src') || ''; if ((src.includes('comic') || src.includes('alltucdn')) && !seen.has(src)) { seen.add(src); imgs.push(src); } }); return imgs; }; const allText = document.body.innerText; const pageMatch = allText.match(/(\\d+)\\/(\\d+)/); const totalPages = pageMatch ? parseInt(pageMatch[2]) : 1; const pathMatch = location.pathname.match(/\\/manhua\\/([^\\/]+)\\/(\\d+)/); const mangaId = pathMatch ? pathMatch[1] : ''; const chapterId = pathMatch ? pathMatch[2] : ''; getPageImgs(document).forEach((url) => { pages.push({ index: pages.length, url: url }); }); for (let i = 2; i <= totalPages; i++) { try { const xhr = new XMLHttpRequest(); xhr.open('GET', '/manhua/' + mangaId + '/' + chapterId + '-' + i + '.html', false); xhr.send(); if (xhr.status === 200) { const parser = new DOMParser(); const doc = parser.parseFromString(xhr.responseText, 'text/html'); getPageImgs(doc).forEach((url) => { pages.push({ index: pages.length, url: url }); }); } } catch(e) {} } return JSON.stringify({ pages: pages, hasNextPage: false, nextPageUrl: null }); })();",
+          "description": "提取图片列表（遍历所有分页）"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return '{{imageUrl}}'; })();",
+          "description": "返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "filters": {
+    "sort": {
+      "name": "排序",
+      "key": "sort",
+      "default": "update",
+      "options": [
+        { "label": "按更新排序", "value": "update" },
+        { "label": "按发布排序", "value": "post" },
+        { "label": "按点击排序", "value": "click" }
+      ]
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-02-01",
+      "changes": [
+        "修复getPageList使用同步XMLHttpRequest代替async/await",
+        "解决WebView不支持async函数返回值的问题"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-02-01",
+      "changes": [
+        "切换到移动端 wap.92mh.com",
+        "修复列表页、详情页、章节列表的选择器",
+        "支持分页阅读模式"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-02-01",
+      "changes": [
+        "初始版本，移植自keiyoushi 92漫画扩展"
+      ]
+    }
+  ]
+}

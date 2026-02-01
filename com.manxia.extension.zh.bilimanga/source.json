@@ -1,0 +1,277 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.bilimanga",
+    "name": "Bilimanga.net",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh-CN",
+    "baseUrl": "https://www.bilimanga.net",
+    "description": "Bilimanga.net - 嗶哩漫畫，轻小说漫画网站",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": false,
+    "tags": ["chinese", "webview", "manga", "nsfw"],
+    "Internet": false
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.bilimanga.net/",
+      "Accept-Language": "zh",
+      "Accept": "*/*"
+    }
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入漫画名称",
+        "description": "搜索漫画",
+        "isDefault": true
+      }
+    ]
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画（周点击排行）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/top/weekvisit/{{page}}.html",
+          "timeout": 15000,
+          "description": "导航到热门漫画页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var mangas=[];var items=document.querySelectorAll('.book-layout');items.forEach(function(item){var link=item.getAttribute('href')||'';var img=item.querySelector('img');var title=img?img.getAttribute('alt')||'':'';var cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):'';var idMatch=link.match(/\\/detail\\/(\\d+)\\.html/);var id=idMatch?idMatch[1]:link;if(title&&id){mangas.push({id:id,title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:'',genre:''});}});return JSON.stringify(mangas);})();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新更新",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/top/lastupdate/{{page}}.html",
+          "timeout": 15000,
+          "description": "导航到最新更新页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var mangas=[];var items=document.querySelectorAll('.book-layout');items.forEach(function(item){var link=item.getAttribute('href')||'';var img=item.querySelector('img');var title=img?img.getAttribute('alt')||'':'';var cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):'';var idMatch=link.match(/\\/detail\\/(\\d+)\\.html/);var id=idMatch?idMatch[1]:link;if(title&&id){mangas.push({id:id,title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:'',genre:''});}});return JSON.stringify(mangas);})();",
+          "description": "提取最新漫画列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画（POST表单）",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/search.html",
+          "timeout": 15000,
+          "description": "导航到搜索页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待搜索页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var searchInput=document.querySelector('#searchkey');var form=document.querySelector('#searchForm');if(searchInput&&form){searchInput.value='{{query}}';form.submit();return JSON.stringify({status:'submitted'});}return JSON.stringify({status:'form_not_found'});})();",
+          "description": "填写搜索表单并提交"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var mangas=[];var currentUrl=window.location.href;if(currentUrl.indexOf('/detail/')>-1){var idMatch=currentUrl.match(/\\/detail\\/(\\d+)\\.html/);var id=idMatch?idMatch[1]:'';var title=document.querySelector('.book-title')?document.querySelector('.book-title').textContent.trim():'';var coverEl=document.querySelector('.book-cover');var cover=coverEl?coverEl.getAttribute('src'):'';mangas.push({id:id,title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:'',genre:''});return JSON.stringify(mangas);}var items=document.querySelectorAll('.book-layout');items.forEach(function(item){var link=item.getAttribute('href')||'';var img=item.querySelector('img');var title=img?img.getAttribute('alt')||'':'';var cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):'';var idMatch=link.match(/\\/detail\\/(\\d+)\\.html/);var id=idMatch?idMatch[1]:link;if(title&&id){mangas.push({id:id,title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:'',genre:''});}});return JSON.stringify(mangas);})();",
+          "description": "提取搜索结果（支持单结果跳转详情页情况）"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/detail/{{mangaId}}.html",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var title=document.querySelector('.book-title')?document.querySelector('.book-title').textContent.trim():'';var coverEl=document.querySelector('.book-cover');var cover=coverEl?coverEl.getAttribute('src'):'';var metaEl=document.querySelector('.book-meta');var metaText=metaEl?metaEl.textContent:'';var status=0;if(metaText.indexOf('連載')>-1)status=1;else if(metaText.indexOf('完結')>-1)status=2;var artist=document.querySelector('.authorname')?document.querySelector('.authorname').textContent.trim():'';var author=document.querySelector('.illname')?document.querySelector('.illname').textContent.trim():artist;var descEl=document.querySelector('#bookSummary > content')||document.querySelector('#bookSummary');var description=descEl?descEl.textContent.trim():'';var backupName=document.querySelector('.backupname')?document.querySelector('.backupname').textContent.trim():'';var fullDesc=backupName?'別名：'+backupName+'\\n\\n'+description:description;var tagEls=document.querySelectorAll('.tag-small');var tags=[];tagEls.forEach(function(el){var t=el.textContent.trim();if(t)tags.push(t);});return JSON.stringify({title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:author,status:status,description:fullDesc,genre:tags.join(', '),updateTime:''});})();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/read/{{mangaId}}/catalog",
+          "timeout": 15000,
+          "description": "导航到章节目录页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var chapters=[];var volumes=document.querySelectorAll('.catalog-volume');volumes.forEach(function(v){var volumeTitle=v.querySelector('.chapter-bar')?v.querySelector('.chapter-bar').textContent.trim():'';var chapterEls=v.querySelectorAll('.chapter-li-a');chapterEls.forEach(function(el){var href=el.getAttribute('href')||'';if(href.indexOf('javascript:')>-1)return;var urlMatch=href.match(/\\/read\\/(\\d+)\\/(\\d+)\\.html/);if(!urlMatch)return;var chapterId=urlMatch[1]+'/'+urlMatch[2];var name=el.textContent.trim()||'';chapters.push({id:chapterId,title:volumeTitle?volumeTitle+' - '+name:name,date:''});});});var infoEl=document.querySelector('.chapter-sub-title');var dateStr='';if(infoEl){var dateMatch=infoEl.textContent.match(/(\\d{4}-\\d{1,2}-\\d{1,2})/);if(dateMatch)dateStr=dateMatch[1];}if(chapters.length>0&&dateStr)chapters[0].date=dateStr;return JSON.stringify(chapters);})();",
+          "description": "提取章节列表（第1话在最前面）"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/read/{{chapterId}}.html",
+          "timeout": 15000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var pages=[];var images=document.querySelectorAll('.imagecontent');images.forEach(function(img,index){var src=img.getAttribute('data-src')||img.getAttribute('src')||'';if(src){pages.push({index:index,url:src.startsWith('http')?src:'https://www.bilimanga.net'+src});}});return JSON.stringify({pages:pages,hasNextPage:false,nextPageUrl:null});})();",
+          "description": "提取图片列表"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(function(){return '{{imageUrl}}';})();",
+          "description": "返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "filters": {
+    "sort": {
+      "name": "排序",
+      "key": "sort",
+      "default": "lastupdate",
+      "options": [
+        { "label": "最近更新", "value": "lastupdate" },
+        { "label": "月点击", "value": "monthvisit" },
+        { "label": "周点击", "value": "weekvisit" },
+        { "label": "周推荐", "value": "weekvote" },
+        { "label": "月推荐", "value": "monthvote" },
+        { "label": "收藏数", "value": "goodnum" },
+        { "label": "最新入库", "value": "postdate" }
+      ]
+    },
+    "status": {
+      "name": "状态",
+      "key": "status",
+      "default": "0",
+      "options": [
+        { "label": "不限", "value": "0" },
+        { "label": "连载", "value": "1" },
+        { "label": "完结", "value": "2" }
+      ]
+    },
+    "region": {
+      "name": "地区",
+      "key": "region",
+      "default": "0",
+      "options": [
+        { "label": "不限", "value": "0" },
+        { "label": "日本", "value": "1" },
+        { "label": "韩国", "value": "2" },
+        { "label": "港台", "value": "3" },
+        { "label": "欧美", "value": "4" },
+        { "label": "大陆", "value": "5" }
+      ]
+    }
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-02-01",
+      "changes": [
+        "修复获取章节图片问题（章节ID格式改为mangaId/chapNum可直接用于URL）",
+        "减少等待时间提高加载速度"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-02-01",
+      "changes": [
+        "修复章节排序问题（第1话在最前面）"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-02-01",
+      "changes": [
+        "初始版本，移植自keiyoushi BiliManga扩展"
+      ]
+    }
+  ]
+}

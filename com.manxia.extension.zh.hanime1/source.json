@@ -1,0 +1,245 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.hanime1",
+    "name": "Hanime1.me",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh-CN",
+    "baseUrl": "https://hanime1.me",
+    "description": "Hanime1.me - 成人漫画网站，需要科学上网",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": ["chinese", "webview", "nsfw", "adult", "comic"],
+    "Internet": true
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 500,
+    "headers": {
+      "Referer": "https://hanime1.me/"
+    }
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入漫画名称",
+        "description": "搜索漫画",
+        "isDefault": true
+      }
+    ]
+  },
+
+  "workflows": {
+    "popular": {
+      "description": "获取热门漫画",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comics",
+          "timeout": 15000,
+          "description": "导航到漫画首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.comic-rows-videos-div'); items.forEach((item) => { const link = item.querySelector('a'); const titleEl = item.querySelector('div.comic-rows-videos-title'); const imgEl = item.querySelector('img'); if (link && titleEl) { const url = link.getAttribute('href') || ''; const urlMatch = url.match(/\\/comic\\/([^\\/]+)/); const id = urlMatch ? urlMatch[1] : url; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-srcset') || imgEl?.getAttribute('src') || ''; if (cover.includes(',')) cover = cover.split(',')[0].trim(); mangas.push({ id: id, title: title, cover: cover, author: '', genre: '' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新上传",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comics?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到最新漫画页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.comic-rows-videos-div'); items.forEach((item) => { const link = item.querySelector('a'); const titleEl = item.querySelector('div.comic-rows-videos-title'); const imgEl = item.querySelector('img'); if (link && titleEl) { const url = link.getAttribute('href') || ''; const urlMatch = url.match(/\\/comic\\/([^\\/]+)/); const id = urlMatch ? urlMatch[1] : url; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-srcset') || imgEl?.getAttribute('src') || ''; if (cover.includes(',')) cover = cover.split(',')[0].trim(); mangas.push({ id: id, title: title, cover: cover, author: '', genre: '' }); } }); const hasNext = document.querySelector('ul.pagination a[rel=next]') !== null; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
+          "description": "提取最新漫画列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comics/search?query={{query}}&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.comic-rows-videos-div'); items.forEach((item) => { const link = item.querySelector('a'); const titleEl = item.querySelector('div.comic-rows-videos-title'); const imgEl = item.querySelector('img'); if (link && titleEl) { const url = link.getAttribute('href') || ''; const urlMatch = url.match(/\\/comic\\/([^\\/]+)/); const id = urlMatch ? urlMatch[1] : url; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-srcset') || imgEl?.getAttribute('src') || ''; if (cover.includes(',')) cover = cover.split(',')[0].trim(); mangas.push({ id: id, title: title, cover: cover, author: '', genre: '' }); } }); const hasNext = document.querySelector('ul.pagination a[rel=next]') !== null; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comic/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const title = document.querySelector('h3.title')?.textContent?.trim() || ''; const coverImg = document.querySelector('div.col-md-4 img'); let cover = coverImg?.getAttribute('data-srcset') || coverImg?.getAttribute('src') || ''; if (cover.includes(',')) cover = cover.split(',')[0].trim(); const getH5Value = (key) => { const h5s = document.querySelectorAll('h5'); for (const h5 of h5s) { if (h5.textContent?.includes(key)) { return h5.textContent.replace(key, '').trim(); } } return ''; }; const author = getH5Value('作者：') || getH5Value('社團：'); const genre = getH5Value('分類：'); return JSON.stringify({ title: title, cover: cover, author: author, status: 0, description: '', genre: genre, updateTime: '' }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comic/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const chapters = []; const urlMatch = location.href.match(/\\/comic\\/([^\\/]+)/); const mangaId = urlMatch ? urlMatch[1] : ''; const title = document.querySelector('h3.title')?.textContent?.trim() || '開始閱讀'; chapters.push({ id: mangaId, title: title, date: '' }); return JSON.stringify(chapters); })();",
+          "description": "提取章节列表"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/comic/{{chapterId}}/1",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const currentImage = document.querySelector('img#current-page-image'); if (!currentImage) return JSON.stringify({ pages: [], hasNextPage: false, nextPageUrl: null }); const dataExtension = currentImage.getAttribute('data-extension') || 'webp'; const dataPrefix = currentImage.getAttribute('data-prefix') || ''; const navEl = document.querySelector('.comic-show-content-nav'); const pageSize = parseInt(navEl?.getAttribute('data-pages') || '1', 10); for (let i = 0; i < pageSize; i++) { pages.push({ index: i, url: dataPrefix + (i + 1) + '.' + dataExtension }); } return JSON.stringify({ pages: pages, hasNextPage: false, nextPageUrl: null }); })();",
+          "description": "提取图片列表"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return '{{imageUrl}}'; })();",
+          "description": "返回图片URL"
+        }
+      ]
+    }
+  },
+
+  "filters": {
+    "sort": {
+      "name": "排序",
+      "key": "sort",
+      "default": "",
+      "options": [
+        { "label": "最新", "value": "" },
+        { "label": "热门：本日", "value": "popular-today" },
+        { "label": "热门：本週", "value": "popular-week" },
+        { "label": "热门：所有", "value": "popular" }
+      ]
+    }
+  },
+
+  "imageHeaders": {
+    "Referer": "https://nhentai.net/",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+  },
+
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-02-01",
+      "changes": [
+        "添加imageHeaders配置修复图片403/404问题",
+        "为nhentai.net图片设置正确的Referer头"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-02-01",
+      "changes": [
+        "修复列表页和详情页的选择器",
+        "移除不支持的jQuery选择器",
+        "优化图片获取逻辑"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-02-01",
+      "changes": [
+        "初始版本，移植自keiyoushi Hanime1扩展"
+      ]
+    }
+  ]
+}
