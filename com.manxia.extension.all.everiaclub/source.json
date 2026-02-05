@@ -190,8 +190,89 @@
           "description": "返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选画廊（支持分类筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "category": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || ''; let url = 'https://everia.club'; if (category) { url += '/category/' + category + '/page/' + page + '/'; } else { url += '/page/' + page + '/'; } return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#blog-entries > article, #content > article",
+          "timeout": 10000,
+          "description": "等待结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const articles = document.querySelectorAll('#blog-entries > article, #content > article'); articles.forEach((article, index) => { const img = article.querySelector('img'); const titleEl = article.querySelector('.entry-title'); const linkEl = article.querySelector('.entry-title > a'); if (img && titleEl && linkEl) { let cover = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; const title = titleEl.textContent?.trim() || ''; const href = linkEl.getAttribute('href') || ''; const id = href.replace('https://everia.club', '').replace(/^\\//, '').replace(/\\/$/, ''); if (title && id) { mangas.push({ id: id, title: title, cover: cover }); } } }); return JSON.stringify(mangas); })();",
+          "description": "提取筛选结果"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选画廊",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "全部"},
+              {"value": "gravure", "label": "Gravure"},
+              {"value": "aidol", "label": "Aidol"},
+              {"value": "magazine", "label": "Magazine"},
+              {"value": "korea", "label": "Korea"},
+              {"value": "thailand", "label": "Thailand"},
+              {"value": "chinese", "label": "Chinese"},
+              {"value": "cosplay", "label": "Cosplay"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "filters": {
     "category": {

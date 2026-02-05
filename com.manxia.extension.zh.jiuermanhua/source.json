@@ -194,8 +194,78 @@
           "description": "返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选漫画（支持排序筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "sort": "update"
+      },
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/list/{{sort}}/?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('li.list-comic'); items.forEach((item) => { const titleLink = item.querySelector('a.txtA'); const imgEl = item.querySelector('img'); const infoEl = item.querySelector('span.info'); if (titleLink) { const title = titleLink.textContent?.trim() || ''; const href = titleLink.getAttribute('href') || ''; const cover = imgEl ? imgEl.getAttribute('src') || '' : ''; const author = infoEl ? infoEl.textContent?.replace('作者:', '').trim() : ''; const idMatch = href.match(/\\/manhua\\/([^\\/]+)/); const id = idMatch ? idMatch[1] : href; mangas.push({ id: id, title: title, cover: cover, author: author, genre: '' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取筛选结果"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "update",
+            "options": [
+              {"value": "update", "label": "按更新排序"},
+              {"value": "post", "label": "按发布排序"},
+              {"value": "click", "label": "按点击排序"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "filters": {
     "sort": {

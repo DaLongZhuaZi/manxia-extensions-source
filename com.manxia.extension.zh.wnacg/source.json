@@ -33,6 +33,49 @@
     }
   },
 
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择分类或输入标签",
+        "groups": [
+          {
+            "id": "filter_category",
+            "title": "分类",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "全部"},
+              {"value": "albums-index-page-%d-cate-5.html", "label": "同人志"},
+              {"value": "albums-index-page-%d-cate-1.html", "label": "同人志-汉化"},
+              {"value": "albums-index-page-%d-cate-12.html", "label": "同人志-日语"},
+              {"value": "albums-index-page-%d-cate-6.html", "label": "单行本"},
+              {"value": "albums-index-page-%d-cate-9.html", "label": "单行本-汉化"},
+              {"value": "albums-index-page-%d-cate-19.html", "label": "韩漫"},
+              {"value": "albums-index-page-%d-cate-20.html", "label": "韩漫-汉化"},
+              {"value": "albums-index-page-%d-cate-22.html", "label": "3D&漫画"},
+              {"value": "albums-index-page-%d-cate-3.html", "label": "写真&Cosplay"},
+              {"value": "albums-index-page-%d-cate-37.html", "label": "AI图集"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
+
   "filters": {
     "category": {
       "title": "分类",

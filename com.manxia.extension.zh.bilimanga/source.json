@@ -207,8 +207,112 @@
           "description": "返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选漫画（支持排序、状态、地区筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "sort": "lastupdate",
+        "status": "0",
+        "region": "0"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const sort = '{{sort}}' || 'lastupdate'; const status = '{{status}}' || '0'; const region = '{{region}}' || '0'; let url = '{{baseUrl}}/top/' + sort + '/' + page + '.html'; if (status !== '0' || region !== '0') { url += '?'; const params = []; if (status !== '0') params.push('serial=' + status); if (region !== '0') params.push('area=' + region); url += params.join('&'); } return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(function(){var mangas=[];var items=document.querySelectorAll('.book-layout');items.forEach(function(item){var link=item.getAttribute('href')||'';var img=item.querySelector('img');var title=img?img.getAttribute('alt')||'':'';var cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):'';var idMatch=link.match(/\\/detail\\/(\\d+)\\.html/);var id=idMatch?idMatch[1]:link;if(title&&id){mangas.push({id:id,title:title,cover:cover.startsWith('http')?cover:'https://www.bilimanga.net'+cover,author:'',genre:''});}});return JSON.stringify(mangas);})();",
+          "description": "提取筛选结果漫画列表"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "lastupdate",
+            "options": [
+              {"value": "lastupdate", "label": "最近更新"},
+              {"value": "monthvisit", "label": "月点击"},
+              {"value": "weekvisit", "label": "周点击"},
+              {"value": "weekvote", "label": "周推荐"},
+              {"value": "monthvote", "label": "月推荐"},
+              {"value": "goodnum", "label": "收藏数"},
+              {"value": "postdate", "label": "最新入库"}
+            ]
+          },
+          {
+            "id": "status",
+            "title": "状态",
+            "defaultValue": "0",
+            "options": [
+              {"value": "0", "label": "不限"},
+              {"value": "1", "label": "连载"},
+              {"value": "2", "label": "完结"}
+            ]
+          },
+          {
+            "id": "region",
+            "title": "地区",
+            "defaultValue": "0",
+            "options": [
+              {"value": "0", "label": "不限"},
+              {"value": "1", "label": "日本"},
+              {"value": "2", "label": "韩国"},
+              {"value": "3", "label": "港台"},
+              {"value": "4", "label": "欧美"},
+              {"value": "5", "label": "大陆"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "filters": {
     "sort": {

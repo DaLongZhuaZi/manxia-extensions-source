@@ -101,6 +101,40 @@
       ]
     },
 
+    "filter": {
+      "description": "筛选漫画（支持分类、排序、时间筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "/albums?",
+        "sort": "mr",
+        "time": "a"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || '/albums?'; const sort = '{{sort}}' || 'mr'; const time = '{{time}}' || 'a'; let url = '{{baseUrl}}' + category + 'o=' + sort + '&t=' + time + '&page=' + page; return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待5秒让页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.list-col > div.p-b-15:not([data-group])'); items.forEach((item) => { const thumbDiv = item.querySelector('.thumb-overlay-albums'); const linkEl = thumbDiv?.querySelector('a'); const imgEl = thumbDiv?.querySelector('img'); const titleEl = item.querySelector('.video-title'); const authorEl = item.querySelector('.title-truncate.hidden-xs'); const tagsEl = item.querySelector('.title-truncate.tags'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const match = href.match(/\\/album\\/(\\d+)/); const albumId = match ? match[1] : href; const title = titleEl.textContent?.trim() || ''; const cover = imgEl?.getAttribute('src') || ''; const author = authorEl ? Array.from(authorEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; const genre = tagsEl ? Array.from(tagsEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; mangas.push({ id: albumId, title: title, cover: cover, author: author, genre: genre }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取筛选结果漫画列表"
+        }
+      ]
+    },
+
     "latest": {
       "description": "获取最新更新",
       "supportsPagination": true,
@@ -264,6 +298,75 @@
       ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "/albums?",
+            "options": [
+              {"value": "/albums?", "label": "全部"},
+              {"value": "/albums/another?", "label": "其他"},
+              {"value": "/albums/doujin?", "label": "同人"},
+              {"value": "/albums/hanman?", "label": "韩漫"},
+              {"value": "/albums/meiman?", "label": "美漫"},
+              {"value": "/albums/short?", "label": "短篇"},
+              {"value": "/albums/single?", "label": "单本"}
+            ]
+          },
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "mr",
+            "options": [
+              {"value": "mr", "label": "最新"},
+              {"value": "mv", "label": "最多浏览"},
+              {"value": "tf", "label": "最多爱心"},
+              {"value": "mp", "label": "最多图片"}
+            ]
+          },
+          {
+            "id": "time",
+            "title": "时间",
+            "defaultValue": "a",
+            "options": [
+              {"value": "a", "label": "全部"},
+              {"value": "t", "label": "今天"},
+              {"value": "w", "label": "这周"},
+              {"value": "m", "label": "本月"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "filters": {
     "category": {

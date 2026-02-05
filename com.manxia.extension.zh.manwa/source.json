@@ -272,8 +272,119 @@
           "description": "直接返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选漫画（支持状态、类型、地区、排序筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "end": "",
+        "gender": "-1",
+        "area": "",
+        "sort": "-1"
+      },
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/booklist?end={{end}}&gender={{gender}}&area={{area}}&sort={{sort}}&tag=&page={{page}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "ul.manga-list-2",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { var mangas = []; var items = document.querySelectorAll('ul.manga-list-2 > li'); for(var i=0;i<items.length;i++){ var item=items[i]; var titleEl = item.querySelector('p.manga-list-2-title'); var linkEl = item.querySelector('a'); var imgEl = item.querySelector('img'); var title = titleEl ? titleEl.innerText : ''; var url = linkEl ? linkEl.getAttribute('href') : ''; var cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || '') : ''; if (title && url) { mangas.push({ id: url, title: title, cover: cover }); }} var pagination = document.querySelectorAll('ul.pagination2 > li'); var hasNext = pagination.length > 0 && pagination[pagination.length - 1].innerText === '下一页'; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
+          "description": "提取筛选结果"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "end",
+            "title": "状态",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "全部"},
+              {"value": "2", "label": "连载中"},
+              {"value": "1", "label": "已完结"}
+            ]
+          },
+          {
+            "id": "gender",
+            "title": "类型",
+            "defaultValue": "-1",
+            "options": [
+              {"value": "-1", "label": "全部"},
+              {"value": "2", "label": "一般向"},
+              {"value": "0", "label": "BL向"},
+              {"value": "1", "label": "禁漫"},
+              {"value": "3", "label": "TL向"}
+            ]
+          },
+          {
+            "id": "area",
+            "title": "地区",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "全部"},
+              {"value": "2", "label": "韩国"},
+              {"value": "3", "label": "日漫"},
+              {"value": "4", "label": "国漫"},
+              {"value": "5", "label": "台漫"},
+              {"value": "6", "label": "其他"},
+              {"value": "1", "label": "未分类"}
+            ]
+          },
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "-1",
+            "options": [
+              {"value": "-1", "label": "最新"},
+              {"value": "0", "label": "最旧"},
+              {"value": "1", "label": "收藏"},
+              {"value": "2", "label": "新漫"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "filters": {
     "end": {

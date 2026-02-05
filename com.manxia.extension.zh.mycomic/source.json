@@ -387,8 +387,117 @@
           "description": "直接返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选漫画（支持排序、地区、类型、受众、年份、状态筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "sort": "",
+        "region": "",
+        "tag": "",
+        "audience": "",
+        "year": "",
+        "status": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const sort = '{{sort}}' || ''; const region = '{{region}}' || ''; const tag = '{{tag}}' || ''; const audience = '{{audience}}' || ''; const year = '{{year}}' || ''; const status = '{{status}}' || ''; let url = 'https://mycomic.com/comics?page=' + page; if (sort) { if (sort.startsWith('rank|')) { url = 'https://mycomic.com/rank' + sort.substring(5) + '?page=' + page; } else { url += '&sort=' + sort; } } if (region) url += '&filter[country]=' + region; if (tag) url += '&filter[tag]=' + tag; if (audience) url += '&filter[audience]=' + audience; if (year) url += '&filter[year]=' + year; if (status) url += '&filter[end]=' + status; return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.grid > div.group",
+          "timeout": 10000,
+          "description": "等待漫画列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const items = document.querySelectorAll('div.grid > div.group'); const results = []; items.forEach((item) => { const link = item.querySelector('a'); const img = item.querySelector('img'); if (link && img) { const href = link.getAttribute('href') || ''; const title = img.getAttribute('alt') || ''; let cover = img.getAttribute('data-src') || img.getAttribute('src') || ''; results.push({ id: href, title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取筛选结果"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "最新上架"},
+              {"value": "-update", "label": "最近更新"},
+              {"value": "-views", "label": "最高人气"},
+              {"value": "rank|", "label": "日排行"},
+              {"value": "rank|-week", "label": "週排行"},
+              {"value": "rank|-month", "label": "月排行"},
+              {"value": "rank|-views", "label": "歷史排行"}
+            ]
+          },
+          {
+            "id": "region",
+            "title": "地区",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "所有"},
+              {"value": "japan", "label": "日本"},
+              {"value": "hongkong", "label": "港台"},
+              {"value": "europe", "label": "歐美"},
+              {"value": "china", "label": "內地"},
+              {"value": "korea", "label": "韩國"},
+              {"value": "other", "label": "其他"}
+            ]
+          },
+          {
+            "id": "status",
+            "title": "状态",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "所有"},
+              {"value": "0", "label": "連載中"},
+              {"value": "1", "label": "已完結"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "imageHeaders": {
     "Referer": "https://mycomic.com/",

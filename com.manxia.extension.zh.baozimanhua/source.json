@@ -86,6 +86,47 @@
       ]
     },
 
+    "filter": {
+      "description": "筛选漫画（支持标签、地区、进度筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "type": "all",
+        "region": "all",
+        "state": "all",
+        "filter": "*"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const type = '{{type}}' || 'all'; const region = '{{region}}' || 'all'; const state = '{{state}}' || 'all'; const filter = '{{filter}}' || '*'; let url = 'https://cn.baozimh.com/classify?page=' + page; if (type && type !== 'all') url += '&type=' + type; if (region && region !== 'all') url += '&region=' + region; if (state && state !== 'all') url += '&state=' + state; if (filter && filter !== '*') url += '&filter=' + filter; return url; })();",
+          "description": "构建筛选URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a.comics-card__poster",
+          "timeout": 10000,
+          "description": "等待漫画卡片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.pure-g div a.comics-card__poster'); const currentPage = {{page}} || 1; const hasNextPage = cards.length >= 36; return JSON.stringify({ hasNextPage: hasNextPage, totalItems: cards.length }); })();",
+          "description": "检查分页信息（每页36个）"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const cards = document.querySelectorAll('div.pure-g div a.comics-card__poster'); const results = []; cards.forEach((card, index) => { const href = card.getAttribute('href') || ''; const title = card.getAttribute('title') || ''; const ampImg = card.querySelector('amp-img'); const cover = ampImg ? (ampImg.getAttribute('src') || '') : ''; results.push({ id: href, title: title, cover: cover }); }); return JSON.stringify(results); })();",
+          "description": "提取筛选结果漫画列表"
+        }
+      ]
+    },
+
     "latest": {
       "description": "获取最新更新",
       "actions": [
@@ -249,8 +290,67 @@
     }
   },
 
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "type",
+            "title": "标签",
+            "defaultValue": "all"
+          },
+          {
+            "id": "region",
+            "title": "地区",
+            "defaultValue": "all",
+            "options": [
+              {"value": "all", "label": "全部"},
+              {"value": "cn", "label": "国漫"},
+              {"value": "jp", "label": "日本"},
+              {"value": "kr", "label": "韩国"},
+              {"value": "en", "label": "欧美"}
+            ]
+          },
+          {
+            "id": "state",
+            "title": "进度",
+            "defaultValue": "all",
+            "options": [
+              {"value": "all", "label": "全部"},
+              {"value": "serial", "label": "连载中"},
+              {"value": "pub", "label": "已完结"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
+
   "filters": {
-    "_TODO": "需要实现筛选器UI支持",
     "type": {
       "name": "标签",
       "key": "type",

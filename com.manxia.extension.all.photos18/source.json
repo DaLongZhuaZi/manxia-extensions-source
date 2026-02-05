@@ -205,8 +205,82 @@
           "description": "返回图片URL"
         }
       ]
+    },
+
+    "filter": {
+      "description": "筛选画廊（支持排序筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "sort": "views"
+      },
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/zh-hans/sort/{{sort}}?page={{page}}",
+          "timeout": 30000,
+          "waitAfterLoad": 3000,
+          "description": "导航到筛选结果页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#videos",
+          "timeout": 15000,
+          "description": "等待画廊列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const container = document.querySelector('#videos'); if (!container) return JSON.stringify([]); const cards = container.querySelectorAll('.card'); cards.forEach((card) => { const cardBody = card.querySelector('.card-body'); const link = cardBody?.querySelector('a'); const img = card.querySelector('img'); const label = cardBody?.querySelector('label'); if (link) { let url = link.getAttribute('href') || ''; url = url.replace('/zh-hans', ''); const title = link.textContent?.trim() || ''; let cover = img?.getAttribute('src') || ''; if (cover) {  if (!cover.startsWith('http')) cover = 'https://www.photos18.com' + cover; } const genre = label?.textContent?.trim() || ''; results.push({ id: url, title: title, cover: cover, url: 'https://www.photos18.com' + url, genre: genre }); } }); return JSON.stringify(results); })();",
+          "description": "提取筛选结果"
+        }
+      ]
     }
   },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选画廊",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "views",
+            "options": [
+              {"value": "views", "label": "趋势"},
+              {"value": "created", "label": "最新"},
+              {"value": "hits", "label": "热门"},
+              {"value": "score", "label": "推荐"},
+              {"value": "likes", "label": "最佳"}
+            ]
+          }
+        ]
+      }
+    }
+  ],
 
   "changelog": [
     {
