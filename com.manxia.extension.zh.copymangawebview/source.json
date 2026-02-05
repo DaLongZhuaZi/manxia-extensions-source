@@ -98,21 +98,22 @@
       "type": "select",
       "name": "地区",
       "description": "筛选地区",
-      "default": "all",
+      "default": "",
       "options": [
-        {"value": "all", "label": "全部"},
-        {"value": "0", "label": "日漫"},
-        {"value": "1", "label": "韩漫"},
-        {"value": "2", "label": "美漫"}
+        {"value": "", "label": "全部"},
+        {"value": "japan", "label": "日漫"},
+        {"value": "korea", "label": "韩漫"},
+        {"value": "west", "label": "美漫"},
+        {"value": "finish", "label": "已完结"}
       ]
     },
     "filterTheme": {
       "type": "select",
       "name": "题材",
       "description": "筛选题材",
-      "default": "all",
+      "default": "",
       "options": [
-        {"value": "all", "label": "全部"},
+        {"value": "", "label": "全部"},
         {"value": "aiqing", "label": "愛情"},
         {"value": "huanlexiang", "label": "歡樂向"},
         {"value": "maoxian", "label": "冒險"},
@@ -299,8 +300,8 @@
       },
       "defaults": {
         "filterOrdering": "-datetime_updated",
-        "filterRegion": "all",
-        "filterTheme": "all"
+        "filterRegion": "",
+        "filterTheme": ""
       },
       "actions": [
         {
@@ -455,7 +456,7 @@
       "id": "latest",
       "type": "latest",
       "name": "最新",
-      "enabled": true,
+      "enabled": false,
       "order": 1,
       "requiresLogin": false
     },
@@ -484,18 +485,19 @@
           {
             "id": "filterRegion",
             "title": "地区",
-            "defaultValue": "all",
+            "defaultValue": "",
             "options": [
-              {"value": "all", "label": "全部"},
-              {"value": "0", "label": "日漫"},
-              {"value": "1", "label": "韩漫"},
-              {"value": "2", "label": "美漫"}
+              {"value": "", "label": "全部"},
+              {"value": "japan", "label": "日漫"},
+              {"value": "korea", "label": "韩漫"},
+              {"value": "west", "label": "美漫"},
+              {"value": "finish", "label": "已完结"}
             ]
           },
           {
             "id": "filterTheme",
             "title": "题材",
-            "defaultValue": "all",
+            "defaultValue": "",
             "placeholder": "选择题材分类"
           }
         ]
@@ -518,20 +520,21 @@
     "filterRegion": {
       "type": "select",
       "name": "地区",
-      "default": "all",
+      "default": "",
       "options": [
-        {"value": "all", "label": "全部"},
-        {"value": "0", "label": "日漫"},
-        {"value": "1", "label": "韩漫"},
-        {"value": "2", "label": "美漫"}
+        {"value": "", "label": "全部"},
+        {"value": "japan", "label": "日漫"},
+        {"value": "korea", "label": "韩漫"},
+        {"value": "west", "label": "美漫"},
+        {"value": "finish", "label": "已完结"}
       ]
     },
     "filterTheme": {
       "type": "select",
       "name": "题材",
-      "default": "all",
+      "default": "",
       "options": [
-        {"value": "all", "label": "全部"},
+        {"value": "", "label": "全部"},
         {"value": "aiqing", "label": "愛情"},
         {"value": "huanlexiang", "label": "歡樂向"},
         {"value": "maoxian", "label": "冒險"},

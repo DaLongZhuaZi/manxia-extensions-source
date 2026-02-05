@@ -671,7 +671,72 @@
       "name": "筛选",
       "enabled": true,
       "order": 2,
-      "requiresLogin": false
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "筛选漫画",
+        "description": "选择筛选条件",
+        "groups": [
+          {
+            "id": "sort",
+            "title": "排序",
+            "defaultValue": "dd",
+            "options": [
+              {"value": "dd", "label": "新到旧"},
+              {"value": "da", "label": "旧到新"},
+              {"value": "ld", "label": "最多爱心"},
+              {"value": "vd", "label": "最多绅士指名"}
+            ]
+          },
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "",
+            "options": [
+              {"value": "", "label": "全部"},
+              {"value": "大家都在看", "label": "大家都在看"},
+              {"value": "牛牛不哭", "label": "牛牛不哭"},
+              {"value": "那年今天", "label": "那年今天"},
+              {"value": "官方都在看", "label": "官方都在看"},
+              {"value": "嗶咔漢化", "label": "嗶咔漢化"},
+              {"value": "全彩", "label": "全彩"},
+              {"value": "長篇", "label": "長篇"},
+              {"value": "同人", "label": "同人"},
+              {"value": "短篇", "label": "短篇"},
+              {"value": "圓神領域", "label": "圓神領域"},
+              {"value": "碧藍幻想", "label": "碧藍幻想"},
+              {"value": "CG雜圖", "label": "CG雜圖"},
+              {"value": "純愛", "label": "純愛"},
+              {"value": "百合花園", "label": "百合花園"},
+              {"value": "後宮閃光", "label": "後宮閃光"},
+              {"value": "單行本", "label": "單行本"},
+              {"value": "姐姐系", "label": "姐姐系"},
+              {"value": "妹妹系", "label": "妹妹系"},
+              {"value": "SM", "label": "SM"},
+              {"value": "人妻", "label": "人妻"},
+              {"value": "NTR", "label": "NTR"},
+              {"value": "強暴", "label": "強暴"},
+              {"value": "艦隊收藏", "label": "艦隊收藏"},
+              {"value": "Love Live", "label": "Love Live"},
+              {"value": "SAO 刀劍神域", "label": "SAO 刀劍神域"},
+              {"value": "Fate", "label": "Fate"},
+              {"value": "東方", "label": "東方"},
+              {"value": "禁書目錄", "label": "禁書目錄"},
+              {"value": "Cosplay", "label": "Cosplay"},
+              {"value": "英語 ENG", "label": "英語 ENG"},
+              {"value": "生肉", "label": "生肉"},
+              {"value": "性轉換", "label": "性轉換"},
+              {"value": "足の恋", "label": "足の恋"},
+              {"value": "非人類", "label": "非人類"},
+              {"value": "耽美花園", "label": "耽美花園"},
+              {"value": "偽娘哲學", "label": "偽娘哲學"},
+              {"value": "扶他樂園", "label": "扶他樂園"},
+              {"value": "重口地帶", "label": "重口地帶"},
+              {"value": "歐美", "label": "歐美"},
+              {"value": "WEBTOON", "label": "WEBTOON"}
+            ]
+          }
+        ]
+      }
     },
     {
       "id": "favorites",
@@ -691,7 +756,23 @@
       "order": 4,
       "requiresLogin": false,
       "icon": "trophy",
-      "description": "热门漫画排行"
+      "description": "热门漫画排行",
+      "filterConfig": {
+        "title": "排行榜",
+        "description": "选择时间范围",
+        "groups": [
+          {
+            "id": "timeType",
+            "title": "时间范围",
+            "defaultValue": "H24",
+            "options": [
+              {"value": "H24", "label": "过去24小时"},
+              {"value": "D7", "label": "过去7天"},
+              {"value": "D30", "label": "过去30天"}
+            ]
+          }
+        ]
+      }
     }
   ],
 
@@ -709,7 +790,7 @@
     },
     "category": {
       "type": "select",
-      "name": "类型",
+      "name": "分类",
       "default": "",
       "options": [
         {"value": "", "label": "全部"},
@@ -755,15 +836,14 @@
         {"value": "WEBTOON", "label": "WEBTOON"}
       ]
     },
-    "rank": {
+    "timeType": {
       "type": "select",
-      "name": "榜单",
-      "default": "",
+      "name": "时间范围",
+      "default": "H24",
       "options": [
-        {"value": "", "label": "无"},
-        {"value": "H24", "label": "过去24小时最热门"},
-        {"value": "D7", "label": "过去7天最热门"},
-        {"value": "D30", "label": "过去30天最热门"}
+        {"value": "H24", "label": "过去24小时"},
+        {"value": "D7", "label": "过去7天"},
+        {"value": "D30", "label": "过去30天"}
       ]
     }
   },

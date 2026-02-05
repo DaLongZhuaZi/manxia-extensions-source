@@ -105,14 +105,14 @@
       "description": "筛选漫画（支持分类、排序、时间筛选）",
       "supportsPagination": true,
       "defaults": {
-        "category": "/albums?",
+        "category": "",
         "sort": "mr",
         "time": "a"
       },
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || '/albums?'; const sort = '{{sort}}' || 'mr'; const time = '{{time}}' || 'a'; let url = '{{baseUrl}}' + category + 'o=' + sort + '&t=' + time + '&page=' + page; return url; })();",
+          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || ''; const sort = '{{sort}}' || 'mr'; const time = '{{time}}' || 'a'; let url = '{{baseUrl}}/albums'; if (category) { url += '/' + category; } url += '?o=' + sort + '&t=' + time + '&page=' + page; return url; })();",
           "description": "构建筛选URL"
         },
         {
@@ -131,6 +131,38 @@
           "type": "script",
           "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.list-col > div.p-b-15:not([data-group])'); items.forEach((item) => { const thumbDiv = item.querySelector('.thumb-overlay-albums'); const linkEl = thumbDiv?.querySelector('a'); const imgEl = thumbDiv?.querySelector('img'); const titleEl = item.querySelector('.video-title'); const authorEl = item.querySelector('.title-truncate.hidden-xs'); const tagsEl = item.querySelector('.title-truncate.tags'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const match = href.match(/\\/album\\/(\\d+)/); const albumId = match ? match[1] : href; const title = titleEl.textContent?.trim() || ''; const cover = imgEl?.getAttribute('src') || ''; const author = authorEl ? Array.from(authorEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; const genre = tagsEl ? Array.from(tagsEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; mangas.push({ id: albumId, title: title, cover: cover, author: author, genre: genre }); } }); return JSON.stringify(mangas); })();",
           "description": "提取筛选结果漫画列表"
+        }
+      ]
+    },
+
+    "getLeaderboard": {
+      "description": "排行榜（按浏览量排序，支持时间筛选）",
+      "supportsPagination": true,
+      "defaults": {
+        "timeType": "a"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const timeType = '{{timeType}}' || 'a'; let url = '{{baseUrl}}/albums?o=mv&t=' + timeType + '&page=' + page; return url; })();",
+          "description": "构建排行榜URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到排行榜页面"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待5秒让页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.list-col > div.p-b-15:not([data-group])'); items.forEach((item) => { const thumbDiv = item.querySelector('.thumb-overlay-albums'); const linkEl = thumbDiv?.querySelector('a'); const imgEl = thumbDiv?.querySelector('img'); const titleEl = item.querySelector('.video-title'); const authorEl = item.querySelector('.title-truncate.hidden-xs'); const tagsEl = item.querySelector('.title-truncate.tags'); if (linkEl && titleEl) { const href = linkEl.getAttribute('href') || ''; const match = href.match(/\\/album\\/(\\d+)/); const albumId = match ? match[1] : href; const title = titleEl.textContent?.trim() || ''; const cover = imgEl?.getAttribute('src') || ''; const author = authorEl ? Array.from(authorEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; const genre = tagsEl ? Array.from(tagsEl.querySelectorAll('a')).map(a => a.textContent?.trim()).join(', ') : ''; mangas.push({ id: albumId, title: title, cover: cover, author: author, genre: genre }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取排行榜漫画列表"
         }
       ]
     },
@@ -330,15 +362,15 @@
           {
             "id": "category",
             "title": "分类",
-            "defaultValue": "/albums?",
+            "defaultValue": "",
             "options": [
-              {"value": "/albums?", "label": "全部"},
-              {"value": "/albums/another?", "label": "其他"},
-              {"value": "/albums/doujin?", "label": "同人"},
-              {"value": "/albums/hanman?", "label": "韩漫"},
-              {"value": "/albums/meiman?", "label": "美漫"},
-              {"value": "/albums/short?", "label": "短篇"},
-              {"value": "/albums/single?", "label": "单本"}
+              {"value": "", "label": "全部"},
+              {"value": "doujin", "label": "同人"},
+              {"value": "single", "label": "单本"},
+              {"value": "short", "label": "短篇"},
+              {"value": "hanman", "label": "韩漫"},
+              {"value": "meiman", "label": "美漫"},
+              {"value": "another", "label": "其他"}
             ]
           },
           {
@@ -346,10 +378,12 @@
             "title": "排序",
             "defaultValue": "mr",
             "options": [
-              {"value": "mr", "label": "最新"},
+              {"value": "mr", "label": "最近上传"},
               {"value": "mv", "label": "最多浏览"},
+              {"value": "md", "label": "最多推荐"},
               {"value": "tf", "label": "最多爱心"},
-              {"value": "mp", "label": "最多图片"}
+              {"value": "mp", "label": "最多图片"},
+              {"value": "tr", "label": "最多好评"}
             ]
           },
           {
@@ -357,10 +391,35 @@
             "title": "时间",
             "defaultValue": "a",
             "options": [
-              {"value": "a", "label": "全部"},
-              {"value": "t", "label": "今天"},
-              {"value": "w", "label": "这周"},
-              {"value": "m", "label": "本月"}
+              {"value": "a", "label": "全部时间"},
+              {"value": "t", "label": "今天上传"},
+              {"value": "w", "label": "这周上传"},
+              {"value": "m", "label": "本月上传"}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "leaderboard",
+      "type": "leaderboard",
+      "name": "排行榜",
+      "enabled": true,
+      "order": 3,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "排行榜",
+        "description": "选择时间范围",
+        "groups": [
+          {
+            "id": "timeType",
+            "title": "时间范围",
+            "defaultValue": "a",
+            "options": [
+              {"value": "a", "label": "总排行榜"},
+              {"value": "t", "label": "日排行榜"},
+              {"value": "w", "label": "周排行榜"},
+              {"value": "m", "label": "月排行榜"}
             ]
           }
         ]
@@ -372,15 +431,15 @@
     "category": {
       "name": "分类",
       "key": "category",
-      "default": "/albums?",
+      "default": "",
       "options": [
-        { "label": "全部", "value": "/albums?" },
-        { "label": "其他", "value": "/albums/another?" },
-        { "label": "同人", "value": "/albums/doujin?" },
-        { "label": "韩漫", "value": "/albums/hanman?" },
-        { "label": "美漫", "value": "/albums/meiman?" },
-        { "label": "短篇", "value": "/albums/short?" },
-        { "label": "单本", "value": "/albums/single?" }
+        { "label": "全部", "value": "" },
+        { "label": "同人", "value": "doujin" },
+        { "label": "单本", "value": "single" },
+        { "label": "短篇", "value": "short" },
+        { "label": "韩漫", "value": "hanman" },
+        { "label": "美漫", "value": "meiman" },
+        { "label": "其他", "value": "another" }
       ]
     },
     "sort": {
@@ -388,10 +447,12 @@
       "key": "o",
       "default": "mr",
       "options": [
-        { "label": "最新", "value": "mr" },
+        { "label": "最近上传", "value": "mr" },
         { "label": "最多浏览", "value": "mv" },
+        { "label": "最多推荐", "value": "md" },
         { "label": "最多爱心", "value": "tf" },
-        { "label": "最多图片", "value": "mp" }
+        { "label": "最多图片", "value": "mp" },
+        { "label": "最多好评", "value": "tr" }
       ]
     },
     "time": {
@@ -399,10 +460,21 @@
       "key": "t",
       "default": "a",
       "options": [
-        { "label": "全部", "value": "a" },
-        { "label": "今天", "value": "t" },
-        { "label": "这周", "value": "w" },
-        { "label": "本月", "value": "m" }
+        { "label": "全部时间", "value": "a" },
+        { "label": "今天上传", "value": "t" },
+        { "label": "这周上传", "value": "w" },
+        { "label": "本月上传", "value": "m" }
+      ]
+    },
+    "timeType": {
+      "name": "时间范围",
+      "key": "timeType",
+      "default": "a",
+      "options": [
+        { "label": "总排行榜", "value": "a" },
+        { "label": "日排行榜", "value": "t" },
+        { "label": "周排行榜", "value": "w" },
+        { "label": "月排行榜", "value": "m" }
       ]
     }
   },

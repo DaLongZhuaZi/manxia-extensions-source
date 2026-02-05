@@ -41,20 +41,6 @@
     }
   },
 
-  "filters": {
-    "sort": {
-      "type": "select",
-      "title": "排序方式",
-      "options": [
-        {"id": "views", "name": "趋势", "param": "views"},
-        {"id": "created", "name": "最新", "param": "created"},
-        {"id": "hits", "name": "热门", "param": "hits"},
-        {"id": "score", "name": "推荐", "param": "score"},
-        {"id": "likes", "name": "最佳", "param": "likes"}
-      ],
-      "default": "views"
-    }
-  },
 
   "workflows": {
     "popular": {
@@ -208,18 +194,23 @@
     },
 
     "filter": {
-      "description": "筛选画廊（支持排序筛选）",
+      "description": "按分类筛选画廊",
       "supportsPagination": true,
       "defaults": {
-        "sort": "views"
+        "category": ""
       },
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || ''; let url = '{{baseUrl}}/zh-hans'; if (category) { url += '/cat/' + category; } url += '?page=' + page; return url; })();",
+          "description": "构建分类URL"
+        },
+        {
           "type": "navigate",
-          "url": "{{baseUrl}}/zh-hans/sort/{{sort}}?page={{page}}",
+          "url": "{{scriptResult}}",
           "timeout": 30000,
           "waitAfterLoad": 3000,
-          "description": "导航到筛选结果页面"
+          "description": "导航到分类页面"
         },
         {
           "type": "wait",
@@ -262,19 +253,35 @@
       "order": 2,
       "requiresLogin": false,
       "filterConfig": {
-        "title": "筛选画廊",
-        "description": "选择筛选条件",
+        "title": "分类筛选",
+        "description": "选择分类",
         "groups": [
           {
-            "id": "sort",
-            "title": "排序",
-            "defaultValue": "views",
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "",
             "options": [
-              {"value": "views", "label": "趋势"},
-              {"value": "created", "label": "最新"},
-              {"value": "hits", "label": "热门"},
-              {"value": "score", "label": "推荐"},
-              {"value": "likes", "label": "最佳"}
+              {"value": "", "label": "全部"},
+              {"value": "11", "label": "極品美女"},
+              {"value": "3", "label": "清涼寫真"},
+              {"value": "7", "label": "性感激情"},
+              {"value": "1", "label": "歐美寫真"},
+              {"value": "5", "label": "美女圖"},
+              {"value": "4", "label": "絲襪美腿"},
+              {"value": "8", "label": "COSPLAY"},
+              {"value": "9", "label": "亞洲美女"},
+              {"value": "6", "label": "素人正妹"},
+              {"value": "17", "label": "Chinese"},
+              {"value": "12", "label": "Gravure"},
+              {"value": "10", "label": "歐美美女"},
+              {"value": "13", "label": "Aidol"},
+              {"value": "16", "label": "Thailand"},
+              {"value": "15", "label": "Korea"},
+              {"value": "21", "label": "國產美女"},
+              {"value": "20", "label": "港台美女"},
+              {"value": "14", "label": "Magazine"},
+              {"value": "19", "label": "日韓美女"},
+              {"value": "2", "label": "夜店辣妹"}
             ]
           }
         ]

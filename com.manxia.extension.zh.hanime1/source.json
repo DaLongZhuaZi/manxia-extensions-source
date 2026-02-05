@@ -194,38 +194,6 @@
           "description": "返回图片URL"
         }
       ]
-    },
-
-    "filter": {
-      "description": "筛选漫画（支持排序筛选）",
-      "supportsPagination": true,
-      "defaults": {
-        "sort": ""
-      },
-      "actions": [
-        {
-          "type": "script",
-          "code": "(() => { const page = {{page}} || 1; const sort = '{{sort}}' || ''; let url = '{{baseUrl}}/comics?page=' + page; if (sort) url += '&sort=' + sort; return url; })();",
-          "description": "构建筛选URL"
-        },
-        {
-          "type": "navigate",
-          "url": "{{scriptResult}}",
-          "timeout": 15000,
-          "description": "导航到筛选结果页面"
-        },
-        {
-          "type": "wait",
-          "condition": "time",
-          "duration": 2000,
-          "description": "等待页面加载"
-        },
-        {
-          "type": "script",
-          "code": "(() => { const mangas = []; const items = document.querySelectorAll('div.comic-rows-videos-div'); items.forEach((item) => { const link = item.querySelector('a'); const titleEl = item.querySelector('div.comic-rows-videos-title'); const imgEl = item.querySelector('img'); if (link && titleEl) { const url = link.getAttribute('href') || ''; const urlMatch = url.match(/\\/comic\\/([^\\/]+)/); const id = urlMatch ? urlMatch[1] : url; const title = titleEl.textContent?.trim() || ''; let cover = imgEl?.getAttribute('data-srcset') || imgEl?.getAttribute('src') || ''; if (cover.includes(',')) cover = cover.split(',')[0].trim(); mangas.push({ id: id, title: title, cover: cover, author: '', genre: '' }); } }); const hasNext = document.querySelector('ul.pagination a[rel=next]') !== null; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
-          "description": "提取筛选结果"
-        }
-      ]
     }
   },
 
@@ -245,47 +213,8 @@
       "enabled": true,
       "order": 1,
       "requiresLogin": false
-    },
-    {
-      "id": "filter",
-      "type": "filter",
-      "name": "筛选",
-      "enabled": true,
-      "order": 2,
-      "requiresLogin": false,
-      "filterConfig": {
-        "title": "筛选漫画",
-        "description": "选择筛选条件",
-        "groups": [
-          {
-            "id": "sort",
-            "title": "排序",
-            "defaultValue": "",
-            "options": [
-              {"value": "", "label": "最新"},
-              {"value": "popular-today", "label": "热门：本日"},
-              {"value": "popular-week", "label": "热门：本週"},
-              {"value": "popular", "label": "热门：所有"}
-            ]
-          }
-        ]
-      }
     }
   ],
-
-  "filters": {
-    "sort": {
-      "name": "排序",
-      "key": "sort",
-      "default": "",
-      "options": [
-        { "label": "最新", "value": "" },
-        { "label": "热门：本日", "value": "popular-today" },
-        { "label": "热门：本週", "value": "popular-week" },
-        { "label": "热门：所有", "value": "popular" }
-      ]
-    }
-  },
 
   "imageHeaders": {
     "Referer": "https://nhentai.net/",
