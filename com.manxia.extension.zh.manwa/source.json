@@ -9,27 +9,30 @@
     "description": "漫蛙 - 需要科学网络，BL为主",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
-    "tags": ["chinese", "webview", "free", "nsfw"],
+    "tags": [
+      "chinese",
+      "webview",
+      "free",
+      "nsfw"
+    ],
     "Internet": true
   },
-
   "capabilities": {
     "urlResolver": true,
     "pagination": true,
     "errorRetry": true,
     "loginSupport": false
   },
-
   "network": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "timeout": 30000,
     "retryCount": 3,
     "retryDelay": 2000
   },
-
   "workflows": {
     "popular": {
       "description": "获取热门漫画",
+      "supportsPagination": false,
       "actions": [
         {
           "type": "navigate",
@@ -51,9 +54,9 @@
         }
       ]
     },
-
     "latest": {
       "description": "获取最新更新",
+      "supportsPagination": false,
       "actions": [
         {
           "type": "navigate",
@@ -81,7 +84,6 @@
         }
       ]
     },
-
     "search": {
       "description": "搜索漫画",
       "supportsPagination": true,
@@ -101,12 +103,11 @@
         },
         {
           "type": "script",
-          "code": "(() => { var mangas = []; var bookListItems = document.querySelectorAll('ul.book-list > li'); if (bookListItems.length > 0) { for(var i=0;i<bookListItems.length;i++){ var item=bookListItems[i]; var titleEl = item.querySelector('p.book-list-info-title'); var linkEl = item.querySelector('a'); var imgEl = item.querySelector('img'); var title = titleEl ? titleEl.innerText : ''; var url = linkEl ? linkEl.getAttribute('href') : ''; var cover = imgEl ? (imgEl.getAttribute('data-original') || imgEl.getAttribute('src') || '') : ''; if (title && url) { mangas.push({ id: url, title: title, cover: cover }); }} } else { var mangaListItems = document.querySelectorAll('ul.manga-list-2 > li'); for(var j=0;j<mangaListItems.length;j++){ var item2=mangaListItems[j]; var titleEl2 = item2.querySelector('p.manga-list-2-title'); var linkEl2 = item2.querySelector('a'); var imgEl2 = item2.querySelector('img'); var title2 = titleEl2 ? titleEl2.innerText : ''; var url2 = linkEl2 ? linkEl2.getAttribute('href') : ''; var cover2 = imgEl2 ? (imgEl2.getAttribute('src') || imgEl2.getAttribute('data-original') || '') : ''; if (title2 && url2) { mangas.push({ id: url2, title: title2, cover: cover2 }); }} } var pagination = document.querySelectorAll('ul.pagination2 > li'); var hasNext = pagination.length > 0 && pagination[pagination.length - 1].innerText === '下一页'; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
+          "code": "(() => { var mangas = []; var bookListItems = document.querySelectorAll('ul.book-list > li'); if (bookListItems.length > 0) { for(var i=0;i<bookListItems.length;i++){ var item=bookListItems[i]; var titleEl = item.querySelector('p.book-list-info-title'); var linkEl = item.querySelector('a'); var imgEl = item.querySelector('img'); var title = titleEl ? titleEl.innerText : ''; var url = linkEl ? linkEl.getAttribute('href') : ''; var cover = imgEl ? (imgEl.getAttribute('data-original') || imgEl.getAttribute('src') || '') : ''; if (title && url) { mangas.push({ id: url, title: title, cover: cover }); }} } else { var mangaListItems = document.querySelectorAll('ul.manga-list-2 > li'); for(var j=0;j<mangaListItems.length;j++){ var item2=mangaListItems[j]; var titleEl2 = item2.querySelector('p.manga-list-2-title'); var linkEl2 = item2.querySelector('a'); var imgEl2 = item2.querySelector('img'); var title2 = titleEl2 ? titleEl2.innerText : ''; var url2 = linkEl2 ? linkEl2.getAttribute('href') : ''; var cover2 = imgEl2 ? (imgEl2.getAttribute('src') || imgEl2.getAttribute('data-original') || '') : ''; if (title2 && url2) { mangas.push({ id: url2, title: title2, cover: cover2 }); }} } return JSON.stringify(mangas); })();",
           "description": "提取搜索结果"
         }
       ]
     },
-
     "browse": {
       "description": "分类浏览漫画",
       "supportsPagination": true,
@@ -131,21 +132,19 @@
         }
       ]
     },
-
     "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
         {
-          "type": "navigate",
-          "url": "{{baseUrl}}/book/{{mangaId}}",
-          "timeout": 15000,
-          "description": "导航到漫画详情页"
+          "type": "script",
+          "code": "(() => { let raw = '{{mangaId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/\\/+$/, '').replace(/^\\/+/, ''); if (!raw) return '{{baseUrl}}'; if (raw.startsWith('book/')) return '{{baseUrl}}/' + raw; if (/^\\d+$/.test(raw)) return '{{baseUrl}}/book/' + raw; return '{{baseUrl}}/' + raw; })();",
+          "description": "归一化漫画详情 URL"
         },
         {
-          "type": "wait",
-          "condition": "time",
-          "duration": 2000,
-          "description": "等待页面完全加载"
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
@@ -156,26 +155,24 @@
         },
         {
           "type": "script",
-          "code": "(() => { var titleEl = document.getElementsByClassName('detail-main-info-title')[0]; if (!titleEl) return null; var title = titleEl.innerText; var coverEl = document.querySelector('div.detail-main-cover img'); var cover = coverEl ? (coverEl.getAttribute('data-original') || coverEl.src || '') : ''; var authorEl = document.querySelector('p.detail-main-info-author span.detail-main-info-value a'); var author = authorEl ? authorEl.innerText : ''; var status = '未知'; var statusItems = document.querySelectorAll('p.detail-main-info-author'); for(var i=0;i<statusItems.length;i++){ var item=statusItems[i]; if(item.innerText.indexOf('更新状态')>=0){ var valueEl=item.querySelector('span.detail-main-info-value'); if(valueEl){ var st=valueEl.innerText; if(st.indexOf('连载')>=0) status='连载中'; else if(st.indexOf('完结')>=0) status='已完结'; }}} var genreEls = document.querySelectorAll('div.detail-main-info-class span.info-tag-span'); var genres = []; for(var j=0;j<genreEls.length;j++){ genres.push(genreEls[j].innerText); } var descEl = document.querySelector('#detail p.detail-desc'); var description = descEl ? descEl.innerText : ''; return JSON.stringify({ title: title, cover: cover, author: author, status: status, genre: genres.join(', '), description: description }); })();",
+          "code": "(() => { const titleEl = document.querySelector('.detail-main-info-title'); if (!titleEl) return JSON.stringify({ title: '', cover: '', author: '', status: 'unknown', genre: '', description: '' }); const title = titleEl.textContent?.trim() || ''; const coverEl = document.querySelector('div.detail-main-cover img'); const cover = coverEl ? (coverEl.getAttribute('data-original') || coverEl.getAttribute('src') || '') : ''; const authorEl = document.querySelector('p.detail-main-info-author span.detail-main-info-value a'); const author = authorEl?.textContent?.trim() || ''; const rows = Array.from(document.querySelectorAll('p.detail-main-info-author')).map(el => el.textContent?.trim() || ''); let status = 'unknown'; const statusText = rows.find(text => text.includes('更新状态') || text.includes('狀態')) || ''; if (statusText.includes('连载') || statusText.includes('連載')) status = 'ongoing'; else if (statusText.includes('完结') || statusText.includes('完結')) status = 'completed'; const genre = Array.from(document.querySelectorAll('div.detail-main-info-class a.info-tag, div.detail-main-info-class span.info-tag-span')).map(el => el.textContent?.trim() || '').filter(Boolean).join(', '); const description = document.querySelector('#detail p.detail-desc')?.textContent?.trim() || ''; return JSON.stringify({ title, cover, author, status, genre, description }); })();",
           "description": "提取漫画详情"
         }
       ]
     },
-
     "getMangaDetailWithChapters": {
       "description": "获取漫画详情和章节列表",
       "actions": [
         {
-          "type": "navigate",
-          "url": "{{baseUrl}}/book/{{mangaId}}",
-          "timeout": 15000,
-          "description": "导航到漫画详情页"
+          "type": "script",
+          "code": "(() => { let raw = '{{mangaId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/\\/+$/, '').replace(/^\\/+/, ''); if (!raw) return '{{baseUrl}}'; if (raw.startsWith('book/')) return '{{baseUrl}}/' + raw; if (/^\\d+$/.test(raw)) return '{{baseUrl}}/book/' + raw; return '{{baseUrl}}/' + raw; })();",
+          "description": "归一化漫画详情 URL"
         },
         {
-          "type": "wait",
-          "condition": "time",
-          "duration": 2000,
-          "description": "等待页面完全加载"
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
@@ -186,47 +183,43 @@
         },
         {
           "type": "script",
-          "code": "(() => { var titleEl = document.getElementsByClassName('detail-main-info-title')[0]; if (!titleEl) return null; var title = titleEl.innerText; var coverEl = document.querySelector('div.detail-main-cover img'); var cover = coverEl ? (coverEl.getAttribute('data-original') || coverEl.src || '') : ''; var authorEl = document.querySelector('p.detail-main-info-author span.detail-main-info-value a'); var author = authorEl ? authorEl.innerText : ''; var status = '未知'; var statusItems = document.querySelectorAll('p.detail-main-info-author'); for(var i=0;i<statusItems.length;i++){ var item=statusItems[i]; if(item.innerText.indexOf('更新状态')>=0){ var valueEl=item.querySelector('span.detail-main-info-value'); if(valueEl){ var st=valueEl.innerText; if(st.indexOf('连载')>=0) status='连载中'; else if(st.indexOf('完结')>=0) status='已完结'; }}} var genreEls = document.querySelectorAll('div.detail-main-info-class span.info-tag-span'); var genres = []; for(var j=0;j<genreEls.length;j++){ genres.push(genreEls[j].innerText); } var descEl = document.querySelector('#detail p.detail-desc'); var description = descEl ? descEl.innerText : ''; return JSON.stringify({ title: title, cover: cover, author: author, status: status, genre: genres.join(', '), description: description }); })();",
+          "code": "(() => { const titleEl = document.querySelector('.detail-main-info-title'); if (!titleEl) return JSON.stringify({ title: '', cover: '', author: '', status: 'unknown', genre: '', description: '' }); const title = titleEl.textContent?.trim() || ''; const coverEl = document.querySelector('div.detail-main-cover img'); const cover = coverEl ? (coverEl.getAttribute('data-original') || coverEl.getAttribute('src') || '') : ''; const authorEl = document.querySelector('p.detail-main-info-author span.detail-main-info-value a'); const author = authorEl?.textContent?.trim() || ''; const rows = Array.from(document.querySelectorAll('p.detail-main-info-author')).map(el => el.textContent?.trim() || ''); let status = 'unknown'; const statusText = rows.find(text => text.includes('更新状态') || text.includes('狀態')) || ''; if (statusText.includes('连载') || statusText.includes('連載')) status = 'ongoing'; else if (statusText.includes('完结') || statusText.includes('完結')) status = 'completed'; const genre = Array.from(document.querySelectorAll('div.detail-main-info-class a.info-tag, div.detail-main-info-class span.info-tag-span')).map(el => el.textContent?.trim() || '').filter(Boolean).join(', '); const description = document.querySelector('#detail p.detail-desc')?.textContent?.trim() || ''; return JSON.stringify({ title, cover, author, status, genre, description }); })();",
           "description": "提取漫画详情"
         },
         {
           "type": "script",
-          "code": "(() => { var chapters = []; var chapterLinks = document.querySelectorAll('ul#detail-list-select > li > a'); for(var i=0;i<chapterLinks.length;i++){ var link=chapterLinks[i]; var url = link.getAttribute('href') || ''; var title = link.innerText; if (url && title) { chapters.push({ id: url, title: title }); }} chapters.reverse(); return JSON.stringify(chapters); })();",
+          "code": "(() => { const chapters = []; const links = document.querySelectorAll('ul#detail-list-select > li > a'); links.forEach(link => { const url = link.getAttribute('href') || ''; const title = link.textContent?.trim() || ''; if (url && title) chapters.push({ id: url, title, url }); }); chapters.reverse(); return JSON.stringify(chapters); })();",
           "description": "提取章节列表（按时间正序）"
         }
       ]
     },
-
     "getChapterList": {
       "description": "获取章节列表",
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { let raw = '{{mangaId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/\\/+$/, '').replace(/^\\/+/, ''); if (!raw) return '{{baseUrl}}'; if (raw.startsWith('book/')) return '{{baseUrl}}/' + raw; if (/^\\d+$/.test(raw)) return '{{baseUrl}}/book/' + raw; return '{{baseUrl}}/' + raw; })();",
+          "description": "归一化漫画详情 URL"
+        },
+        {
           "type": "navigate",
-          "url": "{{baseUrl}}/book/{{mangaId}}",
+          "url": "{{scriptResult}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
           "condition": "time",
-          "duration": 2000,
-          "description": "等待页面完全加载"
-        },
-        {
-          "type": "wait",
-          "condition": "element",
-          "selector": "ul#detail-list-select",
-          "timeout": 10000,
-          "description": "等待章节列表加载"
+          "duration": 2500,
+          "description": "等待章节数据渲染"
         },
         {
           "type": "script",
-          "code": "(() => { var chapters = []; var chapterLinks = document.querySelectorAll('ul#detail-list-select > li > a'); for(var i=0;i<chapterLinks.length;i++){ var link=chapterLinks[i]; var url = link.getAttribute('href') || ''; var title = link.innerText; if (url && title) { chapters.push({ id: url, title: title }); }} chapters.reverse(); return JSON.stringify(chapters); })();",
+          "code": "(() => { const chapters = []; const links = document.querySelectorAll('ul#detail-list-select > li > a'); links.forEach(link => { const url = link.getAttribute('href') || ''; const title = link.textContent?.trim() || ''; if (url && title) chapters.push({ id: url, title, url }); }); chapters.reverse(); return JSON.stringify(chapters); })();",
           "description": "提取章节列表（按时间正序）"
         }
       ]
     },
-
     "getPageList": {
       "description": "获取章节页面列表",
       "actions": [
@@ -257,12 +250,11 @@
         },
         {
           "type": "script",
-          "code": "(() => { var pages = []; var images = document.querySelectorAll('#cp_img img'); for(var i=0;i<images.length;i++){ var img=images[i]; var url = img.getAttribute('data-r-src') || img.src || ''; if (url && url.indexOf('data:')!==0) { pages.push({ index: i, url: url }); }} return JSON.stringify(pages); })();",
+          "code": "(() => { const pages = []; const images = document.querySelectorAll('#cp_img > div.img-content > img[data-r-src], #cp_img img[data-r-src]'); images.forEach((img, index) => { const url = img.getAttribute('data-r-src') || img.getAttribute('src') || ''; if (url && !url.startsWith('data:')) pages.push({ index, url }); }); return JSON.stringify(pages); })();",
           "description": "提取章节图片列表"
         }
       ]
     },
-
     "getImageUrl": {
       "description": "获取图片URL",
       "actions": [
@@ -273,7 +265,6 @@
         }
       ]
     },
-
     "filter": {
       "description": "筛选漫画（支持状态、类型、地区、排序筛选）",
       "supportsPagination": true,
@@ -299,13 +290,12 @@
         },
         {
           "type": "script",
-          "code": "(() => { var mangas = []; var items = document.querySelectorAll('ul.manga-list-2 > li'); for(var i=0;i<items.length;i++){ var item=items[i]; var titleEl = item.querySelector('p.manga-list-2-title'); var linkEl = item.querySelector('a'); var imgEl = item.querySelector('img'); var title = titleEl ? titleEl.innerText : ''; var url = linkEl ? linkEl.getAttribute('href') : ''; var cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || '') : ''; if (title && url) { mangas.push({ id: url, title: title, cover: cover }); }} var pagination = document.querySelectorAll('ul.pagination2 > li'); var hasNext = pagination.length > 0 && pagination[pagination.length - 1].innerText === '下一页'; return JSON.stringify({ mangas: mangas, hasNextPage: hasNext }); })();",
+          "code": "(() => { var mangas = []; var items = document.querySelectorAll('ul.manga-list-2 > li'); for(var i=0;i<items.length;i++){ var item=items[i]; var titleEl = item.querySelector('p.manga-list-2-title'); var linkEl = item.querySelector('a'); var imgEl = item.querySelector('img'); var title = titleEl ? titleEl.innerText : ''; var url = linkEl ? linkEl.getAttribute('href') : ''; var cover = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-original') || '') : ''; if (title && url) { mangas.push({ id: url, title: title, cover: cover }); }} return JSON.stringify(mangas); })();",
           "description": "提取筛选结果"
         }
       ]
     }
   },
-
   "tabs": [
     {
       "id": "popular",
@@ -339,9 +329,18 @@
             "title": "状态",
             "defaultValue": "",
             "options": [
-              {"value": "", "label": "全部"},
-              {"value": "2", "label": "连载中"},
-              {"value": "1", "label": "已完结"}
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "2",
+                "label": "连载中"
+              },
+              {
+                "value": "1",
+                "label": "已完结"
+              }
             ]
           },
           {
@@ -349,11 +348,26 @@
             "title": "类型",
             "defaultValue": "-1",
             "options": [
-              {"value": "-1", "label": "全部"},
-              {"value": "2", "label": "一般向"},
-              {"value": "0", "label": "BL向"},
-              {"value": "1", "label": "禁漫"},
-              {"value": "3", "label": "TL向"}
+              {
+                "value": "-1",
+                "label": "全部"
+              },
+              {
+                "value": "2",
+                "label": "一般向"
+              },
+              {
+                "value": "0",
+                "label": "BL向"
+              },
+              {
+                "value": "1",
+                "label": "禁漫"
+              },
+              {
+                "value": "3",
+                "label": "TL向"
+              }
             ]
           },
           {
@@ -361,13 +375,34 @@
             "title": "地区",
             "defaultValue": "",
             "options": [
-              {"value": "", "label": "全部"},
-              {"value": "2", "label": "韩国"},
-              {"value": "3", "label": "日漫"},
-              {"value": "4", "label": "国漫"},
-              {"value": "5", "label": "台漫"},
-              {"value": "6", "label": "其他"},
-              {"value": "1", "label": "未分类"}
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "2",
+                "label": "韩国"
+              },
+              {
+                "value": "3",
+                "label": "日漫"
+              },
+              {
+                "value": "4",
+                "label": "国漫"
+              },
+              {
+                "value": "5",
+                "label": "台漫"
+              },
+              {
+                "value": "6",
+                "label": "其他"
+              },
+              {
+                "value": "1",
+                "label": "未分类"
+              }
             ]
           },
           {
@@ -375,26 +410,46 @@
             "title": "排序",
             "defaultValue": "-1",
             "options": [
-              {"value": "-1", "label": "最新"},
-              {"value": "0", "label": "最旧"},
-              {"value": "1", "label": "收藏"},
-              {"value": "2", "label": "新漫"}
+              {
+                "value": "-1",
+                "label": "最新"
+              },
+              {
+                "value": "0",
+                "label": "最旧"
+              },
+              {
+                "value": "1",
+                "label": "收藏"
+              },
+              {
+                "value": "2",
+                "label": "新漫"
+              }
             ]
           }
         ]
       }
     }
   ],
-
   "filters": {
     "end": {
       "name": "状态",
       "type": "select",
       "default": "",
       "options": [
-        { "label": "全部", "value": "" },
-        { "label": "连载中", "value": "2" },
-        { "label": "已完结", "value": "1" }
+        {
+          "label": "全部",
+          "value": ""
+        },
+        {
+          "label": "连载中",
+          "value": "2"
+        },
+        {
+          "label": "已完结",
+          "value": "1"
+        }
       ]
     },
     "gender": {
@@ -402,11 +457,26 @@
       "type": "select",
       "default": "-1",
       "options": [
-        { "label": "全部", "value": "-1" },
-        { "label": "一般向", "value": "2" },
-        { "label": "BL向", "value": "0" },
-        { "label": "禁漫", "value": "1" },
-        { "label": "TL向", "value": "3" }
+        {
+          "label": "全部",
+          "value": "-1"
+        },
+        {
+          "label": "一般向",
+          "value": "2"
+        },
+        {
+          "label": "BL向",
+          "value": "0"
+        },
+        {
+          "label": "禁漫",
+          "value": "1"
+        },
+        {
+          "label": "TL向",
+          "value": "3"
+        }
       ]
     },
     "area": {
@@ -414,13 +484,34 @@
       "type": "select",
       "default": "",
       "options": [
-        { "label": "全部", "value": "" },
-        { "label": "韩国", "value": "2" },
-        { "label": "日漫", "value": "3" },
-        { "label": "国漫", "value": "4" },
-        { "label": "台漫", "value": "5" },
-        { "label": "其他", "value": "6" },
-        { "label": "未分类", "value": "1" }
+        {
+          "label": "全部",
+          "value": ""
+        },
+        {
+          "label": "韩国",
+          "value": "2"
+        },
+        {
+          "label": "日漫",
+          "value": "3"
+        },
+        {
+          "label": "国漫",
+          "value": "4"
+        },
+        {
+          "label": "台漫",
+          "value": "5"
+        },
+        {
+          "label": "其他",
+          "value": "6"
+        },
+        {
+          "label": "未分类",
+          "value": "1"
+        }
       ]
     },
     "sort": {
@@ -428,19 +519,29 @@
       "type": "select",
       "default": "-1",
       "options": [
-        { "label": "最新", "value": "-1" },
-        { "label": "最旧", "value": "0" },
-        { "label": "收藏", "value": "1" },
-        { "label": "新漫", "value": "2" }
+        {
+          "label": "最新",
+          "value": "-1"
+        },
+        {
+          "label": "最旧",
+          "value": "0"
+        },
+        {
+          "label": "收藏",
+          "value": "1"
+        },
+        {
+          "label": "新漫",
+          "value": "2"
+        }
       ]
     }
   },
-
   "imageHeaders": {
     "Referer": "https://manwa.me/",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   },
-
   "mirrors": [
     "https://manwa.me",
     "https://manwass.cc",
@@ -448,9 +549,20 @@
     "https://manwast.cc",
     "https://manwasy.cc"
   ],
-
   "notes": {
     "imageDecryption": "部分图片需要AES解密，key为'my2ecret782ecret'，模式为AES/CBC/NOPADDING",
     "mirrorUpdate": "镜像URL可能会动态更新，重定向URL为 https://fuwt.cc/mw666"
-  }
+  },
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-01-04",
+      "changes": [
+        "初始版本，移植自keiyoushi漫蛙扩展",
+        "支持热门、最新、搜索功能",
+        "支持多条件筛选（状态、类型、地区、排序）",
+        "支持图片AES解密"
+      ]
+    }
+  ]
 }

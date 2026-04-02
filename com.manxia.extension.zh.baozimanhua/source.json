@@ -87,26 +87,21 @@
     },
 
     "filter": {
-      "description": "筛选漫画（支持标签、地区、进度筛选）",
-      "supportsPagination": true,
-      "defaults": {
-        "type": "all",
-        "region": "all",
-        "state": "all",
-        "filter": "*"
-      },
-      "actions": [
-        {
-          "type": "script",
-          "code": "(() => { const page = {{page}} || 1; const type = '{{type}}' || 'all'; const region = '{{region}}' || 'all'; const state = '{{state}}' || 'all'; const filter = '{{filter}}' || '*'; let url = 'https://cn.baozimh.com/classify?page=' + page; if (type && type !== 'all') url += '&type=' + type; if (region && region !== 'all') url += '&region=' + region; if (state && state !== 'all') url += '&state=' + state; if (filter && filter !== '*') url += '&filter=' + filter; return url; })();",
-          "description": "构建筛选URL"
-        },
-        {
-          "type": "navigate",
-          "url": "{{scriptResult}}",
-          "timeout": 15000,
-          "description": "导航到筛选结果页面"
-        },
+       "description": "筛选漫画（支持标签、地区、进度筛选）",
+       "supportsPagination": true,
+       "defaults": {
+         "type": "all",
+         "region": "all",
+         "state": "all",
+         "filter": "*"
+       },
+       "actions": [
+         {
+           "type": "navigate",
+           "url": "https://cn.baozimh.com/classify?page={{page}}{{#if type}}&type={{type}}{{/if}}{{#if region}}&region={{region}}{{/if}}{{#if state}}&state={{state}}{{/if}}{{#if filter}}&filter={{filter}}{{/if}}",
+           "timeout": 15000,
+           "description": "导航到筛选结果页面"
+         },
         {
           "type": "wait",
           "condition": "element",
@@ -128,8 +123,9 @@
     },
 
     "latest": {
-      "description": "获取最新更新",
-      "actions": [
+       "description": "获取最新更新",
+       "supportsPagination": false,
+       "actions": [
         {
           "type": "navigate",
           "url": "https://cn.baozimh.com/list/new",
@@ -270,11 +266,11 @@
           "timeout": 15000,
           "description": "等待图片元素加载"
         },
-        {
-          "type": "script",
-          "code": "(() => { const pages = []; const images = document.querySelectorAll('.comic-contain amp-img'); console.log('[Baozi] 找到图片元素数量:', images.length); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; console.log('[Baozi] 图片', index, 'src:', src); if (src) { src = src.replace('.baozicdn.com', '.baozimh.com'); pages.push({ index: index, url: src }); } }); const nextBtn = document.querySelector('#next-chapter'); const hasNextPage = nextBtn && (nextBtn.textContent === '下一页' || nextBtn.textContent === '下一頁'); console.log('[Baozi] 提取到', pages.length, '张图片, 有下一页:', hasNextPage); return JSON.stringify({ pages: pages, hasNextPage: hasNextPage, nextPageUrl: hasNextPage ? nextBtn.getAttribute('href') : null }); })();",
-          "description": "提取当前页图片列表"
-        }
+         {
+           "type": "script",
+           "code": "(() => { const pages = []; const images = document.querySelectorAll('.comic-contain amp-img'); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; if (src) { src = src.replace('.baozicdn.com', '.baozimh.com'); pages.push({ index: index, url: src }); } }); return JSON.stringify(pages); })();",
+           "description": "提取当前页图片列表"
+         }
       ]
     },
 
@@ -454,8 +450,21 @@
     }
   },
 
-  "imageHeaders": {
-    "Referer": "https://cn.baozimh.com/",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-  }
+   "imageHeaders": {
+     "Referer": "https://cn.baozimh.com/",
+     "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+   },
+
+   "changelog": [
+     {
+       "version": "1.0.0",
+       "date": "2026-01-04",
+       "changes": [
+         "初始版本，移植自keiyoushi包子漫画扩展",
+         "支持热门、最新、搜索功能",
+         "支持多条件筛选（标签、地区、进度、标题首字母）",
+         "支持章节内分页"
+       ]
+     }
+   ]
 }

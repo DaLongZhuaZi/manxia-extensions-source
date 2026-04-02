@@ -376,5 +376,23 @@
         "baseUrl": "https://hanime1.me"
       }
     ]
-  }
-]
+  },
+   {
+     "name": "ManXia: Roumanwu",
+     "pkg": "com.manxia.extension.zh.roumanwu",
+     "type": "manga",
+     "lang": "zh",
+     "code": 25,
+     "version": "1.0.0",
+     "nsfw": 1,
+     "hasIcon": true,
+     "sources": [
+       {
+         "name": "肉漫屋",
+         "lang": "zh",
+         "id": "2172475187360186917",
+         "baseUrl": "https://rouman5.com"
+       }
+     ]
+    }
+  ]

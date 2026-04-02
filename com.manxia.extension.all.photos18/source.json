@@ -9,10 +9,14 @@
     "description": "Photos18 - 图片画廊网站",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
-    "tags": ["gallery", "photos", "webview", "free"],
+    "tags": [
+      "gallery",
+      "photos",
+      "webview",
+      "free"
+    ],
     "Internet": true
   },
-
   "capabilities": {
     "urlResolver": true,
     "pagination": true,
@@ -20,7 +24,6 @@
     "loginSupport": false,
     "advancedFilters": true
   },
-
   "network": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "timeout": 30000,
@@ -31,7 +34,6 @@
       "Referer": "https://www.photos18.com"
     }
   },
-
   "settings": {
     "useTraditionalChinese": {
       "type": "boolean",
@@ -40,8 +42,6 @@
       "default": false
     }
   },
-
-
   "workflows": {
     "popular": {
       "description": "获取热门画廊（按浏览量排序）",
@@ -49,7 +49,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/zh-hans/sort/views?page={{page}}",
+          "url": "{{baseUrl}}/zh-hans/?page={{page}}&sort=views",
           "timeout": 30000,
           "waitAfterLoad": 3000,
           "description": "导航到热门页面"
@@ -68,14 +68,18 @@
         }
       ]
     },
-
     "latest": {
       "description": "获取最新画廊",
       "supportsPagination": true,
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const page = Number('{{page}}' || 1); return page <= 1 ? '{{baseUrl}}/zh-hans/' : '{{baseUrl}}/zh-hans?page=' + page + '&per-page=100'; })();",
+          "description": "构建最新列表 URL"
+        },
+        {
           "type": "navigate",
-          "url": "{{baseUrl}}/zh-hans?page={{page}}",
+          "url": "{{scriptResult}}",
           "timeout": 30000,
           "waitAfterLoad": 3000,
           "description": "导航到最新页面"
@@ -94,7 +98,6 @@
         }
       ]
     },
-
     "search": {
       "description": "搜索画廊",
       "supportsPagination": true,
@@ -120,13 +123,17 @@
         }
       ]
     },
-
     "getMangaDetail": {
       "description": "获取画廊详情（导航到画廊页面获取标题）",
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { let raw = '{{mangaId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/zh-hans/, '').replace(/^\\/+/, '').replace(/\\/+$/, ''); raw = raw.replace(/^v\\//, ''); return 'https://www.photos18.com/v/' + raw; })();",
+          "description": "归一化画廊 URL"
+        },
+        {
           "type": "navigate",
-          "url": "https://www.photos18.com/v/{{mangaId}}",
+          "url": "{{scriptResult}}",
           "timeout": 30000,
           "waitAfterLoad": 2000,
           "description": "导航到画廊页面"
@@ -140,29 +147,32 @@
         },
         {
           "type": "script",
-          "code": "(() => { const h1 = document.querySelector('h1'); const title = h1 ? h1.textContent.trim() : ''; const cover = document.querySelector('#content img')?.getAttribute('src') || ''; return JSON.stringify({ title: title, cover: cover, status: 'completed' }); })();",
+          "code": "(() => { const h1 = document.querySelector('h1'); const title = h1 ? h1.textContent.trim() : ''; const firstImg = document.querySelector('#content img'); const cover = firstImg?.getAttribute('src') || firstImg?.getAttribute('data-src') || firstImg?.getAttribute('data-lazy-src') || ''; return JSON.stringify({ title, cover, status: 'completed' }); })();",
           "description": "提取画廊详情"
         }
       ]
     },
-
     "getChapterList": {
       "description": "获取章节列表（Photos18每个画廊只有一个章节）",
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const mangaId = '{{mangaId}}'; const chapters = [{ id: mangaId, title: 'Gallery', url: 'https://www.photos18.com' + mangaId, date: '' }]; return JSON.stringify(chapters); })();",
-          "description": "返回单章节（使用mangaId作为chapterId）"
+          "code": "(() => { let raw = '{{mangaId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/zh-hans/, '').replace(/^\\/+/, '').replace(/\\/+$/, ''); raw = raw.replace(/^v\\//, ''); return JSON.stringify([{ id: raw, title: 'Gallery', url: 'https://www.photos18.com/v/' + raw, date: '' }]); })();",
+          "description": "返回单章节结果"
         }
       ]
     },
-
     "getPageList": {
       "description": "获取画廊所有图片",
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { let raw = '{{chapterId}}'; if (raw.startsWith('http')) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/zh-hans/, '').replace(/^\\/+/, '').replace(/\\/+$/, ''); raw = raw.replace(/^v\\//, ''); return 'https://www.photos18.com/v/' + raw; })();",
+          "description": "归一化章节 URL"
+        },
+        {
           "type": "navigate",
-          "url": "https://www.photos18.com/v/{{chapterId}}",
+          "url": "{{scriptResult}}",
           "timeout": 30000,
           "waitAfterLoad": 3000,
           "description": "导航到画廊页面"
@@ -176,12 +186,11 @@
         },
         {
           "type": "script",
-          "code": "(() => { const pages = []; const images = document.querySelectorAll('#content img'); images.forEach((img, index) => { let src = img.getAttribute('src') || ''; if (src) { pages.push({ index: index, imageUrl: src }); } }); return JSON.stringify(pages); })();",
-          "description": "提取所有图片URL"
+          "code": "(() => { const pages = []; document.querySelectorAll('#content img').forEach((img, index) => { const url = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || ''; if (url) pages.push({ index, imageUrl: url }); }); return JSON.stringify(pages); })();",
+          "description": "提取所有图片 URL"
         }
       ]
     },
-
     "getImageUrl": {
       "description": "获取单张图片URL（Photos18图片URL在getPageList中已获取）",
       "actions": [
@@ -192,7 +201,6 @@
         }
       ]
     },
-
     "filter": {
       "description": "按分类筛选画廊",
       "supportsPagination": true,
@@ -201,13 +209,8 @@
       },
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || ''; let url = '{{baseUrl}}/zh-hans'; if (category) { url += '/cat/' + category; } url += '?page=' + page; return url; })();",
-          "description": "构建分类URL"
-        },
-        {
           "type": "navigate",
-          "url": "{{scriptResult}}",
+          "url": "{{baseUrl}}/zh-hans/cat/{{category}}?page={{page}}",
           "timeout": 30000,
           "waitAfterLoad": 3000,
           "description": "导航到分类页面"
@@ -227,7 +230,6 @@
       ]
     }
   },
-
   "tabs": [
     {
       "id": "popular",
@@ -261,34 +263,96 @@
             "title": "分类",
             "defaultValue": "",
             "options": [
-              {"value": "", "label": "全部"},
-              {"value": "11", "label": "極品美女"},
-              {"value": "3", "label": "清涼寫真"},
-              {"value": "7", "label": "性感激情"},
-              {"value": "1", "label": "歐美寫真"},
-              {"value": "5", "label": "美女圖"},
-              {"value": "4", "label": "絲襪美腿"},
-              {"value": "8", "label": "COSPLAY"},
-              {"value": "9", "label": "亞洲美女"},
-              {"value": "6", "label": "素人正妹"},
-              {"value": "17", "label": "Chinese"},
-              {"value": "12", "label": "Gravure"},
-              {"value": "10", "label": "歐美美女"},
-              {"value": "13", "label": "Aidol"},
-              {"value": "16", "label": "Thailand"},
-              {"value": "15", "label": "Korea"},
-              {"value": "21", "label": "國產美女"},
-              {"value": "20", "label": "港台美女"},
-              {"value": "14", "label": "Magazine"},
-              {"value": "19", "label": "日韓美女"},
-              {"value": "2", "label": "夜店辣妹"}
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "11",
+                "label": "極品美女"
+              },
+              {
+                "value": "3",
+                "label": "清涼寫真"
+              },
+              {
+                "value": "7",
+                "label": "性感激情"
+              },
+              {
+                "value": "1",
+                "label": "歐美寫真"
+              },
+              {
+                "value": "5",
+                "label": "美女圖"
+              },
+              {
+                "value": "4",
+                "label": "絲襪美腿"
+              },
+              {
+                "value": "8",
+                "label": "COSPLAY"
+              },
+              {
+                "value": "9",
+                "label": "亞洲美女"
+              },
+              {
+                "value": "6",
+                "label": "素人正妹"
+              },
+              {
+                "value": "17",
+                "label": "Chinese"
+              },
+              {
+                "value": "12",
+                "label": "Gravure"
+              },
+              {
+                "value": "10",
+                "label": "歐美美女"
+              },
+              {
+                "value": "13",
+                "label": "Aidol"
+              },
+              {
+                "value": "16",
+                "label": "Thailand"
+              },
+              {
+                "value": "15",
+                "label": "Korea"
+              },
+              {
+                "value": "21",
+                "label": "國產美女"
+              },
+              {
+                "value": "20",
+                "label": "港台美女"
+              },
+              {
+                "value": "14",
+                "label": "Magazine"
+              },
+              {
+                "value": "19",
+                "label": "日韓美女"
+              },
+              {
+                "value": "2",
+                "label": "夜店辣妹"
+              }
             ]
           }
         ]
       }
     }
   ],
-
   "changelog": [
     {
       "version": "1.0.0",

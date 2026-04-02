@@ -9,17 +9,19 @@
     "description": "Everia.club - 图片写真",
     "author": "ManXia Team",
     "nsfw": true,
-    "tags": ["gallery", "webview", "all-language"],
+    "tags": [
+      "gallery",
+      "webview",
+      "all-language"
+    ],
     "Internet": true
   },
-
   "capabilities": {
     "urlResolver": true,
     "pagination": true,
     "errorRetry": true,
     "loginSupport": false
   },
-
   "network": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "timeout": 30000,
@@ -29,14 +31,19 @@
       "Referer": "https://everia.club/"
     }
   },
-
   "workflows": {
     "popular": {
       "description": "获取热门漫画列表（从侧边栏热门帖子）",
+      "supportsPagination": false,
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const page = Number('{{page}}' || 1); return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'; })();",
+          "description": "构建热门列表页面 URL"
+        },
+        {
           "type": "navigate",
-          "url": "https://everia.club/page/{{page}}/",
+          "url": "{{scriptResult}}",
           "timeout": 15000,
           "description": "导航到首页"
         },
@@ -54,13 +61,18 @@
         }
       ]
     },
-
     "latest": {
       "description": "获取最新漫画列表",
+      "supportsPagination": true,
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const page = Number('{{page}}' || 1); return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'; })();",
+          "description": "构建最新列表页面 URL"
+        },
+        {
           "type": "navigate",
-          "url": "https://everia.club/page/{{page}}/",
+          "url": "{{scriptResult}}",
           "timeout": 15000,
           "description": "导航到最新页面"
         },
@@ -78,13 +90,13 @@
         }
       ]
     },
-
     "search": {
       "description": "搜索漫画",
+      "supportsPagination": true,
       "actions": [
         {
           "type": "navigate",
-          "url": "https://everia.club/?s={{query}}",
+          "url": "https://everia.club/?paged={{page}}&s={{query}}",
           "timeout": 15000,
           "description": "导航到搜索页面"
         },
@@ -108,7 +120,6 @@
         }
       ]
     },
-
     "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
@@ -127,12 +138,11 @@
         },
         {
           "type": "script",
-          "code": "(() => { const title = document.querySelector('.entry-title')?.textContent?.trim() || ''; const description = title; const tags = []; document.querySelectorAll('.post-tags > a').forEach(el => { const tag = el.textContent?.trim(); if (tag) tags.push(tag); }); const genre = tags.join(', '); const status = '已完结'; const cover = ''; return JSON.stringify({ title, cover, author: '', status, description, genre }); })();",
+          "code": "(() => { const title = document.querySelector('.entry-title')?.textContent?.trim() || ''; const description = title; const tags = Array.from(document.querySelectorAll('.post-tags > a')).map(el => el.textContent?.trim() || '').filter(Boolean); const genre = tags.join(', '); const cover = document.querySelector('.entry-content img, .wp-post-image, img')?.getAttribute('data-lazy-src') || document.querySelector('.entry-content img, .wp-post-image, img')?.getAttribute('data-src') || document.querySelector('.entry-content img, .wp-post-image, img')?.getAttribute('src') || ''; return JSON.stringify({ title, cover, author: '', status: 'completed', description, genre }); })();",
           "description": "提取漫画详情"
         }
       ]
     },
-
     "getChapterList": {
       "description": "获取章节列表",
       "actions": [
@@ -156,7 +166,6 @@
         }
       ]
     },
-
     "getPageList": {
       "description": "获取章节图片列表",
       "actions": [
@@ -175,12 +184,11 @@
         },
         {
           "type": "script",
-          "code": "(() => { document.querySelectorAll('noscript').forEach(el => el.remove()); const pages = []; const images = document.querySelectorAll('.entry-content img'); console.log('[EveriaClub] 找到图片元素数量:', images.length); images.forEach((img, index) => { let src = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; console.log('[EveriaClub] 图片', index, 'src:', src); if (src && !src.includes('data:image')) { pages.push({ index: index, url: src }); } }); console.log('[EveriaClub] 提取到', pages.length, '张有效图片'); return JSON.stringify({ pages: pages, hasNextPage: false, nextPageUrl: null }); })();",
+          "code": "(() => { document.querySelectorAll('noscript').forEach(el => el.remove()); const pages = []; const images = document.querySelectorAll('.entry-content img'); images.forEach((img, index) => { let src = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (src && !src.includes('data:image')) { pages.push({ index: index, url: src }); } }); return JSON.stringify(pages); })();",
           "description": "提取图片列表"
         }
       ]
     },
-
     "getImageUrl": {
       "description": "获取图片URL（直接返回）",
       "actions": [
@@ -191,7 +199,6 @@
         }
       ]
     },
-
     "filter": {
       "description": "筛选画廊（支持分类筛选）",
       "supportsPagination": true,
@@ -200,13 +207,8 @@
       },
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const page = {{page}} || 1; const category = '{{category}}' || ''; let url = 'https://everia.club'; if (category) { url += '/category/' + category + '/page/' + page + '/'; } else { url += '/page/' + page + '/'; } return url; })();",
-          "description": "构建筛选URL"
-        },
-        {
           "type": "navigate",
-          "url": "{{scriptResult}}",
+          "url": "https://everia.club/{{#if category}}/category/{{category}}{{/if}}/page/{{page}}/",
           "timeout": 15000,
           "description": "导航到筛选结果页面"
         },
@@ -225,7 +227,6 @@
       ]
     }
   },
-
   "tabs": [
     {
       "id": "popular",
@@ -259,90 +260,54 @@
             "title": "分类",
             "defaultValue": "",
             "options": [
-              {"value": "", "label": "全部"},
-              {"value": "gravure", "label": "Gravure"},
-              {"value": "aidol", "label": "Aidol"},
-              {"value": "magazine", "label": "Magazine"},
-              {"value": "korea", "label": "Korea"},
-              {"value": "thailand", "label": "Thailand"},
-              {"value": "chinese", "label": "Chinese"},
-              {"value": "cosplay", "label": "Cosplay"}
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "gravure",
+                "label": "Gravure"
+              },
+              {
+                "value": "aidol",
+                "label": "Aidol"
+              },
+              {
+                "value": "magazine",
+                "label": "Magazine"
+              },
+              {
+                "value": "korea",
+                "label": "Korea"
+              },
+              {
+                "value": "thailand",
+                "label": "Thailand"
+              },
+              {
+                "value": "chinese",
+                "label": "Chinese"
+              },
+              {
+                "value": "cosplay",
+                "label": "Cosplay"
+              }
             ]
           }
         ]
       }
     }
   ],
-
-  "filters": {
-    "category": {
-      "name": "分类",
-      "key": "category",
-      "default": "",
-      "options": [
-        { "value": "", "label": "全部" },
-        { "value": "gravure", "label": "Gravure" },
-        { "value": "aidol", "label": "Aidol" },
-        { "value": "magazine", "label": "Magazine" },
-        { "value": "korea", "label": "Korea" },
-        { "value": "thailand", "label": "Thailand" },
-        { "value": "chinese", "label": "Chinese" },
-        { "value": "cosplay", "label": "Cosplay" }
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-02-05",
+      "changes": [
+        "初始版本，移植自keiyoushi Everia扩展",
+        "支持热门、最新、搜索功能",
+        "支持分类筛选",
+        "支持图片懒加载"
       ]
-    },
-    "tag": {
-      "name": "标签",
-      "key": "tag",
-      "type": "text",
-      "default": ""
     }
-  },
-
-  "searchByCategory": {
-    "description": "按分类搜索",
-    "actions": [
-      {
-        "type": "navigate",
-        "url": "https://everia.club/category/{{category}}/page/{{page}}/",
-        "timeout": 15000,
-        "description": "导航到分类页面"
-      },
-      {
-        "type": "wait",
-        "condition": "element",
-        "selector": "#content > article",
-        "timeout": 10000,
-        "description": "等待结果加载"
-      },
-      {
-        "type": "script",
-        "code": "(() => { const mangas = []; const articles = document.querySelectorAll('#content > article'); articles.forEach((article, index) => { const img = article.querySelector('img'); const titleEl = article.querySelector('.entry-title'); const linkEl = article.querySelector('.entry-title > a'); if (img && titleEl && linkEl) { let cover = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; const title = titleEl.textContent?.trim() || ''; const href = linkEl.getAttribute('href') || ''; const id = href.replace('https://everia.club', '').replace(/^\\//, '').replace(/\\/$/, ''); if (title && id) { mangas.push({ id: id, title: title, cover: cover }); } } }); return JSON.stringify(mangas); })();",
-        "description": "提取分类结果"
-      }
-    ]
-  },
-
-  "searchByTag": {
-    "description": "按标签搜索",
-    "actions": [
-      {
-        "type": "navigate",
-        "url": "https://everia.club/tag/{{tag}}/page/{{page}}/",
-        "timeout": 15000,
-        "description": "导航到标签页面"
-      },
-      {
-        "type": "wait",
-        "condition": "element",
-        "selector": "#content > article",
-        "timeout": 10000,
-        "description": "等待结果加载"
-      },
-      {
-        "type": "script",
-        "code": "(() => { const mangas = []; const articles = document.querySelectorAll('#content > article'); articles.forEach((article, index) => { const img = article.querySelector('img'); const titleEl = article.querySelector('.entry-title'); const linkEl = article.querySelector('.entry-title > a'); if (img && titleEl && linkEl) { let cover = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; const title = titleEl.textContent?.trim() || ''; const href = linkEl.getAttribute('href') || ''; const id = href.replace('https://everia.club', '').replace(/^\\//, '').replace(/\\/$/, ''); if (title && id) { mangas.push({ id: id, title: title, cover: cover }); } } }); return JSON.stringify(mangas); })();",
-        "description": "提取标签结果"
-      }
-    ]
-  }
+  ]
 }

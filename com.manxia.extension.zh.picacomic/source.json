@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.zh.picacomic",
     "name": "哔咔漫画",
     "type": "manga",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "language": "zh-CN",
     "baseUrl": "https://picaapi.picacomic.com",
     "description": "哔咔漫画 - 需要登录，需要科学网络",
@@ -30,7 +30,7 @@
     "type": "jwt",
     "loginUrl": "https://picaapi.picacomic.com/auth/sign-in",
     "loginMethod": "POST",
-    "tokenStorageKey": "picacomic_token",
+    "tokenStorageKey": "TOKEN",
     "tokenLeeway": 10,
     "loginPayload": {
       "email": "{{username}}",
@@ -47,7 +47,7 @@
     "userAgent": "okhttp/3.8.1",
     "headers": {
       "api-key": "C69BAF41DA5ABD1FFEDC6D2FEA56B",
-      "app-channel": "2",
+      "app-channel": "{{appChannel}}",
       "app-version": "2.2.1.3.3.4",
       "app-uuid": "defaultUuid",
       "app-platform": "android",
@@ -155,7 +155,7 @@
           },
           "headers": {
             "api-key": "C69BAF41DA5ABD1FFEDC6D2FEA56B",
-            "app-channel": "2",
+            "app-channel": "{{appChannel}}",
             "app-version": "2.2.1.3.3.4",
             "app-uuid": "defaultUuid",
             "app-platform": "android",
@@ -673,7 +673,6 @@
       "order": 2,
       "requiresLogin": false,
       "filterConfig": {
-        "title": "筛选漫画",
         "description": "选择筛选条件",
         "groups": [
           {
@@ -744,7 +743,7 @@
       "name": "收藏",
       "enabled": true,
       "order": 3,
-      "requiresLogin": false,
+      "requiresLogin": true,
       "icon": "heart",
       "description": "您收藏的漫画"
     },
@@ -754,7 +753,7 @@
       "name": "排行榜",
       "enabled": true,
       "order": 4,
-      "requiresLogin": false,
+      "requiresLogin": true,
       "icon": "trophy",
       "description": "热门漫画排行",
       "filterConfig": {
