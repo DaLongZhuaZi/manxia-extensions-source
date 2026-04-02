@@ -85,7 +85,7 @@
         "name": "Everia.club",
         "lang": "all",
         "id": "672475187360186901",
-        "baseUrl": "https://everia.club"
+        "baseUrl": "https://www.everiaclub.com/"
       }
     ]
   },
@@ -262,7 +262,7 @@
     "hasIcon": true,
     "sources": [
       {
-        "name": "(AVIF暂不支持)Photos18",
+        "name": "Photos18",
         "lang": "all",
         "id": "1672475187360186911",
         "baseUrl": "https://www.photos18.com"
