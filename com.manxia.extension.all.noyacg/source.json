@@ -1,0 +1,381 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.noyacg",
+    "name": "NoyAcg",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "zh",
+    "baseUrl": "https://noy1.top",
+    "description": "NoyAcg - 需要登录后才能访问全部工作流",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": ["chinese", "authenticated", "api", "nsfw"],
+    "Internet": true,
+    "notes": "已验证站点依赖 NOY_SESSION Cookie，初始化阶段会使用已保存账号自动登录。"
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "sessionManagement": true,
+    "loginSupport": true,
+    "credentialLogin": true
+  },
+  "authentication": {
+    "type": "cookie",
+    "loginUrl": "https://noy1.top/api/login",
+    "loginMethod": "POST",
+    "requiresLogin": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 1000,
+    "rateLimit": 500,
+    "headers": {
+      "Referer": "https://noy1.top/",
+      "Accept": "application/json, text/plain, */*",
+      "Content-Type": "application/x-www-form-urlencoded"
+    }
+  },
+  "settings": {
+    "username": {
+      "type": "text",
+      "name": "用户名 / 邮箱",
+      "description": "NoyAcg 账号用户名或邮箱",
+      "required": true
+    },
+    "password": {
+      "type": "password",
+      "name": "密码",
+      "description": "NoyAcg 账号密码",
+      "required": true
+    },
+    "imageCdn": {
+      "type": "select",
+      "name": "图片分流",
+      "description": "阅读图片使用的 CDN 分流",
+      "default": "https://img.noy.asia",
+      "options": [
+        {
+          "value": "https://img.noy.asia",
+          "label": "分流 1"
+        },
+        {
+          "value": "https://img.noyteam.online",
+          "label": "分流 2"
+        },
+        {
+          "value": "https://img.457475.xyz",
+          "label": "分流 3"
+        }
+      ]
+    }
+  },
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入作品名、作者或关键字",
+        "description": "综合搜索",
+        "isDefault": true
+      },
+      {
+        "id": "searchByTag",
+        "label": "标签",
+        "placeholder": "输入标签文本",
+        "description": "按标签搜索"
+      },
+      {
+        "id": "searchByAuthor",
+        "label": "作者",
+        "placeholder": "输入作者文本",
+        "description": "按作者搜索"
+      },
+      {
+        "id": "searchById",
+        "label": "作品 ID",
+        "placeholder": "输入作品数字 ID 或详情链接",
+        "description": "直接进入作品详情"
+      }
+    ]
+  },
+  "workflows": {
+    "initialize": {
+      "description": "使用已保存凭据自动登录并刷新 WebView Cookie",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/",
+          "timeout": 15000,
+          "description": "预热站点首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待首页脚本初始化"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const user = String(`{{login.username}}` || '').trim(); const pass = String(`{{login.password}}` || '').trim(); if (!user || !pass) { return JSON.stringify({ skipped: true, reason: 'missing_credentials' }); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/login', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('user=' + encodeURIComponent(user) + '&pass=' + encodeURIComponent(pass)); if (xhr.status !== 200) { throw new Error('NoyAcg 初始化登录失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status !== 'ok') { throw new Error('NoyAcg 初始化登录失败'); } return JSON.stringify({ status: data.status, session: data.SESSION || '' }); })();",
+          "description": "使用已保存凭据登录"
+        }
+      ]
+    },
+    "login": {
+      "description": "使用输入的账号密码登录 NoyAcg",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/",
+          "timeout": 15000,
+          "description": "预热站点首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1500,
+          "description": "等待首页脚本初始化"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const user = String(`{{username}}` || '').trim(); const pass = String(`{{password}}` || '').trim(); if (!user || !pass) { throw new Error('NoyAcg 登录缺少用户名或密码'); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/login', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('user=' + encodeURIComponent(user) + '&pass=' + encodeURIComponent(pass)); if (xhr.status !== 200) { throw new Error('NoyAcg 登录失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status !== 'ok') { throw new Error('NoyAcg 登录失败'); } return JSON.stringify({ status: data.status, session: data.SESSION || '' }); })();",
+          "description": "执行账号密码登录"
+        }
+      ]
+    },
+    "popular": {
+      "description": "获取阅读榜（日榜）",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/index",
+          "timeout": 15000,
+          "description": "进入首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待页面稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/readLeaderboard', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&type=day'); if (xhr.status !== 200) { throw new Error('NoyAcg 热门获取失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用阅读榜接口并映射作品数据"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取最新更新",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/index",
+          "timeout": 15000,
+          "description": "进入首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待页面稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/booklist_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page))); if (xhr.status !== 200) { throw new Error('NoyAcg 最新获取失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用最新更新接口并映射作品数据"
+        }
+      ]
+    },
+    "search": {
+      "description": "综合搜索",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/index",
+          "timeout": 15000,
+          "description": "进入首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待页面稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const query = String(`{{query}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&info=' + encodeURIComponent(query) + '&type=de&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用综合搜索接口"
+        }
+      ]
+    },
+    "searchByTag": {
+      "description": "按标签搜索",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/index",
+          "timeout": 15000,
+          "description": "进入首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待页面稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const query = String(`{{tagId}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&info=' + encodeURIComponent(query) + '&type=tag&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 标签搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用标签搜索接口"
+        }
+      ]
+    },
+    "directSearch": {
+      "description": "作者搜索与作品 ID 直达",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/index",
+          "timeout": 15000,
+          "description": "进入首页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待页面稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const searchType = String(`{{searchType}}` || '').trim(); const query = String(`{{query}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); if (searchType === 'searchByAuthor') { const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=1&info=' + encodeURIComponent(query) + '&type=author&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 作者搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ type: 'list', mangas: mangas, total: Number(data.len || 0), hasNext: list.length >= 20 }); } const mangaId = normalizeId(query); if (!mangaId) { return JSON.stringify({ type: 'list', mangas: [], total: 0, hasNext: false, error: 'invalid_id' }); } return JSON.stringify({ type: 'detail', manga: { id: mangaId, url: mangaId, title: '', cover: imageCdn + '/' + mangaId + '/m1.webp' }, error: null }); })();",
+          "description": "根据搜索类型执行作者搜索或作品 ID 直达"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取作品详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/book/{{mangaId}}",
+          "timeout": 15000,
+          "description": "进入作品详情路由"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待详情页稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangaId = String(`{{mangaId}}` || '').match(/(\\d+)/); const bid = mangaId ? mangaId[1] : ''; const imageCdn = '{{imageCdn}}'; if (!bid) { throw new Error('NoyAcg 详情缺少作品 ID'); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 详情获取失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); if (item.status === 'login' || (Array.isArray(item) && item[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const genre = [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const description = ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); return JSON.stringify({ id: bid, url: bid, title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + bid + '/m1.webp', status: 'completed', description: description, genre: genre }); })();",
+          "description": "通过详情接口组装作品信息"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取单章节信息",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/book/{{mangaId}}",
+          "timeout": 15000,
+          "description": "进入作品详情路由"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待详情页稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangaId = String(`{{mangaId}}` || '').match(/(\\d+)/); const bid = mangaId ? mangaId[1] : ''; if (!bid) { throw new Error('NoyAcg 章节缺少作品 ID'); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 章节获取失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); if (item.status === 'login' || (Array.isArray(item) && item[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const pageCount = Math.max(0, Number(item.Len || 0)); const publishTime = item.Time ? String(Number(item.Time) * 1000) : ''; return JSON.stringify([{ id: bid + '#' + String(pageCount), url: bid + '#' + String(pageCount), title: '单话', publishTime: publishTime, size: pageCount }]); })();",
+          "description": "将作品映射为单章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "构造章节图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/#/read/{{chapterId}}",
+          "timeout": 15000,
+          "description": "进入阅读路由"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 1200,
+          "description": "等待阅读页稳定"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const raw = String(`{{chapterId}}` || '').trim(); const imageCdn = '{{imageCdn}}'; let bid = ''; let pageCount = 0; if (raw.includes('#')) { const parts = raw.split('#'); bid = String(parts[0] || '').match(/(\\d+)/)?.[1] || ''; pageCount = Math.max(0, parseInt(parts[1], 10) || 0); } else { bid = String(raw || '').match(/(\\d+)/)?.[1] || ''; } if (!bid) { throw new Error('NoyAcg 页面缺少章节 ID'); } if (!pageCount) { const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 页面补全失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); pageCount = Math.max(0, Number(item.Len || 0)); } const pages = []; for (let i = 1; i <= pageCount; i++) { pages.push({ url: imageCdn + '/' + bid + '/' + String(i) + '.webp' }); } return JSON.stringify(pages); })();",
+          "description": "根据作品 ID 与页数生成图片地址"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "直接返回图片地址",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => '{{imageUrl}}')();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": true
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": true
+    }
+  ],
+  "imageHeaders": {
+    "Referer": "https://noy1.top/",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Mobile Safari/537.36"
+  },
+  "notes": [
+    "必须先保存账号密码后再使用。",
+    "图源会在初始化阶段自动登录，不会把凭据写进 source.json。",
+    "当前站点为单章节作品结构，章节列表会固定返回一话。",
+    "图片分流已验证可用：img.noy.asia、img.noyteam.online、img.457475.xyz。"
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-04-02",
+      "changes": [
+        "新增 NoyAcg 图源。",
+        "支持凭据登录与初始化自动登录。",
+        "已验证热门、最新、搜索、详情、章节、页面链路。",
+        "支持图片分流切换。"
+      ]
+    }
+  ]
+}

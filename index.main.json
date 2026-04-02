@@ -394,5 +394,23 @@
          "baseUrl": "https://rouman5.com"
        }
      ]
+    },
+    {
+      "name": "ManXia: NoyAcg",
+      "pkg": "com.manxia.extension.all.noyacg",
+      "type": "manga",
+      "lang": "all",
+      "code": 26,
+      "version": "1.0.0",
+      "nsfw": 1,
+      "hasIcon": true,
+      "sources": [
+        {
+          "name": "NoyAcg",
+          "lang": "all",
+          "id": "2272475187360186918",
+          "baseUrl": "https://noy1.top"
+        }
+      ]
     }
   ]

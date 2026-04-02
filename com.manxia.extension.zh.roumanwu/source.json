@@ -157,8 +157,13 @@
       "description": "獲取漫畫詳情",
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const raw = String('{{mangaId}}' || '').trim(); let slug = raw; try { if (/^https?:\\/\\//i.test(slug)) { slug = new URL(slug).pathname || ''; } } catch (e) {} let match = slug.match(/\\/books\\/([^\\/\\s?#]+)/); if (!match) match = slug.match(/^books\\/([^\\/\\s?#]+)/); if (!match) match = slug.match(/^([^\\/\\s?#]+)/); slug = match ? match[1] : ''; if (!slug) { throw new Error('Roumanwu 詳情缺少 mangaId'); } return '{{baseUrl}}/books/' + slug; })();",
+          "description": "規範化漫畫詳情頁 URL"
+        },
+        {
           "type": "navigate",
-          "url": "{{baseUrl}}{{mangaId}}",
+          "url": "{{scriptResult}}",
           "timeout": 15000,
           "description": "導航到漫畫詳情頁"
         },
@@ -170,7 +175,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const img = document.querySelector('div.basis-2\\\\/5 img'); const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map(el => clean(el.textContent)); const detail = { title: rows[0] || '', cover: img?.getAttribute('src') || '', author: '', status: 'unknown', genre: '', description: '', updateTime: '' }; const intro = Array.from(document.querySelectorAll('p')).find(p => clean(p.textContent).startsWith('簡介')); if (intro) detail.description = clean(intro.textContent).replace(/^簡介[:：]/, '').trim(); const genres = []; rows.forEach(row => { if (row.startsWith('作者')) { detail.author = clean(row.replace(/^作者[:：]/, '')); } else if (row.startsWith('狀態')) { const value = clean(row.replace(/^狀態[:：]/, '')); if (value.includes('連載')) detail.status = 'ongoing'; else if (value.includes('完結')) detail.status = 'completed'; } else if (row.startsWith('地區')) { const value = clean(row.replace(/^地區[:：]/, '')); if (value) genres.push(value); } else if (row.startsWith('標籤')) { const value = clean(row.replace(/^標籤[:：]/, '')); if (value) genres.push(...value.split(',').map(item => clean(item)).filter(Boolean)); } const match = row.match(/\\b\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\b/); if (match) detail.updateTime = match[0]; }); detail.genre = genres.join(', '); return JSON.stringify(detail); })();",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const pathMatch = (location.pathname || '').match(/\\/books\\/([^\\/\\s?#]+)/); const slug = pathMatch ? pathMatch[1] : ''; const img = document.querySelector('div.basis-2\\\\/5 img'); const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map(el => clean(el.textContent)); const detail = { id: slug, url: slug ? ('/books/' + slug) : '', title: rows[0] || '', cover: img?.getAttribute('src') || '', author: '', status: 'unknown', genre: '', description: '', updateTime: '' }; const intro = Array.from(document.querySelectorAll('p')).find(p => clean(p.textContent).startsWith('簡介')); if (intro) detail.description = clean(intro.textContent).replace(/^簡介[:：]/, '').trim(); const genres = []; rows.forEach(row => { if (row.startsWith('作者')) { detail.author = clean(row.replace(/^作者[:：]/, '')); } else if (row.startsWith('狀態')) { const value = clean(row.replace(/^狀態[:：]/, '')); if (value.includes('連載')) detail.status = 'ongoing'; else if (value.includes('完結')) detail.status = 'completed'; } else if (row.startsWith('地區')) { const value = clean(row.replace(/^地區[:：]/, '')); if (value) genres.push(value); } else if (row.startsWith('標籤')) { const value = clean(row.replace(/^標籤[:：]/, '')); if (value) genres.push(...value.split(',').map(item => clean(item)).filter(Boolean)); } const match = row.match(/\\b\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\b/); if (match) detail.updateTime = match[0]; }); detail.genre = genres.join(', '); return JSON.stringify(detail); })();",
           "description": "提取漫畫詳情（標題/封面/作者/狀態/標籤/簡介/更新日期）"
         }
       ]
@@ -179,8 +184,13 @@
       "description": "獲取章節列表",
       "actions": [
         {
+          "type": "script",
+          "code": "(() => { const raw = String('{{mangaId}}' || '').trim(); let slug = raw; try { if (/^https?:\\/\\//i.test(slug)) { slug = new URL(slug).pathname || ''; } } catch (e) {} let match = slug.match(/\\/books\\/([^\\/\\s?#]+)/); if (!match) match = slug.match(/^books\\/([^\\/\\s?#]+)/); if (!match) match = slug.match(/^([^\\/\\s?#]+)/); slug = match ? match[1] : ''; if (!slug) { throw new Error('Roumanwu 章節缺少 mangaId'); } return '{{baseUrl}}/books/' + slug; })();",
+          "description": "規範化漫畫詳情頁 URL"
+        },
+        {
           "type": "navigate",
-          "url": "{{baseUrl}}{{mangaId}}",
+          "url": "{{scriptResult}}",
           "timeout": 15000,
           "description": "導航到漫畫詳情頁"
         },
@@ -192,7 +202,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); let date = ''; const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map(el => clean(el.textContent)); for (let i = rows.length - 1; i >= 0; i--) { const match = rows[i].match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/); if (match) { date = match[1]; break; } } const chapters = []; const seen = new Set(); document.querySelectorAll('a[href*=\"/books/\"]').forEach(a => { const href = a.getAttribute('href') || ''; const match = href.match(/\\/books\\/([^\\/\\s?]+)\\/(\\d+)/); if (!match) return; const key = match[1] + '/' + match[2]; if (seen.has(key)) return; seen.add(key); const num = parseInt(match[2], 10); const title = Number.isFinite(num) ? ('第' + (num + 1) + '話') : ('第' + match[2] + '話'); const chapter = { id: key, title, date }; chapters.push(chapter); }); chapters.reverse(); return JSON.stringify(chapters); })();",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); let date = ''; const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map(el => clean(el.textContent)); for (let i = rows.length - 1; i >= 0; i--) { const match = rows[i].match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/); if (match) { date = match[1]; break; } } const chapters = []; const seen = new Set(); document.querySelectorAll('a[href*=\"/books/\"]').forEach(a => { const href = a.getAttribute('href') || ''; const match = href.match(/\\/books\\/([^\\/\\s?]+)\\/(\\d+)/); if (!match) return; const title = clean(a.textContent); if (!title || title === '開始閱讀') return; const key = match[1] + '/' + match[2]; if (seen.has(key)) return; seen.add(key); chapters.push({ id: key, url: '/books/' + key, title, date }); }); chapters.reverse(); return JSON.stringify(chapters); })();",
           "description": "提取章節列表（去重開始閱讀入口，chapterId=slug/num）"
         }
       ]
