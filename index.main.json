@@ -41,7 +41,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 6,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -59,7 +59,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 7,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -77,7 +77,7 @@
     "type": "manga",
     "lang": "all",
     "code": 8,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -383,7 +383,7 @@
      "type": "manga",
      "lang": "zh",
      "code": 25,
-     "version": "1.0.0",
+      "version": "1.0.6",
      "nsfw": 1,
      "hasIcon": true,
      "sources": [

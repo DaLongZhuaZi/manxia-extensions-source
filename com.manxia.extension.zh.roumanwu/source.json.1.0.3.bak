@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.zh.roumanwu",
     "name": "肉漫屋",
     "type": "manga",
-    "version": "1.0.6",
+    "version": "1.0.3",
     "language": "zh-TW",
     "baseUrl": "https://rouman5.com",
     "description": "肉漫屋 - 成人漫画网站（繁体中文），需要科学上网",
@@ -157,13 +157,8 @@
       "description": "獲取漫畫詳情",
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const raw = String('{{mangaId}}' || '').trim(); let value = raw; try { if (/^https?:\\/\\//i.test(value)) { value = new URL(value).pathname || ''; } } catch (error) {} let match = value.match(/\\/books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^([^\\/\\s?#]+)/); const slug = match ? match[1] : ''; if (!slug) { throw new Error('Roumanwu missing mangaId'); } return '{{baseUrl}}/books/' + slug; })();",
-          "description": "規範化漫畫詳情頁 URL"
-        },
-        {
           "type": "navigate",
-          "url": "{{scriptResult}}",
+          "url": "{{baseUrl}}/books/{{mangaId}}",
           "timeout": 15000,
           "description": "導航到漫畫詳情頁"
         },
@@ -180,49 +175,12 @@
         }
       ]
     },
-    "getMangaDetailWithChapters": {
-      "description": "获取漫画详情与章节列表（单次详情页导航）",
-      "actions": [
-        {
-          "type": "script",
-          "code": "(() => { const raw = String('{{mangaId}}' || '').trim(); let value = raw; try { if (/^https?:\\/\\//i.test(value)) { value = new URL(value).pathname || ''; } } catch (error) {} let match = value.match(/\\/books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^([^\\/\\s?#]+)/); const slug = match ? match[1] : ''; if (!slug) { throw new Error('Roumanwu missing mangaId'); } return '{{baseUrl}}/books/' + slug; })();",
-          "description": "規範化漫畫詳情頁 URL"
-        },
-        {
-          "type": "navigate",
-          "url": "{{scriptResult}}",
-          "timeout": 15000,
-          "description": "導航到漫畫詳情頁"
-        },
-        {
-          "type": "wait",
-          "condition": "time",
-          "duration": 3000,
-          "description": "等待頁面載入"
-        },
-        {
-          "type": "script",
-          "description": "提取漫畫詳情（標題/封面/作者/狀態/標籤/簡介/更新日期）",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const stripSiteSuffix = (value) => { const suffix = ' - 肉漫屋'; const text = clean(value); return text.endsWith(suffix) ? clean(text.slice(0, text.length - suffix.length)) : text; }; const getMeta = (name) => { const node = document.querySelector('meta[property=\"' + name + '\"]') || document.querySelector('meta[name=\"' + name + '\"]'); return node ? clean(node.getAttribute('content') || '') : ''; }; const pathMatch = (location.pathname || '').match(/\\/books\\/([^\\/\\s?#]+)/); const slug = pathMatch ? pathMatch[1] : ''; const infoBox = document.querySelector('div.basis-3\\\\/5'); const rows = infoBox ? Array.from(infoBox.children).map((el) => clean(el.textContent)) : []; const rowValue = (labels) => { for (const label of labels) { const row = rows.find((item) => item.startsWith(label)); if (row) { return clean(row.slice(label.length)); } } return ''; }; const bodyTextRaw = String(document.body ? document.body.innerText : ''); const bodyText = clean(bodyTextRaw); const bodyValue = (label) => { const match = bodyTextRaw.match(new RegExp(label + '\\\\s*[:：]\\\\s*([^\\\\n]+)')); return match ? clean(match[1]) : ''; }; const sanitizeTagText = (value) => { let text = clean(value); const cutMarkers = ['簡介', '開始閱讀', '放入書架']; cutMarkers.forEach((marker) => { const index = text.indexOf(marker); if (index >= 0) text = clean(text.slice(0, index)); }); return text; }; const coverCandidates = Array.from(document.querySelectorAll('img')).map((img) => ({ src: clean(img.getAttribute('src') || ''), alt: clean(img.getAttribute('alt') || '') })).filter((item) => item.src.length > 0 && !item.src.startsWith('/android-chrome-')); let title = rows.length > 0 ? rows[0] : ''; if (!title) title = stripSiteSuffix(getMeta('og:title')); if (!title) title = stripSiteSuffix(document.title); if (!title) { const coverImage = coverCandidates.find((item) => item.alt.toLowerCase().endsWith(' cover')); if (coverImage) title = clean(coverImage.alt.replace(/\\s*cover$/i, '')); } if (!title) title = bodyValue('別名'); let cover = ''; const infoImage = document.querySelector('div.basis-2\\\\/5 img'); if (infoImage) cover = clean(infoImage.getAttribute('src') || ''); if (!cover) cover = getMeta('og:image'); if (!cover && coverCandidates.length > 0) { const candidate = coverCandidates.find((item) => /cover/i.test(item.alt)) || coverCandidates[0]; cover = candidate ? candidate.src : ''; } let description = ''; const introNode = Array.from(document.querySelectorAll('p')).find((node) => clean(node.textContent).startsWith('簡介')); if (introNode) description = clean(introNode.textContent).replace(/^簡介[:：]/, '').trim(); if (!description) description = getMeta('og:description'); if (!description) { const descMatch = bodyText.match(/簡介\\s*[:：]\\s*([\\s\\S]*?)(?:\\s+放入書架\\s+開始閱讀|\\s+放入書架|\\s+開始閱讀|$)/); description = descMatch ? clean(descMatch[1]) : ''; } const author = rowValue(['作者:', '作者：']) || bodyValue('作者'); const statusText = rowValue(['狀態:', '狀態：']) || bodyValue('狀態'); const region = rowValue(['地區:', '地區：']) || bodyValue('地區'); const tagText = sanitizeTagText(rowValue(['標籤:', '標籤：']) || bodyValue('標籤')); const dateMatch = bodyText.match(/\\b\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\b/); const tags = []; if (region) tags.push(region); if (tagText) tags.push(...tagText.split(/[、,，]/).map((item) => clean(item)).filter((item) => item.length > 0 && !/^[0-9./\\sKMkm]+$/.test(item))); const genre = Array.from(new Set(tags)).join(', '); return JSON.stringify({ id: slug, url: slug ? ('/books/' + slug) : '', title, cover, author, status: statusText.includes('完結') ? 'completed' : (statusText.includes('連載') ? 'ongoing' : 'unknown'), genre, description, updated: dateMatch ? dateMatch[0] : '' }); })();"
-        },
-        {
-          "type": "script",
-          "description": "提取章節列表（與詳情頁共用同一次導航）",
-          "code": "(() => {\n  const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim();\n  const decodeHtml = (value) => {\n    const node = document.createElement('textarea');\n    node.innerHTML = String(value || '');\n    return clean(node.value);\n  };\n  const pathMatch = (location.pathname || '').match(/\\/books\\/([^\\/\\s?#]+)/);\n  const currentSlug = pathMatch ? pathMatch[1] : '';\n  const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map((el) => clean(el.textContent));\n  const bodyTextRaw = String(document.body ? document.body.innerText : '');\n  const bodyText = clean(bodyTextRaw);\n  let updateTime = '';\n  for (let i = rows.length - 1; i >= 0; i--) {\n    const match = rows[i].match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/);\n    if (match) {\n      updateTime = match[1];\n      break;\n    }\n  }\n  if (!updateTime) {\n    const bodyMatch = bodyText.match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/);\n    updateTime = bodyMatch ? bodyMatch[1] : '';\n  }\n  const chapterMap = new Map();\n  const putChapter = (slug, numberText, rawTitle) => {\n    const normalizedSlug = clean(slug);\n    const normalizedNumber = clean(numberText);\n    if (!normalizedSlug || !normalizedNumber) {\n      return;\n    }\n    const key = normalizedSlug + '/' + normalizedNumber;\n    const number = Number(normalizedNumber);\n    const fallbackTitle = Number.isNaN(number) ? ('Episode ' + normalizedNumber) : ('Episode ' + String(number + 1));\n    const normalizedTitle = clean(rawTitle);\n    const hasRealTitle = normalizedTitle.length > 0 && (/\\d/.test(normalizedTitle) || normalizedTitle.length > 4);\n    const title = hasRealTitle ? normalizedTitle : fallbackTitle;\n    const existing = chapterMap.get(key);\n    if (!existing || (existing.autoGenerated && hasRealTitle)) {\n      chapterMap.set(key, {\n        id: key,\n        url: '/books/' + key,\n        title,\n        updateTime,\n        autoGenerated: !hasRealTitle\n      });\n    }\n  };\n  document.querySelectorAll('a[href*=\\\"/books/\\\"]').forEach((anchor) => {\n    const href = clean(anchor.getAttribute('href') || '');\n    const match = href.match(/\\/books\\/([^\\/\\s?#]+)\\/(\\d+)(?:[?#].*)?$/);\n    if (!match) {\n      return;\n    }\n    putChapter(match[1], match[2], clean(anchor.textContent));\n  });\n  const html = document.documentElement ? document.documentElement.innerHTML : '';\n  const anchorRegex = /<a[^>]+href=[\\\"']([^\\\"']*\\/books\\/([^\\/\\s\\\"'#?]+)\\/(\\d+)(?:[?#][^\\\"']*)?)[\\\"'][^>]*>([\\s\\S]*?)<\\/a>/gi;\n  let anchorMatch = anchorRegex.exec(html);\n  while (anchorMatch !== null) {\n    const anchorText = decodeHtml(String(anchorMatch[4] || '').replace(/<[^>]+>/g, ' '));\n    putChapter(anchorMatch[2], anchorMatch[3], anchorText);\n    anchorMatch = anchorRegex.exec(html);\n  }\n  const hrefRegex = /\\/books\\/([^\\/\\s\\\"'#?]+)\\/(\\d+)(?=[\\\"'#?<\\s])/g;\n  let hrefMatch = hrefRegex.exec(html);\n  while (hrefMatch !== null) {\n    putChapter(hrefMatch[1], hrefMatch[2], '');\n    hrefMatch = hrefRegex.exec(html);\n  }\n  if (chapterMap.size === 0 && currentSlug) {\n    putChapter(currentSlug, '0', '');\n  }\n  const chapters = Array.from(chapterMap.values())\n    .sort((left, right) => Number(left.id.split('/').pop() || '0') - Number(right.id.split('/').pop() || '0'))\n    .map((item) => ({ id: item.id, url: item.url, title: item.title, updateTime: item.updateTime }));\n  return JSON.stringify(chapters);\n})();"
-        }
-      ]
-    },
     "getChapterList": {
       "description": "獲取章節列表",
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const raw = String('{{mangaId}}' || '').trim(); let value = raw; try { if (/^https?:\\/\\//i.test(value)) { value = new URL(value).pathname || ''; } } catch (error) {} let match = value.match(/\\/books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^books\\/([^\\/\\s?#]+)/); if (!match) match = value.match(/^([^\\/\\s?#]+)/); const slug = match ? match[1] : ''; if (!slug) { throw new Error('Roumanwu missing mangaId'); } return '{{baseUrl}}/books/' + slug; })();",
-          "description": "規範化漫畫詳情頁 URL"
-        },
-        {
           "type": "navigate",
-          "url": "{{scriptResult}}",
+          "url": "{{baseUrl}}/books/{{mangaId}}",
           "timeout": 15000,
           "description": "導航到漫畫詳情頁"
         },
@@ -234,35 +192,18 @@
         },
         {
           "type": "script",
-          "code": "(() => {\n  const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim();\n  const decodeHtml = (value) => {\n    const node = document.createElement('textarea');\n    node.innerHTML = String(value || '');\n    return clean(node.value);\n  };\n  const pathMatch = (location.pathname || '').match(/\\/books\\/([^\\/\\s?#]+)/);\n  const currentSlug = pathMatch ? pathMatch[1] : '';\n  const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map((el) => clean(el.textContent));\n  const bodyTextRaw = String(document.body ? document.body.innerText : '');\n  const bodyText = clean(bodyTextRaw);\n  let updateTime = '';\n  for (let i = rows.length - 1; i >= 0; i--) {\n    const match = rows[i].match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/);\n    if (match) {\n      updateTime = match[1];\n      break;\n    }\n  }\n  if (!updateTime) {\n    const bodyMatch = bodyText.match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/);\n    updateTime = bodyMatch ? bodyMatch[1] : '';\n  }\n  const chapterMap = new Map();\n  const putChapter = (slug, numberText, rawTitle) => {\n    const normalizedSlug = clean(slug);\n    const normalizedNumber = clean(numberText);\n    if (!normalizedSlug || !normalizedNumber) {\n      return;\n    }\n    const key = normalizedSlug + '/' + normalizedNumber;\n    const number = Number(normalizedNumber);\n    const fallbackTitle = Number.isNaN(number) ? ('Episode ' + normalizedNumber) : ('Episode ' + String(number + 1));\n    const normalizedTitle = clean(rawTitle);\n    const hasRealTitle = normalizedTitle.length > 0 && (/\\d/.test(normalizedTitle) || normalizedTitle.length > 4);\n    const title = hasRealTitle ? normalizedTitle : fallbackTitle;\n    const existing = chapterMap.get(key);\n    if (!existing || (existing.autoGenerated && hasRealTitle)) {\n      chapterMap.set(key, {\n        id: key,\n        url: '/books/' + key,\n        title,\n        updateTime,\n        autoGenerated: !hasRealTitle\n      });\n    }\n  };\n  document.querySelectorAll('a[href*=\\\"/books/\\\"]').forEach((anchor) => {\n    const href = clean(anchor.getAttribute('href') || '');\n    const match = href.match(/\\/books\\/([^\\/\\s?#]+)\\/(\\d+)(?:[?#].*)?$/);\n    if (!match) {\n      return;\n    }\n    putChapter(match[1], match[2], clean(anchor.textContent));\n  });\n  const html = document.documentElement ? document.documentElement.innerHTML : '';\n  const anchorRegex = /<a[^>]+href=[\\\"']([^\\\"']*\\/books\\/([^\\/\\s\\\"'#?]+)\\/(\\d+)(?:[?#][^\\\"']*)?)[\\\"'][^>]*>([\\s\\S]*?)<\\/a>/gi;\n  let anchorMatch = anchorRegex.exec(html);\n  while (anchorMatch !== null) {\n    const anchorText = decodeHtml(String(anchorMatch[4] || '').replace(/<[^>]+>/g, ' '));\n    putChapter(anchorMatch[2], anchorMatch[3], anchorText);\n    anchorMatch = anchorRegex.exec(html);\n  }\n  const hrefRegex = /\\/books\\/([^\\/\\s\\\"'#?]+)\\/(\\d+)(?=[\\\"'#?<\\s])/g;\n  let hrefMatch = hrefRegex.exec(html);\n  while (hrefMatch !== null) {\n    putChapter(hrefMatch[1], hrefMatch[2], '');\n    hrefMatch = hrefRegex.exec(html);\n  }\n  if (chapterMap.size === 0 && currentSlug) {\n    putChapter(currentSlug, '0', '');\n  }\n  const chapters = Array.from(chapterMap.values())\n    .sort((left, right) => Number(left.id.split('/').pop() || '0') - Number(right.id.split('/').pop() || '0'))\n    .map((item) => ({ id: item.id, url: item.url, title: item.title, updateTime: item.updateTime }));\n  return JSON.stringify(chapters);\n})();",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const pathMatch = (location.pathname || '').match(/\\/books\\/([^\\/\\s?#]+)/); const currentSlug = pathMatch ? pathMatch[1] : ''; const rows = Array.from(document.querySelector('div.basis-3\\\\/5')?.children || []).map((el) => clean(el.textContent)); const bodyText = clean(document.body ? document.body.innerText : ''); let updateTime = ''; for (let i = rows.length - 1; i >= 0; i--) { const match = rows[i].match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/); if (match) { updateTime = match[1]; break; } } if (!updateTime) { const bodyMatch = bodyText.match(/\\b(\\d{1,2}\\/\\d{1,2}\\/\\d{4})\\b/); updateTime = bodyMatch ? bodyMatch[1] : ''; } const chapterMap = new Map(); const putChapter = (slug, numberText, rawTitle) => { if (!slug || numberText === '') return; const key = slug + '/' + numberText; const number = Number(numberText); const fallbackTitle = Number.isNaN(number) ? ('第' + numberText + '話') : ('第' + String(number + 1) + '話'); const normalizedTitle = clean(rawTitle); const title = !normalizedTitle || normalizedTitle === '開始閱讀' ? fallbackTitle : normalizedTitle; const hasRealTitle = normalizedTitle.length > 0 && normalizedTitle !== '開始閱讀'; const existing = chapterMap.get(key); if (!existing || (existing.autoGenerated && hasRealTitle)) { chapterMap.set(key, { id: key, url: '/books/' + key, title, updateTime, autoGenerated: !hasRealTitle }); } }; document.querySelectorAll('a[href*=\"/books/\"]').forEach((a) => { const href = clean(a.getAttribute('href') || ''); const match = href.match(/\\/books\\/([^\\/\\s?#]+)\\/(\\d+)(?:[?#].*)?$/); if (!match) return; putChapter(match[1], match[2], clean(a.textContent)); }); if (chapterMap.size === 0) { const html = document.documentElement ? document.documentElement.innerHTML : ''; const regex = /\\/books\\/([^\\/\\s\\\"'#?]+)\\/(\\d+)(?=[\\\"'#?<\\s])/g; let match = regex.exec(html); while (match !== null) { putChapter(match[1], match[2], ''); match = regex.exec(html); } } if (chapterMap.size === 0 && currentSlug) putChapter(currentSlug, '0', ''); const chapters = Array.from(chapterMap.values()).sort((a, b) => Number(a.id.split('/').pop() || '0') - Number(b.id.split('/').pop() || '0')).map((item) => ({ id: item.id, url: item.url, title: item.title, updateTime: item.updateTime })); return JSON.stringify(chapters); })();",
           "description": "提取章節列表（去重開始閱讀入口，chapterId=slug/num）"
         }
       ]
     },
     "getPageList": {
-      "description": "获取章节图片列表（导航到章节页后直接提取页面图片）",
+      "description": "获取章节图片列表（直接请求章节页并提取 RSC imageUrl）",
       "actions": [
         {
           "type": "script",
-          "code": "(() => {\n  let chapter = String('{{chapterId}}' || '').trim();\n  if (!chapter) {\n    return JSON.stringify([]);\n  }\n  if (chapter.startsWith('http')) {\n    try {\n      chapter = new URL(chapter).pathname || '';\n    } catch (error) {}\n  }\n  chapter = chapter.replace(/^\\/+/, '');\n  if (chapter.startsWith('books/')) {\n    chapter = chapter.replace(/^books\\//, '');\n  }\n  if (!chapter) {\n    return JSON.stringify([]);\n  }\n  return '{{baseUrl}}/books/' + chapter;\n})();",
-          "description": "規範化章節頁 URL"
-        },
-        {
-          "type": "navigate",
-          "url": "{{scriptResult}}",
-          "timeout": 15000,
-          "description": "導航到章節頁"
-        },
-        {
-          "type": "wait",
-          "condition": "time",
-          "duration": 2500,
-          "description": "等待章節頁載入"
-        },
-        {
-          "type": "script",
-          "code": "(() => {\n  const seen = new Set();\n  const pages = [];\n  const normalizeUrl = (raw) => {\n    let url = String(raw || '').trim();\n    if (!url) {\n      return '';\n    }\n    url = url.replace(/\\\\u002F/g, '/').replace(/\\\\\\//g, '/').replace(/&amp;/g, '&');\n    if (url.startsWith('//')) {\n      url = 'https:' + url;\n    }\n    if (url.startsWith('/')) {\n      try {\n        url = new URL(url, location.origin || '{{baseUrl}}').toString();\n      } catch (error) {\n        return '';\n      }\n    }\n    if (!/^https?:\\/\\//i.test(url)) {\n      return '';\n    }\n    const isCdnImage = url.includes('rmcdn');\n    const hasImageExtension = /\\.(jpg|jpeg|png|webp|gif)(?:[?#].*)?$/i.test(url);\n    if (!isCdnImage && !hasImageExtension) {\n      return '';\n    }\n    if (/\\/loading\\.jpg(?:[?#].*)?$/i.test(url)) {\n      return '';\n    }\n    return url;\n  };\n  const pushUrl = (raw) => {\n    const url = normalizeUrl(raw);\n    if (!url || seen.has(url)) {\n      return;\n    }\n    seen.add(url);\n    pages.push({ index: pages.length, url });\n  };\n  const html = document.documentElement ? document.documentElement.outerHTML : '';\n  const patterns = [/\\\\\\\"imageUrl\\\\\\\":\\\\\\\"([^\\\\\\\"]+)\\\\\\\"/g, /\\\"imageUrl\\\":\\\"([^\\\"]+)\\\"/g];\n  patterns.forEach((pattern) => {\n    let match = pattern.exec(html);\n    while (match !== null) {\n      pushUrl(match[1]);\n      match = pattern.exec(html);\n    }\n  });\n  if (pages.length === 0) {\n    document.querySelectorAll('img').forEach((img) => {\n      pushUrl(img.getAttribute('src') || '');\n      pushUrl(img.getAttribute('data-src') || '');\n      pushUrl(img.currentSrc || '');\n    });\n  }\n  if (pages.length === 0) {\n    document.querySelectorAll('link[rel=\\\"preload\\\"][as=\\\"image\\\"]').forEach((link) => {\n      pushUrl(link.getAttribute('href') || '');\n    });\n  }\n  return JSON.stringify(pages);\n})();",
-          "description": "從當前章節頁 HTML / DOM 提取圖片列表"
+          "code": "(() => { let chapter = String('{{chapterId}}' || '').trim(); if (!chapter) { throw new Error('Roumanwu missing chapterId'); } if (chapter.startsWith('http')) { try { chapter = new URL(chapter).pathname || ''; } catch (error) {} } chapter = chapter.replace(/^\\/+/, ''); if (chapter.startsWith('books/')) chapter = chapter.replace(/^books\\//, ''); if (!chapter) { throw new Error('Roumanwu missing normalized chapterId'); } const requestUrl = '{{baseUrl}}/books/' + chapter; const seen = new Set(); const pages = []; const pushUrl = (raw) => { let url = String(raw || '').trim(); if (!url) return; url = url.replace(/\\\\u002F/g, '/').replace(/\\\\\\//g, '/').replace(/&amp;/g, '&'); if (url.startsWith('//')) url = 'https:' + url; if (url.startsWith('/')) { try { url = new URL(url, '{{baseUrl}}').toString(); } catch (error) { return; } } if (!/^https?:\\/\\//i.test(url)) return; if (!url.includes('rmcdn')) return; if (seen.has(url)) return; seen.add(url); pages.push({ index: pages.length, url }); }; const extractFromText = (text) => { const patterns = [/\\\"imageUrl\\\":\\\"([^\\\"]+)\\\"/g, /\"imageUrl\":\"([^\"]+)\"/g, /https?:\\\\/\\\\/[^\\\"'\\s)]+/g, /https?:\\/\\/[^\"'\\s)]+/g]; patterns.forEach((pattern) => { let match = pattern.exec(text); while (match !== null) { const candidate = match.length > 1 ? match[1] : match[0]; pushUrl(candidate); match = pattern.exec(text); } }); }; const xhr = new XMLHttpRequest(); xhr.open('GET', requestUrl, false); xhr.setRequestHeader('rsc', '1'); xhr.setRequestHeader('cache-control', 'no-store'); xhr.setRequestHeader('x-requested-with', 'XMLHttpRequest'); try { xhr.send(null); } catch (error) { throw new Error('Roumanwu chapter request failed'); } if (xhr.status >= 400) { throw new Error('Roumanwu chapter request failed with status ' + String(xhr.status)); } const responseText = String(xhr.responseText || ''); extractFromText(responseText); if (pages.length === 0 && location && typeof location.pathname === 'string' && location.pathname.includes('/books/' + chapter)) { document.querySelectorAll('img').forEach((img) => { pushUrl(img.getAttribute('src') || ''); }); } if (pages.length === 0) { throw new Error('Roumanwu page list extraction returned empty'); } return JSON.stringify(pages); })();",
+          "description": "不切换共享 WebView 页面，直接同步请求章节 RSC 并提取图片列表"
         }
       ]
     },
@@ -388,31 +329,6 @@
     }
   },
   "changelog": [
-    {
-      "version": "1.0.6",
-      "date": "2026-04-03",
-      "changes": [
-        "修复章节列表在真机详情页只命中“开始阅读”入口时，漏抓后续章节的问题",
-        "getChapterList 与合并详情工作流改为同时扫描 DOM 与原始 HTML，统一去重并保留真实章节标题",
-        "getPageList 改回导航到章节页后直接从当前页面 HTML / DOM 提取 imageUrl，避免同步 XHR 在 ArkWeb 注入脚本里返回空值"
-      ]
-    },
-    {
-      "version": "1.0.5",
-      "date": "2026-04-03",
-      "changes": [
-        "修复详情页、合并详情页、章节列表对 mangaId 传参形态的兼容问题",
-        "统一先规范化裸 slug、/books/slug 与完整 URL，再导航到详情页，避免真机详情页落到错误地址"
-      ]
-    },
-    {
-      "version": "1.0.4",
-      "date": "2026-04-02",
-      "changes": [
-        "新增 getMangaDetailWithChapters，與同類 WebView 圖源保持一致，詳情與章節共用同一次導航",
-        "減少詳情階段對共享 WebView 的重複切頁，降低與後台預取流程互相干擾的機率"
-      ]
-    },
     {
       "version": "1.0.3",
       "date": "2026-04-02",
