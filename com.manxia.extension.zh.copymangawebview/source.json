@@ -3,10 +3,10 @@
     "id": "com.manxia.extension.zh.copymangawebview",
     "name": "拷贝漫画",
     "type": "manga",
-    "version": "3.1.0",
+    "version": "3.1.4",
     "language": "zh-CN",
-    "baseUrl": "https://api.mangacopy.com",
-    "description": "拷贝漫画 - 日漫为主，API版本",
+    "baseUrl": "https://www.mangacopy.com",
+    "description": "拷贝漫画 - 日漫为主，API版本，支持手动网页登录",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "api", "popular"],
@@ -28,8 +28,14 @@
     "urlResolver": true,
     "pagination": true,
     "errorRetry": true,
-    "sessionManagement": false,
-    "loginSupport": false
+    "sessionManagement": true,
+    "loginSupport": true
+  },
+
+  "login": {
+    "url": "https://www.mangacopy.com/web/login/loginByAccount?url=person%2Fhome",
+    "method": "manual",
+    "description": "请在网页登录拷贝漫画账号，完成后点击应用内“完成登录”保存 Cookie"
   },
 
   "network": {
@@ -37,7 +43,8 @@
     "headers": {
       "Accept": "application/json",
       "Accept-Language": "en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7",
-      "Origin": "https://2025copy.com",
+      "Origin": "https://www.mangacopy.com",
+      "Referer": "https://www.mangacopy.com/",
       "Version": "2025.11.21",
       "Region": "0",
       "Webp": "0"
@@ -172,6 +179,17 @@
   },
 
   "workflows": {
+    "initialize": {
+      "description": "初始化站点会话",
+      "actions": [
+        {
+          "type": "http",
+          "method": "GET",
+          "url": "https://www.mangacopy.com"
+        }
+      ]
+    },
+
     "popular": {
       "description": "获取热门漫画",
       "pagination": {
@@ -324,6 +342,121 @@
               "title": "name",
               "cover": "cover",
               "author": "author[0].name"
+            }
+          }
+        }
+      ]
+    },
+
+    "favorites_legacy": {
+      "description": "登录后获取收藏书架作品",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.mangacopy.com/web/person/shujia"
+        },
+        {
+          "type": "script",
+          "code": "(function(){const rawOffset='{{offset}}';const offset=/^\\d+$/.test(rawOffset)?rawOffset:'0';const origin='https://www.mangacopy.com';const dec=(v)=>{try{return decodeURIComponent(v)}catch(_){return v}};const getCookie=(name)=>{const arr=document.cookie?document.cookie.split(';'):[];for(let i=0;i<arr.length;i++){const p=arr[i].trim();if(p.startsWith(name+'=')){return dec(p.substring(name.length+1));}}return '';};const token=getCookie('token');const csrf=getCookie('csrftoken');const txt=(v)=>String(v||'').replace(/\\s+/g,' ').trim();const abs=(u)=>{try{return new URL(u,origin).toString()}catch(_){return''}};const parseId=(u)=>{const m=String(u||'').match(/\\/comic\\/([^/?#]+)/i);return m?m[1]:''};const normalize=(item)=>{const src=item&&typeof item==='object'?item:{};const comic=src.comic||src.comics||src.comic_info||src.book||src;const id=String(comic.path_word||comic.slug||comic.uuid||comic.id||src.path_word||src.slug||src.uuid||src.id||parseId(comic.url||src.url||'')||'');if(!id){return null;}let author='';if(Array.isArray(comic.author)&&comic.author.length>0){const a0=comic.author[0];author=txt(typeof a0==='string'?a0:(a0&&a0.name)||'');}else{author=txt(comic.author||src.author||'');}const title=txt(comic.name||comic.title||src.name||src.title||'');const cover=txt(comic.cover||comic.image||comic.img||src.cover||src.image||src.img||'');const url=abs(comic.url||src.url||('/comic/'+id));return{id:id,title:title,url:url,cover:cover,author:author};};const pickList=(obj)=>{if(!obj||typeof obj!=='object'){return [];}const arrs=[];if(Array.isArray(obj)){arrs.push(obj);}if(obj.results){if(Array.isArray(obj.results.list))arrs.push(obj.results.list);if(Array.isArray(obj.results.comics))arrs.push(obj.results.comics);if(Array.isArray(obj.results))arrs.push(obj.results);}if(obj.data){if(Array.isArray(obj.data.list))arrs.push(obj.data.list);if(Array.isArray(obj.data.comics))arrs.push(obj.data.comics);if(Array.isArray(obj.data))arrs.push(obj.data);}if(Array.isArray(obj.list))arrs.push(obj.list);for(let i=0;i<arrs.length;i++){if(arrs[i]&&arrs[i].length>0){return arrs[i];}}return arrs.length>0?arrs[0]:[];};const request=(url)=>{try{const xhr=new XMLHttpRequest();xhr.open('GET',url,false);xhr.setRequestHeader('Accept','application/json, text/plain, */*');xhr.setRequestHeader('Version','2025.11.21');xhr.setRequestHeader('Region','0');xhr.setRequestHeader('Webp','0');xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');xhr.setRequestHeader('Referer',origin+'/web/person/shujia');if(csrf){xhr.setRequestHeader('x-csrftoken',csrf);xhr.setRequestHeader('X-CSRFToken',csrf);}if(token){xhr.setRequestHeader('token',token);xhr.setRequestHeader('authorization',token);xhr.setRequestHeader('Authorization','Token '+token);}xhr.send(null);if(xhr.status!==200||!xhr.responseText){return [];}const parsed=JSON.parse(xhr.responseText);const list=pickList(parsed);const out=[];const seen={};for(let i=0;i<list.length;i++){const row=normalize(list[i]);if(!row||seen[row.id]){continue;}seen[row.id]=1;out.push(row);}return out;}catch(_){return [];}};const apis=['https://www.mangacopy.com/api/v3/member/collect/comics?limit=12&offset='+offset+'&free_type=1&ordering=-datetime_modifier','https://www.mangacopy.com/api/v3/member/collect/comics?limit=12&offset='+offset+'&free_type=1','https://www.mangacopy.com/api/v3/member/collect/comics?limit=12&offset='+offset];for(let i=0;i<apis.length;i++){const out=request(apis[i]);if(out.length>0){return JSON.stringify(out);}}const links=Array.from(document.querySelectorAll('a[href*=\"/comic/\"]'));const out=[];const seen={};for(let i=0;i<links.length;i++){const a=links[i];const href=abs(a.getAttribute('href')||'');const id=parseId(href);if(!id||seen[id]){continue;}seen[id]=1;const card=a.closest('li,article,.item,.card,.comic-item,.manga-item,.book-item,.list-item,div')||a;const img=card.querySelector('img');const titleEl=card.querySelector('h1,h2,h3,h4,.title,.name,.comic-name,.book-name');out.push({id:id,title:txt(a.getAttribute('title')||(titleEl?titleEl.textContent:'')||a.textContent||''),url:href,cover:txt(img?(img.getAttribute('data-src')||img.getAttribute('data-original')||img.getAttribute('src')||''):''),author:''});}return JSON.stringify(out);})()"
+        },
+        {
+          "type": "extract",
+          "source": "variable",
+          "variable": "scriptResult",
+          "fields": {
+            "id": "id",
+            "title": "title",
+            "url": "url",
+            "cover": "cover",
+            "author": "author"
+          }
+        }
+      ]
+    },
+
+    "history_legacy": {
+      "description": "登录后获取浏览历史作品",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.mangacopy.com/web/person/liulan"
+        },
+        {
+          "type": "script",
+          "code": "(function(){const rawOffset='{{offset}}';const offset=/^\\d+$/.test(rawOffset)?rawOffset:'0';const origin='https://www.mangacopy.com';const dec=(v)=>{try{return decodeURIComponent(v)}catch(_){return v}};const getCookie=(name)=>{const arr=document.cookie?document.cookie.split(';'):[];for(let i=0;i<arr.length;i++){const p=arr[i].trim();if(p.startsWith(name+'=')){return dec(p.substring(name.length+1));}}return '';};const token=getCookie('token');const csrf=getCookie('csrftoken');const txt=(v)=>String(v||'').replace(/\\s+/g,' ').trim();const abs=(u)=>{try{return new URL(u,origin).toString()}catch(_){return''}};const parseId=(u)=>{const m=String(u||'').match(/\\/comic\\/([^/?#]+)/i);return m?m[1]:''};const normalize=(item)=>{const src=item&&typeof item==='object'?item:{};const comic=src.comic||src.comics||src.comic_info||src.book||src;const id=String(comic.path_word||comic.slug||comic.uuid||comic.id||src.path_word||src.slug||src.uuid||src.id||parseId(comic.url||src.url||'')||'');if(!id){return null;}let author='';if(Array.isArray(comic.author)&&comic.author.length>0){const a0=comic.author[0];author=txt(typeof a0==='string'?a0:(a0&&a0.name)||'');}else{author=txt(comic.author||src.author||'');}const title=txt(comic.name||comic.title||src.name||src.title||'');const cover=txt(comic.cover||comic.image||comic.img||src.cover||src.image||src.img||'');const url=abs(comic.url||src.url||('/comic/'+id));return{id:id,title:title,url:url,cover:cover,author:author};};const pickList=(obj)=>{if(!obj||typeof obj!=='object'){return [];}const arrs=[];if(Array.isArray(obj)){arrs.push(obj);}if(obj.results){if(Array.isArray(obj.results.list))arrs.push(obj.results.list);if(Array.isArray(obj.results.comics))arrs.push(obj.results.comics);if(Array.isArray(obj.results))arrs.push(obj.results);}if(obj.data){if(Array.isArray(obj.data.list))arrs.push(obj.data.list);if(Array.isArray(obj.data.comics))arrs.push(obj.data.comics);if(Array.isArray(obj.data))arrs.push(obj.data);}if(Array.isArray(obj.list))arrs.push(obj.list);for(let i=0;i<arrs.length;i++){if(arrs[i]&&arrs[i].length>0){return arrs[i];}}return arrs.length>0?arrs[0]:[];};const request=(url)=>{try{const xhr=new XMLHttpRequest();xhr.open('GET',url,false);xhr.setRequestHeader('Accept','application/json, text/plain, */*');xhr.setRequestHeader('Version','2025.11.21');xhr.setRequestHeader('Region','0');xhr.setRequestHeader('Webp','0');xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');xhr.setRequestHeader('Referer',origin+'/web/person/liulan');if(csrf){xhr.setRequestHeader('x-csrftoken',csrf);xhr.setRequestHeader('X-CSRFToken',csrf);}if(token){xhr.setRequestHeader('token',token);xhr.setRequestHeader('authorization',token);xhr.setRequestHeader('Authorization','Token '+token);}xhr.send(null);if(xhr.status!==200||!xhr.responseText){return [];}const parsed=JSON.parse(xhr.responseText);const list=pickList(parsed);const out=[];const seen={};for(let i=0;i<list.length;i++){const row=normalize(list[i]);if(!row||seen[row.id]){continue;}seen[row.id]=1;out.push(row);}return out;}catch(_){return [];}};const apis=['https://www.mangacopy.com/api/kb/web/browses?limit=12&offset='+offset+'&free_type=1','https://www.mangacopy.com/api/kb/web/browses?limit=12&offset='+offset,'https://www.mangacopy.com/api/v3/member/history/comics?limit=12&offset='+offset];for(let i=0;i<apis.length;i++){const out=request(apis[i]);if(out.length>0){return JSON.stringify(out);}}const links=Array.from(document.querySelectorAll('a[href*=\"/comic/\"]'));const out=[];const seen={};for(let i=0;i<links.length;i++){const a=links[i];const href=abs(a.getAttribute('href')||'');const id=parseId(href);if(!id||seen[id]){continue;}seen[id]=1;const card=a.closest('li,article,.item,.card,.comic-item,.manga-item,.book-item,.list-item,div')||a;const img=card.querySelector('img');const titleEl=card.querySelector('h1,h2,h3,h4,.title,.name,.comic-name,.book-name');out.push({id:id,title:txt(a.getAttribute('title')||(titleEl?titleEl.textContent:'')||a.textContent||''),url:href,cover:txt(img?(img.getAttribute('data-src')||img.getAttribute('data-original')||img.getAttribute('src')||''):''),author:''});}return JSON.stringify(out);})()"
+        },
+        {
+          "type": "extract",
+          "source": "variable",
+          "variable": "scriptResult",
+          "fields": {
+            "id": "id",
+            "title": "title",
+            "url": "url",
+            "cover": "cover",
+            "author": "author"
+          }
+        }
+      ]
+    },
+
+    "favorites": {
+      "description": "登录后获取收藏书架作品（API）",
+      "actions": [
+        {
+          "type": "api",
+          "method": "GET",
+          "url": "https://www.mangacopy.com/api/v3/member/collect/comics",
+          "params": {
+            "limit": "30",
+            "offset": "{{offset}}",
+            "free_type": "1",
+            "ordering": "-datetime_modifier"
+          },
+          "headers": {
+            "Accept": "application/json, text/plain, */*",
+            "Referer": "https://www.mangacopy.com/web/person/shujia",
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          "extract": {
+            "type": "json",
+            "path": "results.list",
+            "fields": {
+              "id": "comic.path_word",
+              "title": "comic.name",
+              "cover": "comic.cover",
+              "author": "comic.author[0].name"
+            }
+          }
+        }
+      ]
+    },
+
+    "history": {
+      "description": "登录后获取浏览记录作品（API）",
+      "actions": [
+        {
+          "type": "api",
+          "method": "GET",
+          "url": "https://www.mangacopy.com/api/kb/web/browses",
+          "params": {
+            "limit": "30",
+            "offset": "{{offset}}",
+            "free_type": "1"
+          },
+          "headers": {
+            "Accept": "application/json, text/plain, */*",
+            "Referer": "https://www.mangacopy.com/web/person/liulan",
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          "extract": {
+            "type": "json",
+            "path": "results.list",
+            "fields": {
+              "id": "comic.path_word",
+              "title": "comic.name",
+              "cover": "comic.cover",
+              "author": "comic.author[0].name"
             }
           }
         }
@@ -502,6 +635,22 @@
           }
         ]
       }
+    },
+    {
+      "id": "favorites",
+      "type": "favorites",
+      "name": "收藏书架",
+      "enabled": true,
+      "order": 3,
+      "requiresLogin": true
+    },
+    {
+      "id": "history",
+      "type": "history",
+      "name": "浏览历史",
+      "enabled": true,
+      "order": 4,
+      "requiresLogin": true
     }
   ],
 
@@ -626,6 +775,7 @@
     "域名切换: 在设置中选择API域名即可生效",
     "图片需要根据words数组索引进行排序",
     "请求头: Version=2025.11.21, Region=0, Webp=0",
-    "本版本不支持登录功能"
+    "支持手动网页登录并保存 Cookie",
+    "当前登录入口绑定 www.mangacopy.com，镜像 API 的登录态复用情况仍需继续联调确认"
   ]
 }
