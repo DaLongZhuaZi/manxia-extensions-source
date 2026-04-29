@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.all.everiaclub",
     "name": "Everia.club",
     "type": "manga",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "language": "all",
     "baseUrl": "https://www.everiaclub.com",
     "description": "Everia.club gallery source",
@@ -32,32 +32,8 @@
     }
   },
   "workflows": {
-    "popular": {
-      "description": "Load sidebar galleries from the home page",
-      "supportsPagination": false,
-      "actions": [
-        {
-          "type": "navigate",
-          "url": "https://www.everiaclub.com/",
-          "timeout": 15000,
-          "description": "Open the home page"
-        },
-        {
-          "type": "wait",
-          "condition": "element",
-          "selector": ".mainright li a",
-          "timeout": 10000,
-          "description": "Wait for the sidebar gallery list"
-        },
-        {
-          "type": "script",
-          "code": "(() => { const mangas = []; const items = document.querySelectorAll('.mainright li a'); items.forEach((item) => { const img = item.querySelector('img'); const href = item.getAttribute('href') || ''; const title = (img?.getAttribute('title') || img?.getAttribute('alt') || item.textContent || '').trim(); const cover = img?.getAttribute('data-original') || img?.getAttribute('data-lazy-src') || img?.getAttribute('data-src') || img?.getAttribute('src') || ''; const id = href.replace(/^https?:\\/\\/(www\\.)?everiaclub\\.com/i, '').replace(/^\\//, '').replace(/\\/$/, ''); if (title && id) { mangas.push({ id: id, title: title, cover: cover }); } }); return JSON.stringify(mangas); })();",
-          "description": "Extract sidebar galleries"
-        }
-      ]
-    },
     "latest": {
-      "description": "Load latest galleries",
+      "description": "Load latest galleries from homepage",
       "supportsPagination": true,
       "actions": [
         {
@@ -69,7 +45,7 @@
           "type": "navigate",
           "url": "{{scriptResult}}",
           "timeout": 15000,
-          "description": "Open the latest page"
+          "description": "Open the homepage"
         },
         {
           "type": "wait",
@@ -119,25 +95,26 @@
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const mangaId = '{{mangaId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); return '{{baseUrl}}/' + mangaId; })();",
-          "description": "Build the gallery detail URL"
+          "code": "(() => { const mangaId = '{{mangaId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); const encoded = encodeURI(decodeURIComponent(mangaId)); return '{{baseUrl}}/' + encoded; })();",
+          "description": "Build the gallery detail URL (properly encoded)"
         },
         {
           "type": "navigate",
           "url": "{{scriptResult}}",
           "timeout": 15000,
+          "waitAfterLoad": 2000,
           "description": "Open the gallery detail page"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".mainleft img",
+          "selector": ".mainleft > img[data-original]",
           "timeout": 10000,
-          "description": "Wait for gallery images"
+          "description": "Wait for gallery images with data-original"
         },
         {
           "type": "script",
-          "code": "(() => { const titleNode = document.querySelector('.mainleft h1, .mainleft .title, .mainleft .article-title, h1'); const rawTitle = (titleNode?.textContent || '').trim(); const title = rawTitle || document.title.replace(/\\s*-\\s*Everia\\s*Club\\s*$/i, '').trim(); const tags = Array.from(document.querySelectorAll('div.end a > p.tags, div.end .tags')).map((el) => (el.textContent || '').trim()).filter(Boolean); const coverNode = document.querySelector('.mainleft img'); const cover = coverNode?.getAttribute('data-original') || coverNode?.getAttribute('data-lazy-src') || coverNode?.getAttribute('data-src') || coverNode?.getAttribute('src') || ''; return JSON.stringify({ title: title, cover: cover, author: '', status: 'completed', description: title, genre: tags.join(', ') }); })();",
+          "code": "(() => { const titleNode = document.querySelector('.mainleft h1, .mainleft .title, .mainleft .article-title, h1'); const rawTitle = (titleNode?.textContent || '').trim(); const title = rawTitle || document.title.replace(/\\s*-\\s*Everia\\s*Club\\s*$/i, '').trim(); const tags = Array.from(document.querySelectorAll('div.end a > p.tags, div.end .tags')).map((el) => (el.textContent || '').trim()).filter(Boolean); const coverNode = document.querySelector('.mainleft > img[data-original]'); const cover = coverNode ? (coverNode.getAttribute('data-original') || coverNode.getAttribute('data-lazy-src') || coverNode.getAttribute('data-src') || coverNode.getAttribute('src') || '') : ''; return JSON.stringify({ title: title, cover: cover, author: '', status: 'completed', description: title, genre: tags.join(', ') }); })();",
           "description": "Extract gallery details"
         }
       ]
@@ -147,21 +124,22 @@
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const mangaId = '{{mangaId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); return '{{baseUrl}}/' + mangaId; })();",
-          "description": "Build the gallery URL"
+          "code": "(() => { const mangaId = '{{mangaId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); const encoded = encodeURI(decodeURIComponent(mangaId)); return '{{baseUrl}}/' + encoded; })();",
+          "description": "Build the gallery URL (properly encoded)"
         },
         {
           "type": "navigate",
           "url": "{{scriptResult}}",
           "timeout": 15000,
+          "waitAfterLoad": 2000,
           "description": "Open the gallery page"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".mainleft img",
+          "selector": ".mainleft > img[data-original]",
           "timeout": 10000,
-          "description": "Wait for gallery images"
+          "description": "Wait for gallery images with data-original"
         },
         {
           "type": "script",
@@ -175,26 +153,27 @@
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const chapterId = '{{chapterId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); return '{{baseUrl}}/' + chapterId; })();",
-          "description": "Build the gallery page URL"
+          "code": "(() => { const chapterId = '{{chapterId}}'.replace(/^\\/+/, '').replace(/\\/+$/, ''); const encoded = encodeURI(decodeURIComponent(chapterId)); return '{{baseUrl}}/' + encoded; })();",
+          "description": "Build the gallery page URL (properly encoded)"
         },
         {
           "type": "navigate",
           "url": "{{scriptResult}}",
           "timeout": 20000,
+          "waitAfterLoad": 2000,
           "description": "Open the gallery page"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".mainleft img",
+          "selector": ".mainleft > img[data-original]",
           "timeout": 15000,
-          "description": "Wait for gallery images"
+          "description": "Wait for gallery images with data-original attribute"
         },
         {
           "type": "script",
-          "code": "(() => { const pages = []; const images = document.querySelectorAll('.mainleft img'); images.forEach((img, index) => { const url = img.getAttribute('data-original') || img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (url && !url.includes('data:image')) { pages.push({ index: index, url: url }); } }); return JSON.stringify(pages); })();",
-          "description": "Extract gallery images"
+          "code": "(() => { const pages = []; const mainleft = document.querySelector('.mainleft'); if (!mainleft) { return JSON.stringify(pages); } const directImgs = mainleft.querySelectorAll(':scope > img[data-original]'); directImgs.forEach((img, index) => { const url = img.getAttribute('data-original') || img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || ''; if (url && !url.includes('data:image') && !url.includes('loading') && !url.includes('placeholder') && url !== '/static/loading.jpg') { pages.push({ index: index, url: url }); } }); return JSON.stringify(pages); })();",
+          "description": "Extract gallery page image URLs"
         }
       ]
     },
@@ -243,81 +222,98 @@
   },
   "tabs": [
     {
-      "id": "popular",
-      "type": "popular",
-      "name": "Popular",
+      "id": "latest",
+      "type": "latest",
+      "name": "Latest",
       "enabled": true,
       "order": 0,
       "requiresLogin": false
     },
     {
-      "id": "latest",
-      "type": "latest",
-      "name": "Latest",
+      "id": "gravure",
+      "type": "filter",
+      "name": "Gravure",
       "enabled": true,
       "order": 1,
-      "requiresLogin": false
+      "requiresLogin": false,
+      "filterValues": {
+        "category": "Gravure"
+      }
     },
     {
-      "id": "filter",
+      "id": "japan",
       "type": "filter",
-      "name": "Categories",
+      "name": "Japan",
       "enabled": true,
       "order": 2,
       "requiresLogin": false,
-      "filterConfig": {
-        "title": "Browse Categories",
-        "description": "Select a category page to open",
-        "groups": [
-          {
-            "id": "category",
-            "title": "Category",
-            "defaultValue": "",
-            "options": [
-              {
-                "value": "",
-                "label": "All"
-              },
-              {
-                "value": "Gravure",
-                "label": "Gravure"
-              },
-              {
-                "value": "Japan",
-                "label": "Japan"
-              },
-              {
-                "value": "Korea",
-                "label": "Korea"
-              },
-              {
-                "value": "Thailand",
-                "label": "Thailand"
-              },
-              {
-                "value": "Chinese",
-                "label": "Chinese"
-              },
-              {
-                "value": "Cosplay",
-                "label": "Cosplay"
-              }
-            ]
-          }
-        ]
+      "filterValues": {
+        "category": "Japan"
+      }
+    },
+    {
+      "id": "korea",
+      "type": "filter",
+      "name": "Korea",
+      "enabled": true,
+      "order": 3,
+      "requiresLogin": false,
+      "filterValues": {
+        "category": "Korea"
+      }
+    },
+    {
+      "id": "thailand",
+      "type": "filter",
+      "name": "Thailand",
+      "enabled": true,
+      "order": 4,
+      "requiresLogin": false,
+      "filterValues": {
+        "category": "Thailand"
+      }
+    },
+    {
+      "id": "chinese",
+      "type": "filter",
+      "name": "Chinese",
+      "enabled": true,
+      "order": 5,
+      "requiresLogin": false,
+      "filterValues": {
+        "category": "Chinese"
+      }
+    },
+    {
+      "id": "cosplay",
+      "type": "filter",
+      "name": "Cosplay",
+      "enabled": true,
+      "order": 6,
+      "requiresLogin": false,
+      "filterValues": {
+        "category": "Cosplay"
       }
     }
   ],
   "changelog": [
     {
-      "version": "1.0.1",
-      "date": "2026-04-03",
+      "version": "1.0.3",
+      "date": "2026-04-29",
       "changes": [
-        "Switch workflows back to the live legacy DOM structure.",
-        "Fix search URLs to use search.php?keyword=.",
-        "Fix category URLs to use *.html pages.",
-        "Fix detail and page extraction to use .mainleft and div.end nodes.",
-        "Rewrite the file as valid JSON."
+        "Add URL encoding for getMangaDetail and getChapterList (encodeURI+decodeURIComponent)",
+        "Remove broken wait condition 'load' from getPageList (caused 15s timeouts)",
+        "Add waitAfterLoad=2000 to all navigate actions for reliable page load",
+        "Use '.mainleft > img[data-original]' selector for more reliable image detection",
+        "Simplify getPageList extraction to return plain page array"
+      ]
+    },
+    {
+      "version": "1.0.2",
+      "date": "2026-04-29",
+      "changes": [
+        "Add URL encoding fix for getPageList (encodeURI+decodeURIComponent)",
+        "Add diagnostic info to getPageList extraction script"
       ]
     }
   ]
