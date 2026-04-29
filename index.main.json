@@ -383,7 +383,7 @@
      "type": "manga",
      "lang": "zh",
      "code": 25,
-      "version": "1.0.6",
+      "version": "1.0.9",
      "nsfw": 1,
      "hasIcon": true,
      "sources": [
@@ -410,6 +410,42 @@
           "lang": "all",
           "id": "2272475187360186918",
           "baseUrl": "https://noy1.top"
+        }
+      ]
+    },
+    {
+      "name": "ManXia: Komiic",
+      "pkg": "com.manxia.extension.zh.komiic",
+      "type": "manga",
+      "lang": "zh",
+      "code": 27,
+      "version": "1.0.0",
+      "nsfw": 0,
+      "hasIcon": false,
+      "sources": [
+        {
+          "name": "Komiic",
+          "lang": "zh",
+          "id": "2372475187360186919",
+          "baseUrl": "https://komiic.com"
+        }
+      ]
+    },
+    {
+      "name": "ManXia: GoDa漫画",
+      "pkg": "com.manxia.extension.zh.godamh",
+      "type": "manga",
+      "lang": "zh",
+      "code": 28,
+      "version": "1.0.0",
+      "nsfw": 0,
+      "hasIcon": false,
+      "sources": [
+        {
+          "name": "GoDa漫画",
+          "lang": "zh",
+          "id": "2472475187360186920",
+          "baseUrl": "https://godamh.com"
         }
       ]
     }

@@ -1,0 +1,340 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.komiic",
+    "name": "Komiic",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "zh-TW",
+    "baseUrl": "https://komiic.com",
+    "description": "Komiic 漫画图源，基于 GraphQL API，图片使用临时 X-Image-Ticket 请求头。",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["chinese", "graphql", "komiic"],
+    "Internet": true,
+    "created": "2026-04-29",
+    "updated": "2026-04-29"
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "sessionManagement": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Accept-Language": "zh-TW,zh-HK;q=0.9,zh-CN;q=0.8,zh;q=0.7,en;q=0.6",
+      "Origin": "https://komiic.com",
+      "Referer": "https://komiic.com/"
+    },
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 1000
+  },
+
+  "imageHeaders": {
+    "Accept": "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.5",
+    "Referer": "https://komiic.com/",
+    "Origin": "https://komiic.com",
+    "Sec-Fetch-Dest": "image",
+    "Sec-Fetch-Mode": "no-cors",
+    "Sec-Fetch-Site": "cross-site"
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入漫画名称或作者",
+        "isDefault": true
+      },
+      {
+        "id": "searchById",
+        "label": "作品ID",
+        "placeholder": "输入 Komiic 作品 ID"
+      }
+    ]
+  },
+
+  "workflows": {
+    "latest": {
+      "description": "获取最新更新",
+      "pagination": {
+        "type": "offset",
+        "pageSize": 30,
+        "startOffset": 0
+      },
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "recentUpdate",
+            "query": "query recentUpdate($pagination: Pagination!) { recentUpdate(pagination: $pagination) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "variables": {
+              "pagination": {
+                "limit": 30,
+                "offset": "{{offset}}"
+              }
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.recentUpdate",
+            "fields": {
+              "id": "id",
+              "title": "title",
+              "cover": "imageUrl",
+              "author": "authors[0].name",
+              "status": "status",
+              "updated": "dateUpdated",
+              "genres": "categories[*].name",
+              "url": "id"
+            }
+          }
+        }
+      ]
+    },
+
+    "popular": {
+      "description": "获取热门漫画",
+      "pagination": {
+        "type": "offset",
+        "pageSize": 30,
+        "startOffset": 0
+      },
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "hotComics",
+            "query": "query hotComics($pagination: Pagination!) { hotComics(pagination: $pagination) { id title status year imageUrl dateUpdated contentType imageCount monthViews views warnings authors { id name } categories { id name } } }",
+            "variables": {
+              "pagination": {
+                "limit": 30,
+                "offset": "{{offset}}"
+              }
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.hotComics",
+            "fields": {
+              "id": "id",
+              "title": "title",
+              "cover": "imageUrl",
+              "author": "authors[0].name",
+              "status": "status",
+              "updated": "dateUpdated",
+              "genres": "categories[*].name",
+              "url": "id"
+            }
+          }
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索漫画",
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "searchComicAndAuthorQuery",
+            "query": "query searchComicAndAuthorQuery($keyword: String!) { searchComicsAndAuthors(keyword: $keyword) { comics { id title status year imageUrl dateUpdated contentType imageCount warnings authors { id name } categories { id name } } } }",
+            "variables": {
+              "keyword": "{{query}}"
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.searchComicsAndAuthors.comics",
+            "fields": {
+              "id": "id",
+              "title": "title",
+              "cover": "imageUrl",
+              "author": "authors[0].name",
+              "status": "status",
+              "updated": "dateUpdated",
+              "genres": "categories[*].name",
+              "url": "id"
+            }
+          }
+        }
+      ]
+    },
+
+    "searchById": {
+      "description": "通过作品 ID 直达详情",
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "comicById",
+            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "variables": {
+              "comicId": "{{illustId}}"
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.comicById",
+            "fields": {
+              "id": "id",
+              "title": "title",
+              "cover": "imageUrl",
+              "author": "authors[0].name",
+              "status": "status",
+              "updated": "dateUpdated",
+              "genres": "categories[*].name",
+              "url": "id"
+            }
+          }
+        }
+      ]
+    },
+
+    "directSearch": {
+      "description": "作品 ID 直达详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(function() { const raw = '{{query}}'.trim(); const match = raw.match(/(?:comic\\/)?(\\d+)/); const comicId = match ? match[1] : raw; const result = { type: 'detail', manga: { id: comicId, title: comicId ? ('Komiic #' + comicId) : '', url: comicId, cover: '' }, error: comicId ? null : '作品ID为空' }; return JSON.stringify(result); })();",
+          "description": "提取 Komiic 作品 ID 并跳转详情"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "comicById",
+            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "variables": {
+              "comicId": "{{mangaId}}"
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.comicById",
+            "fields": {
+              "id": "id",
+              "title": "title",
+              "cover": "imageUrl",
+              "author": "authors[0].name",
+              "status": "status",
+              "updated": "dateUpdated",
+              "genres": "categories[*].name",
+              "url": "id"
+            }
+          }
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "chapterByComicId",
+            "query": "query chapterByComicId($comicId: ID!) { chaptersByComicId(comicId: $comicId) { id serial type dateCreated dateUpdated size } }",
+            "variables": {
+              "comicId": "{{mangaId}}"
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.chaptersByComicId",
+            "fields": {
+              "id": "id",
+              "title": "serial",
+              "url": "id",
+              "publishTime": "dateUpdated",
+              "size": "size"
+            }
+          }
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片票据列表",
+      "actions": [
+        {
+          "type": "api",
+          "method": "POST",
+          "url": "https://komiic.com/api/query",
+          "body": {
+            "operationName": "imageTicketsByChapterId",
+            "query": "query imageTicketsByChapterId($chapterId: ID!) { imageTicketsByChapterId(chapterId: $chapterId) { url ticket kid width height expiresAt } }",
+            "variables": {
+              "chapterId": "{{chapterId}}"
+            }
+          },
+          "extract": {
+            "type": "json",
+            "path": "data.imageTicketsByChapterId",
+            "fields": {
+              "imageUrl": "url",
+              "ticket": "ticket",
+              "kid": "kid",
+              "width": "width",
+              "height": "height",
+              "expiresAt": "expiresAt"
+            }
+          }
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "直接返回图片 URL",
+      "actions": [
+        {
+          "type": "direct",
+          "description": "图片 URL 已由 getPageList 返回"
+        }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    }
+  ]
+}

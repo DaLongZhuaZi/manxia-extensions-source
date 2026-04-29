@@ -1,0 +1,208 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.godamh",
+    "name": "GoDa漫画",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "zh-TW",
+    "baseUrl": "https://godamh.com",
+    "description": "GoDa漫画(G站) - 提供韩漫、国漫、日漫等多种漫画资源",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["chinese", "korean", "japanese", "manga"],
+    "Internet": true,
+    "created": "2026-04-29",
+    "updated": "2026-04-29"
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": false,
+    "errorRetry": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Referer": "https://godamh.com/",
+      "Origin": "https://godamh.com"
+    },
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "imageHeaders": {
+    "Accept": "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.5",
+    "Referer": "https://godamh.com/",
+    "Origin": "https://godamh.com"
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "请输入漫画名称",
+        "isDefault": true
+      }
+    ]
+  },
+
+  "workflows": {
+    "search": {
+      "description": "搜索漫画",
+      "actions": [
+        {
+          "type": "html",
+          "method": "GET",
+          "url": "https://godamh.com/s/{{query}}",
+          "extract": {
+            "type": "css",
+            "selector": "a[href*='/manga/']",
+            "filter": "href.match(/\\/manga\\/[^/]+$/)",
+            "fields": {
+              "id": {
+                "selector": "href",
+                "transform": "split('/')|last"
+              },
+              "title": {
+                "selector": "text"
+              },
+              "coverUrl": {
+                "selector": "img",
+                "attribute": "src"
+              },
+              "url": {
+                "selector": "href"
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        {
+          "type": "html",
+          "method": "GET",
+          "url": "{{mangaId}}",
+          "extract": {
+            "type": "css",
+            "selector": "body",
+            "fields": {
+              "title": {
+                "selector": "h1",
+                "transform": "split(' ')|first"
+              },
+              "author": {
+                "selector": "*:contains('作者：')",
+                "transform": "match('作者：(.+)'|1)"
+              },
+              "status": {
+                "selector": "*:contains('連載中'), *:contains('已完結')",
+                "transform": "text"
+              },
+              "coverUrl": {
+                "selector": "img[src*='cover']",
+                "attribute": "src"
+              }
+            }
+          }
+        },
+        {
+          "type": "html",
+          "method": "GET",
+          "url": "https://godamh.com/chapterlist/{{mangaSlug}}",
+          "extract": {
+            "type": "css",
+            "selector": "a[href*='/manga/{{mangaSlug}}/']",
+            "filter": "href.match(/\\/manga\\/[^/]+\\/\\d+/)",
+            "fields": {
+              "id": {
+                "selector": "href",
+                "transform": "split('/')|last"
+              },
+              "title": {
+                "selector": "text"
+              },
+              "url": {
+                "selector": "href"
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        {
+          "type": "html",
+          "method": "GET",
+          "url": "https://godamh.com/chapterlist/{{mangaId}}",
+          "extract": {
+            "type": "css",
+            "selector": "a[href*='/manga/{{mangaId}}/']",
+            "filter": "href.match(/\\/manga\\/[^/]+\\/\\d+/)",
+            "fields": {
+              "id": {
+                "selector": "href",
+                "transform": "split('/')|last"
+              },
+              "title": {
+                "selector": "text"
+              },
+              "url": {
+                "selector": "href"
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        {
+          "type": "html",
+          "method": "GET",
+          "url": "{{chapterId}}",
+          "wait": 3000,
+          "extract": {
+            "type": "css",
+            "selector": "img[src*='.webp'], img[src*='.jpg'], img[src*='.png']",
+            "filter": "src.includes('g-mh.online') || src.includes('mangabuddy') || (width > 300)",
+            "fields": {
+              "imageUrl": {
+                "selector": "src"
+              },
+              "index": {
+                "selector": "data-index",
+                "transform": "number"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "search",
+      "type": "search",
+      "name": "搜索",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    }
+  ]
+}
