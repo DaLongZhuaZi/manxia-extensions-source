@@ -3,10 +3,10 @@
     "id": "com.manxia.extension.zh.komiic",
     "name": "Komiic",
     "type": "manga",
-    "version": "1.0.2",
+    "version": "1.0.0",
     "language": "zh-TW",
     "baseUrl": "https://komiic.com",
-    "description": "Komiic 漫画图源，基于 GraphQL API，图片通过 kid 访问 /api/image 接口。",
+    "description": "Komiic 漫画图源，基于 GraphQL API，图片使用临时 X-Image-Ticket 请求头。",
     "author": "ManXia Team",
     "nsfw": false,
     "tags": ["chinese", "graphql", "komiic"],
@@ -39,9 +39,10 @@
   "imageHeaders": {
     "Accept": "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.5",
     "Referer": "https://komiic.com/",
+    "Origin": "https://komiic.com",
     "Sec-Fetch-Dest": "image",
     "Sec-Fetch-Mode": "no-cors",
-    "Sec-Fetch-Site": "same-origin"
+    "Sec-Fetch-Site": "cross-site"
   },
 
   "searchConfig": {
@@ -75,14 +76,11 @@
           "url": "https://komiic.com/api/query",
           "body": {
             "operationName": "recentUpdate",
-            "query": "query recentUpdate($pagination: Pagination!) { recentUpdate(pagination: $pagination) { id title description status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "query": "query recentUpdate($pagination: Pagination!) { recentUpdate(pagination: $pagination) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
             "variables": {
               "pagination": {
                 "limit": 30,
-                "offset": "{{offset}}",
-                "orderBy": "DATE_UPDATED",
-                "asc": true,
-                "status": ""
+                "offset": "{{offset}}"
               }
             }
           },
@@ -94,7 +92,6 @@
               "title": "title",
               "cover": "imageUrl",
               "author": "authors[0].name",
-              "description": "description",
               "status": "status",
               "updated": "dateUpdated",
               "genres": "categories[*].name",
@@ -119,14 +116,11 @@
           "url": "https://komiic.com/api/query",
           "body": {
             "operationName": "hotComics",
-            "query": "query hotComics($pagination: Pagination!) { hotComics(pagination: $pagination) { id title description status year imageUrl dateUpdated contentType imageCount monthViews views warnings authors { id name } categories { id name } } }",
+            "query": "query hotComics($pagination: Pagination!) { hotComics(pagination: $pagination) { id title status year imageUrl dateUpdated contentType imageCount monthViews views warnings authors { id name } categories { id name } } }",
             "variables": {
               "pagination": {
                 "limit": 30,
-                "offset": "{{offset}}",
-                "orderBy": "MONTH_VIEWS",
-                "asc": true,
-                "status": ""
+                "offset": "{{offset}}"
               }
             }
           },
@@ -138,7 +132,6 @@
               "title": "title",
               "cover": "imageUrl",
               "author": "authors[0].name",
-              "description": "description",
               "status": "status",
               "updated": "dateUpdated",
               "genres": "categories[*].name",
@@ -158,7 +151,7 @@
           "url": "https://komiic.com/api/query",
           "body": {
             "operationName": "searchComicAndAuthorQuery",
-            "query": "query searchComicAndAuthorQuery($keyword: String!) { searchComicsAndAuthors(keyword: $keyword) { comics { id title description status year imageUrl dateUpdated contentType imageCount warnings authors { id name } categories { id name } } } }",
+            "query": "query searchComicAndAuthorQuery($keyword: String!) { searchComicsAndAuthors(keyword: $keyword) { comics { id title status year imageUrl dateUpdated contentType imageCount warnings authors { id name } categories { id name } } } }",
             "variables": {
               "keyword": "{{query}}"
             }
@@ -171,7 +164,6 @@
               "title": "title",
               "cover": "imageUrl",
               "author": "authors[0].name",
-              "description": "description",
               "status": "status",
               "updated": "dateUpdated",
               "genres": "categories[*].name",
@@ -191,7 +183,7 @@
           "url": "https://komiic.com/api/query",
           "body": {
             "operationName": "comicById",
-            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title description status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
             "variables": {
               "comicId": "{{illustId}}"
             }
@@ -204,7 +196,6 @@
               "title": "title",
               "cover": "imageUrl",
               "author": "authors[0].name",
-              "description": "description",
               "status": "status",
               "updated": "dateUpdated",
               "genres": "categories[*].name",
@@ -235,7 +226,7 @@
           "url": "https://komiic.com/api/query",
           "body": {
             "operationName": "comicById",
-            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title description status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
+            "query": "query comicById($comicId: ID!) { comicById(comicId: $comicId) { id title status year imageUrl dateUpdated lastChapterUpdate contentType imageCount warnings authors { id name } categories { id name } } }",
             "variables": {
               "comicId": "{{mangaId}}"
             }
@@ -248,7 +239,6 @@
               "title": "title",
               "cover": "imageUrl",
               "author": "authors[0].name",
-              "description": "description",
               "status": "status",
               "updated": "dateUpdated",
               "genres": "categories[*].name",
@@ -280,7 +270,7 @@
               "id": "id",
               "title": "serial",
               "url": "id",
-              "publishTime": "dateCreated",
+              "publishTime": "dateUpdated",
               "size": "size"
             }
           }
@@ -289,27 +279,29 @@
     },
 
     "getPageList": {
-      "description": "获取章节图片列表",
+      "description": "获取章节图片票据列表",
       "actions": [
         {
           "type": "api",
           "method": "POST",
           "url": "https://komiic.com/api/query",
           "body": {
-            "operationName": "imagesByChapterId",
-            "query": "query imagesByChapterId($chapterId: ID!) { imagesByChapterId(chapterId: $chapterId) { id kid width height } }",
+            "operationName": "imageTicketsByChapterId",
+            "query": "query imageTicketsByChapterId($chapterId: ID!) { imageTicketsByChapterId(chapterId: $chapterId) { url ticket kid width height expiresAt } }",
             "variables": {
               "chapterId": "{{chapterId}}"
             }
           },
           "extract": {
             "type": "json",
-            "path": "data.imagesByChapterId",
+            "path": "data.imageTicketsByChapterId",
             "fields": {
-              "id": "id",
+              "imageUrl": "url",
+              "ticket": "ticket",
               "kid": "kid",
               "width": "width",
-              "height": "height"
+              "height": "height",
+              "expiresAt": "expiresAt"
             }
           }
         }
@@ -317,12 +309,11 @@
     },
 
     "getImageUrl": {
-      "description": "页面图片 URL 已由 getPageList 返回",
+      "description": "直接返回图片 URL",
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { return ''; })();",
-          "description": "兼容旧接口，Komiic 图片地址由页面列表工作流提供"
+          "type": "direct",
+          "description": "图片 URL 已由 getPageList 返回"
         }
       ]
     }

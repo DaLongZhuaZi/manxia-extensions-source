@@ -3,10 +3,10 @@
     "id": "com.manxia.extension.zh.komiic",
     "name": "Komiic",
     "type": "manga",
-    "version": "1.0.2",
+    "version": "1.0.1",
     "language": "zh-TW",
     "baseUrl": "https://komiic.com",
-    "description": "Komiic 漫画图源，基于 GraphQL API，图片通过 kid 访问 /api/image 接口。",
+    "description": "Komiic 漫画图源，基于 GraphQL API，图片使用临时 X-Image-Ticket 请求头。",
     "author": "ManXia Team",
     "nsfw": false,
     "tags": ["chinese", "graphql", "komiic"],
@@ -39,9 +39,10 @@
   "imageHeaders": {
     "Accept": "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.5",
     "Referer": "https://komiic.com/",
+    "Origin": "https://komiic.com",
     "Sec-Fetch-Dest": "image",
     "Sec-Fetch-Mode": "no-cors",
-    "Sec-Fetch-Site": "same-origin"
+    "Sec-Fetch-Site": "cross-site"
   },
 
   "searchConfig": {
@@ -289,27 +290,29 @@
     },
 
     "getPageList": {
-      "description": "获取章节图片列表",
+      "description": "获取章节图片票据列表",
       "actions": [
         {
           "type": "api",
           "method": "POST",
           "url": "https://komiic.com/api/query",
           "body": {
-            "operationName": "imagesByChapterId",
-            "query": "query imagesByChapterId($chapterId: ID!) { imagesByChapterId(chapterId: $chapterId) { id kid width height } }",
+            "operationName": "imageTicketsByChapterId",
+            "query": "query imageTicketsByChapterId($chapterId: ID!) { imageTicketsByChapterId(chapterId: $chapterId) { url ticket kid width height expiresAt } }",
             "variables": {
               "chapterId": "{{chapterId}}"
             }
           },
           "extract": {
             "type": "json",
-            "path": "data.imagesByChapterId",
+            "path": "data.imageTicketsByChapterId",
             "fields": {
-              "id": "id",
+              "imageUrl": "url",
+              "ticket": "ticket",
               "kid": "kid",
               "width": "width",
-              "height": "height"
+              "height": "height",
+              "expiresAt": "expiresAt"
             }
           }
         }

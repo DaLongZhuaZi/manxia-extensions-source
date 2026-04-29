@@ -3,84 +3,97 @@
     "id": "com.manxia.extension.zh.godamh",
     "name": "GoDa漫画",
     "type": "manga",
-    "version": "1.0.0",
+    "version": "3.8.0",
     "language": "zh-TW",
     "baseUrl": "https://godamh.com",
     "description": "GoDa漫画(G站) - 提供韩漫、国漫、日漫等多种漫画资源",
     "author": "ManXia Team",
     "nsfw": false,
     "tags": ["chinese", "korean", "japanese", "manga"],
-    "Internet": true,
-    "created": "2026-04-29",
-    "updated": "2026-04-29"
+    "Internet": true
   },
 
   "capabilities": {
     "urlResolver": true,
-    "pagination": false,
+    "pagination": true,
     "errorRetry": true
   },
 
   "network": {
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "headers": {
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-      "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
-      "Accept-Encoding": "gzip, deflate, br",
-      "Referer": "https://godamh.com/",
-      "Origin": "https://godamh.com"
-    },
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
     "timeout": 30000,
     "retryCount": 3,
     "retryDelay": 2000
   },
 
-  "imageHeaders": {
-    "Accept": "image/avif,image/webp,image/png,image/jpeg;q=0.9,*/*;q=0.5",
-    "Referer": "https://godamh.com/",
-    "Origin": "https://godamh.com"
-  },
-
-  "searchConfig": {
-    "types": [
-      {
-        "id": "search",
-        "label": "关键词",
-        "placeholder": "请输入漫画名称",
-        "isDefault": true
-      }
-    ]
-  },
-
   "workflows": {
+    "popular": {
+      "description": "获取人气推荐",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://godamh.com/hots?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到人气推荐页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = new Set(); document.querySelectorAll('a[href*=\"/manga/\"]').forEach(a => { const href = a.getAttribute('href') || ''; const m = href.match(/\\/manga\\/([^\\/\\s?#]+)$/); if (!m || seen.has(m[1])) return; seen.add(m[1]); const img = a.querySelector('img'); const title = a.textContent?.trim() || a.getAttribute('title') || ''; const cover = img?.getAttribute('src') || img?.getAttribute('data-src') || ''; if (title && title.length > 1 && title.length < 100) { results.push({ id: m[1], title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取漫画列表"
+        }
+      ]
+    },
+
+    "latest": {
+      "description": "获取最新上架",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://godamh.com/newss?page={{page}}",
+          "timeout": 15000,
+          "description": "导航到最新上架页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = new Set(); document.querySelectorAll('a[href*=\"/manga/\"]').forEach(a => { const href = a.getAttribute('href') || ''; const m = href.match(/\\/manga\\/([^\\/\\s?#]+)$/); if (!m || seen.has(m[1])) return; seen.add(m[1]); const img = a.querySelector('img'); const title = a.textContent?.trim() || a.getAttribute('title') || ''; const cover = img?.getAttribute('src') || img?.getAttribute('data-src') || ''; if (title && title.length > 1 && title.length < 100) { results.push({ id: m[1], title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取漫画列表"
+        }
+      ]
+    },
+
     "search": {
       "description": "搜索漫画",
       "actions": [
         {
-          "type": "html",
-          "method": "GET",
+          "type": "navigate",
           "url": "https://godamh.com/s/{{query}}",
-          "extract": {
-            "type": "css",
-            "selector": "a[href*='/manga/']",
-            "filter": "href.match(/\\/manga\\/[^/]+$/)",
-            "fields": {
-              "id": {
-                "selector": "href",
-                "transform": "split('/')|last"
-              },
-              "title": {
-                "selector": "text"
-              },
-              "coverUrl": {
-                "selector": "img",
-                "attribute": "src"
-              },
-              "url": {
-                "selector": "href"
-              }
-            }
-          }
+          "timeout": 15000,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = new Set(); document.querySelectorAll('a[href*=\"/manga/\"]').forEach(a => { const href = a.getAttribute('href') || ''; const m = href.match(/\\/manga\\/([^\\/\\s?#]+)$/); if (!m || seen.has(m[1])) return; seen.add(m[1]); const img = a.querySelector('img'); const title = a.textContent?.trim() || a.getAttribute('title') || ''; const cover = img?.getAttribute('src') || img?.getAttribute('data-src') || ''; if (title && title.length > 1 && title.length < 100) { results.push({ id: m[1], title: title, cover: cover }); } }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
         }
       ]
     },
@@ -89,53 +102,60 @@
       "description": "获取漫画详情",
       "actions": [
         {
-          "type": "html",
-          "method": "GET",
-          "url": "{{mangaId}}",
-          "extract": {
-            "type": "css",
-            "selector": "body",
-            "fields": {
-              "title": {
-                "selector": "h1",
-                "transform": "split(' ')|first"
-              },
-              "author": {
-                "selector": "*:contains('作者：')",
-                "transform": "match('作者：(.+)'|1)"
-              },
-              "status": {
-                "selector": "*:contains('連載中'), *:contains('已完結')",
-                "transform": "text"
-              },
-              "coverUrl": {
-                "selector": "img[src*='cover']",
-                "attribute": "src"
-              }
-            }
-          }
+          "type": "navigate",
+          "url": "https://godamh.com/manga/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
         },
         {
-          "type": "html",
-          "method": "GET",
-          "url": "https://godamh.com/chapterlist/{{mangaSlug}}",
-          "extract": {
-            "type": "css",
-            "selector": "a[href*='/manga/{{mangaSlug}}/']",
-            "filter": "href.match(/\\/manga\\/[^/]+\\/\\d+/)",
-            "fields": {
-              "id": {
-                "selector": "href",
-                "transform": "split('/')|last"
-              },
-              "title": {
-                "selector": "text"
-              },
-              "url": {
-                "selector": "href"
-              }
-            }
-          }
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (v) => String(v||'').replace(/\\s+/g,' ').trim(); const h1 = document.querySelector('h1'); let title = h1 ? clean(h1.textContent||'') : ''; const ogTitle = document.querySelector('meta[property=\"og:title\"]'); if (ogTitle && !title) title = clean(ogTitle.getAttribute('content')||'').replace(/-G站漫畫.*$/, '').trim(); const ogImage = document.querySelector('meta[property=\"og:image\"]'); let cover = ogImage ? ogImage.getAttribute('content')||'' : ''; if (!cover) { const img = document.querySelector('img[src*=\"cover\"], img[src*=\"baozimh\"]'); if (img) cover = img.getAttribute('src')||''; } let author = ''; const bodyText = document.body.innerText || ''; const authorPatterns = [/作者[：:]\\s*([^\\n,，]{2,20})/, /原著[：:]\\s*([^\\n,，]{2,20})/]; for (const p of authorPatterns) { const m = bodyText.match(p); if (m) { author = clean(m[1]).split(/\\s/)[0]; break; } } let status = '未知'; if (title.includes('完結') || title.includes('完结') || bodyText.includes('完結') || bodyText.includes('完结')) status = '已完结'; else if (bodyText.includes('連載中') || bodyText.includes('连载中')) status = '连载中'; const ogDesc = document.querySelector('meta[property=\"og:description\"]'); let description = ogDesc ? clean(ogDesc.getAttribute('content')||'').substring(0, 500) : ''; title = title.replace(/\\s+/g, ' ').trim(); title = title.replace(/\\s*(連載中|连载中|完結|完结|已完结)\\s*$/g, '').trim(); return JSON.stringify({ title: title || '未知标题', cover: cover, author: author || '未知', status: status, description: description }); })();",
+          "description": "提取漫画详情"
+        }
+      ]
+    },
+
+    "getMangaDetailWithChapters": {
+      "description": "获取漫画详情和章节列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://godamh.com/manga/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (v) => String(v||'').replace(/\\s+/g,' ').trim(); const h1 = document.querySelector('h1'); let title = h1 ? clean(h1.textContent||'') : ''; const ogTitle = document.querySelector('meta[property=\"og:title\"]'); if (ogTitle && !title) title = clean(ogTitle.getAttribute('content')||'').replace(/-G站漫畫.*$/, '').trim(); const ogImage = document.querySelector('meta[property=\"og:image\"]'); let cover = ogImage ? ogImage.getAttribute('content')||'' : ''; if (!cover) { const img = document.querySelector('img[src*=\"cover\"], img[src*=\"baozimh\"]'); if (img) cover = img.getAttribute('src')||''; } let author = ''; const bodyText = document.body.innerText || ''; const authorPatterns = [/作者[：:]\\s*([^\\n,，]{2,20})/, /原著[：:]\\s*([^\\n,，]{2,20})/]; for (const p of authorPatterns) { const m = bodyText.match(p); if (m) { author = clean(m[1]).split(/\\s/)[0]; break; } } let status = '未知'; if (title.includes('完結') || title.includes('完结') || bodyText.includes('完結') || bodyText.includes('完结')) status = '已完结'; else if (bodyText.includes('連載中') || bodyText.includes('连载中')) status = '连载中'; const ogDesc = document.querySelector('meta[property=\"og:description\"]'); let description = ogDesc ? clean(ogDesc.getAttribute('content')||'').substring(0, 500) : ''; title = title.replace(/\\s+/g, ' ').trim(); title = title.replace(/\\s*(連載中|连载中|完結|完结|已完结)\\s*$/g, '').trim(); return JSON.stringify({ title: title || '未知标题', cover: cover, author: author || '未知', status: status, description: description }); })();",
+          "description": "提取漫画详情"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + mid, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var chapters = json.data.chapters.map(function(ch) { return { id: slug + '/' + (ch.attributes ? ch.attributes.slug : ''), url: '/manga/' + slug + '/' + (ch.attributes ? ch.attributes.slug : ''), title: (ch.attributes ? ch.attributes.title : '') || 'Chapter', date: (ch.attributes ? ch.attributes.updatedAt : '') || '' }; }); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "description": "通过API获取全部章节列表"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待API返回全部章节数据"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaChapters || '[]'",
+          "description": "读取章节列表结果"
         }
       ]
     },
@@ -144,26 +164,32 @@
       "description": "获取章节列表",
       "actions": [
         {
-          "type": "html",
-          "method": "GET",
-          "url": "https://godamh.com/chapterlist/{{mangaId}}",
-          "extract": {
-            "type": "css",
-            "selector": "a[href*='/manga/{{mangaId}}/']",
-            "filter": "href.match(/\\/manga\\/[^/]+\\/\\d+/)",
-            "fields": {
-              "id": {
-                "selector": "href",
-                "transform": "split('/')|last"
-              },
-              "title": {
-                "selector": "text"
-              },
-              "url": {
-                "selector": "href"
-              }
-            }
-          }
+          "type": "navigate",
+          "url": "https://godamh.com/manga/{{mangaId}}",
+          "timeout": 15000,
+          "description": "导航到漫画详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 3000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + mid, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var chapters = json.data.chapters.map(function(ch) { return { id: slug + '/' + (ch.attributes ? ch.attributes.slug : ''), url: '/manga/' + slug + '/' + (ch.attributes ? ch.attributes.slug : ''), title: (ch.attributes ? ch.attributes.title : '') || 'Chapter', date: (ch.attributes ? ch.attributes.updatedAt : '') || '' }; }); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "description": "通过API获取全部章节列表"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待API返回全部章节数据"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaChapters || '[]'",
+          "description": "读取章节列表结果"
         }
       ]
     },
@@ -172,37 +198,50 @@
       "description": "获取章节图片列表",
       "actions": [
         {
-          "type": "html",
-          "method": "GET",
-          "url": "{{chapterId}}",
-          "wait": 3000,
-          "extract": {
-            "type": "css",
-            "selector": "img[src*='.webp'], img[src*='.jpg'], img[src*='.png']",
-            "filter": "src.includes('g-mh.online') || src.includes('mangabuddy') || (width > 300)",
-            "fields": {
-              "imageUrl": {
-                "selector": "src"
-              },
-              "index": {
-                "selector": "data-index",
-                "transform": "number"
-              }
-            }
-          }
+          "type": "navigate",
+          "url": "https://godamh.com/manga/{{chapterId}}",
+          "timeout": 20000,
+          "description": "导航到章节阅读页"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 2000,
+          "description": "等待页面DOM加载"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaPages = null; (function() { var el = document.getElementById('chapterContent'); if (!el) { window.__godaPages = '[]'; return; } var ms = el.getAttribute('data-ms'); var cs = el.getAttribute('data-cs'); if (!ms || !cs) { window.__godaPages = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/chapter/getinfo?m=' + ms + '&c=' + cs, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.info || !json.data.info.images) { window.__godaPages = '[]'; return; } var imgs = json.data.info.images; var line = imgs.line; var base = line === 2 ? 'https://f40-1-4.g-mh.online' : 'https://t40-1-4.g-mh.online'; var pages = (imgs.images || []).map(function(img, i) { return {index: i, url: base + img.url}; }); window.__godaPages = JSON.stringify(pages); } catch(e) { window.__godaPages = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "description": "通过API获取章节图片列表"
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待API返回图片数据"
+        },
+        {
+          "type": "script",
+          "code": "window.__godaPages || '[]'",
+          "description": "读取图片列表结果"
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取图片URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "return '{{imageUrl}}';",
+          "description": "直接返回图片URL"
         }
       ]
     }
   },
 
-  "tabs": [
-    {
-      "id": "search",
-      "type": "search",
-      "name": "搜索",
-      "enabled": true,
-      "order": 0,
-      "requiresLogin": false
-    }
-  ]
+  "imageHeaders": {
+    "Referer": "https://godamh.com/",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+  }
 }
