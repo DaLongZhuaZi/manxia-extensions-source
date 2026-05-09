@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.all.everiaclub",
     "name": "Everia.club",
     "type": "manga",
-    "version": "2.0.3",
+    "version": "2.0.0",
     "language": "all",
     "baseUrl": "https://everia.club",
     "description": "Everia.club - 图片写真",
@@ -32,6 +32,30 @@
     }
   },
   "workflows": {
+    "popular": {
+      "description": "获取热门漫画列表（从侧边栏热门帖子）",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/",
+          "timeout": 15000,
+          "description": "导航到首页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".wli_popular_posts-class li",
+          "timeout": 10000,
+          "description": "等待热门列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const mangas = []; const items = document.querySelectorAll('.wli_popular_posts-class li'); items.forEach((item) => { const img = item.querySelector('img'); const h3 = item.querySelector('h3'); const link = item.querySelector('h3 > a'); if (img && h3 && link) { const cover = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; const title = h3.textContent?.trim() || ''; const href = link.getAttribute('href') || ''; const id = href.replace(/^https?:\\/\\/(www\\.)?everia\\.club/i, '').replace(/^\\//, '').replace(/\\/$/, ''); if (title && id) { mangas.push({ id: id, title: title, cover: cover }); } } }); return JSON.stringify(mangas); })();",
+          "description": "提取热门漫画列表"
+        }
+      ]
+    },
     "latest": {
       "description": "获取最新漫画列表",
       "supportsPagination": true,
@@ -101,27 +125,20 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/{{mangaId}}/",
+          "url": "https://everia.club/{{mangaId}}/",
           "timeout": 15000,
-          "waitAfterLoad": 3000,
           "description": "导航到漫画详情页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": ".entry-content img",
+          "selector": ".entry-title",
           "timeout": 10000,
           "description": "等待详情加载"
         },
         {
-          "type": "wait",
-          "condition": "time",
-          "duration": 1000,
-          "description": "等待详情图片懒加载稳定"
-        },
-        {
           "type": "script",
-          "code": "(() => { const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return value; } return ''; }; const title = document.querySelector('.entry-title')?.textContent?.trim() || document.title.replace(/\\s*-\\s*Everia\\.club\\s*$/i, '').trim(); const description = title; const tags = Array.from(document.querySelectorAll('.post-tags > a')).map((el) => (el.textContent || '').trim()).filter(Boolean); const genre = tags.join(', '); const cover = pickImage(document.querySelector('.entry-content img')) || pickImage(document.querySelector('.wp-post-image')) || document.querySelector('meta[property=\"og:image\"]')?.getAttribute('content') || ''; return JSON.stringify({ title: title, cover: cover, author: '', status: 'completed', description: description, genre: genre }); })();",
+          "code": "(() => { const title = document.querySelector('.entry-title')?.textContent?.trim() || ''; const description = title; const tags = Array.from(document.querySelectorAll('.post-tags > a')).map((el) => (el.textContent || '').trim()).filter(Boolean); const genre = tags.join(', '); const cover = document.querySelector('.entry-content img')?.getAttribute('data-lazy-src') || document.querySelector('.entry-content img')?.getAttribute('data-src') || document.querySelector('.entry-content img')?.getAttribute('src') || ''; return JSON.stringify({ title: title, cover: cover, author: '', status: 'completed', description: description, genre: genre }); })();",
           "description": "提取漫画详情"
         }
       ]
@@ -131,9 +148,8 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/{{mangaId}}/",
+          "url": "https://everia.club/{{mangaId}}/",
           "timeout": 15000,
-          "waitAfterLoad": 2000,
           "description": "导航到漫画详情页"
         },
         {
@@ -155,9 +171,8 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/{{chapterId}}/",
+          "url": "https://everia.club/{{chapterId}}/",
           "timeout": 20000,
-          "waitAfterLoad": 3000,
           "description": "导航到画廊页面"
         },
         {
@@ -168,15 +183,32 @@
           "description": "等待图片加载"
         },
         {
+          "type": "script",
+          "code": "(() => { document.querySelectorAll('noscript').forEach((el) => el.remove()); const pageLinks = document.querySelectorAll('.page-links a.post-page-numbers'); const allUrls = []; if (pageLinks.length > 0) { const urls = []; pageLinks.forEach((a) => { const href = a.getAttribute('href'); if (href && !urls.includes(href)) urls.push(href); }); return JSON.stringify({ type: 'multiPage', urls: urls }); } const images = document.querySelectorAll('.entry-content img'); images.forEach((img, index) => { const src = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (src && !src.startsWith('data:image')) { allUrls.push({ index: index, url: src }); } }); return JSON.stringify({ type: 'singlePage', pages: allUrls }); })();",
+          "description": "提取图片列表（支持多分页）"
+        }
+      ]
+    },
+    "getPageListMultiPage": {
+      "description": "获取多分页画廊的图片列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{pageUrl}}",
+          "timeout": 20000,
+          "description": "导航到分页页面"
+        },
+        {
           "type": "wait",
-          "condition": "time",
-          "duration": 1200,
-          "description": "等待分页和图片懒加载稳定"
+          "condition": "element",
+          "selector": ".entry-content img",
+          "timeout": 15000,
+          "description": "等待图片加载"
         },
         {
           "type": "script",
-          "code": "(() => { document.querySelectorAll('noscript').forEach((el) => el.remove()); const pages = []; const seen = []; const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return value; } return ''; }; const addImages = (doc) => { const root = doc.querySelector('.entry-content') || doc.querySelector('article') || doc.body; if (!root) return; const images = root.querySelectorAll('img'); images.forEach((img) => { const src = pickImage(img); if (src && !src.includes('placeholder') && seen.indexOf(src) < 0) { seen.push(src); pages.push({ index: pages.length, url: src }); } }); }; addImages(document); const pageUrls = []; document.querySelectorAll('.page-links a.post-page-numbers').forEach((a) => { const href = a.getAttribute('href') || ''; if (href && pageUrls.indexOf(href) < 0) pageUrls.push(href); }); for (let i = 0; i < pageUrls.length && i < 30; i++) { try { const xhr = new XMLHttpRequest(); xhr.open('GET', pageUrls[i], false); xhr.send(); if (xhr.status >= 200 && xhr.status < 400) { const doc = new DOMParser().parseFromString(xhr.responseText, 'text/html'); doc.querySelectorAll('noscript').forEach((el) => el.remove()); addImages(doc); } } catch (e) { console.warn('[Everia.club] page fetch failed:', pageUrls[i], e); } } return JSON.stringify({ pages: pages, totalPages: pages.length, hasNextPage: false, nextPageUrl: null }); })();",
-          "description": "提取图片列表（支持多分页）"
+          "code": "(() => { document.querySelectorAll('noscript').forEach((el) => el.remove()); const pages = []; const images = document.querySelectorAll('.entry-content img'); images.forEach((img, index) => { const src = img.getAttribute('data-lazy-src') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (src && !src.startsWith('data:image')) { pages.push({ index: index, url: src }); } }); return JSON.stringify(pages); })();",
+          "description": "提取单个分页的图片列表"
         }
       ]
     },
@@ -194,13 +226,13 @@
       "description": "筛选画廊（支持分类筛选）",
       "supportsPagination": true,
       "defaults": {
-        "category": "https://everia.club/category/chinese/"
+        "category": ""
       },
       "actions": [
         {
           "type": "script",
-          "code": "(() => { const page = Number('{{page}}' || 1); const category = '{{category}}'.trim(); const trimSlash = (value) => value.replace(/\\/+$/, ''); const base = trimSlash('{{baseUrl}}'); const target = category ? trimSlash(category) : base; const url = target.startsWith('http') ? target : base + '/category/' + target.replace(/^\\/+|\\/+$/g, ''); return page <= 1 ? url + '/' : url + '/page/' + page + '/'; })();",
-          "description": "构建分类筛选页面 URL（分类值直接使用站点入口 URL）"
+          "code": "(() => { const page = Number('{{page}}' || 1); const category = '{{category}}'.trim(); if (!category) { return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'; } return page <= 1 ? '{{baseUrl}}/category/' + category + '/' : '{{baseUrl}}/category/' + category + '/page/' + page + '/'; })();",
+          "description": "构建分类筛选页面 URL"
         },
         {
           "type": "navigate",
@@ -225,11 +257,19 @@
   },
   "tabs": [
     {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
       "id": "latest",
       "type": "latest",
       "name": "最新",
       "enabled": true,
-      "order": 0,
+      "order": 1,
       "requiresLogin": false
     },
     {
@@ -237,7 +277,7 @@
       "type": "filter",
       "name": "筛选",
       "enabled": true,
-      "order": 1,
+      "order": 2,
       "requiresLogin": false,
       "filterConfig": {
         "title": "筛选画廊",
@@ -246,26 +286,30 @@
           {
             "id": "category",
             "title": "分类",
-            "defaultValue": "https://everia.club/category/chinese/",
+            "defaultValue": "",
             "options": [
               {
-                "value": "https://everia.club/category/chinese/",
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "china",
                 "label": "China"
               },
               {
-                "value": "https://everia.club/category/cosplay/",
+                "value": "cosplay",
                 "label": "Cosplay"
               },
               {
-                "value": "https://everia.club/category/japan/",
+                "value": "japan",
                 "label": "Japan"
               },
               {
-                "value": "https://everia.club/category/korea/",
+                "value": "korea",
                 "label": "Korea"
               },
               {
-                "value": "https://everia.club/category/thailand/",
+                "value": "thailand",
                 "label": "Thailand"
               }
             ]
@@ -275,33 +319,6 @@
     }
   ],
   "changelog": [
-    {
-      "version": "2.0.3",
-      "date": "2026-05-09",
-      "changes": [
-        "移除筛选中的全部选项",
-        "将筛选默认分类改为 China，避免默认访问未筛选首页"
-      ]
-    },
-    {
-      "version": "2.0.2",
-      "date": "2026-05-09",
-      "changes": [
-        "移除站点不支持的热门工作流与热门标签页",
-        "分类筛选改为直接访问实际分类入口 URL",
-        "修正 China 分类入口为 /category/chinese/"
-      ]
-    },
-    {
-      "version": "2.0.1",
-      "date": "2026-05-09",
-      "changes": [
-        "修正多分页画廊图片提取：一次性合并所有分页图片并返回标准 pages 数组",
-        "移除当前引擎不支持的 getPageListMultiPage 工作流，避免解析警告",
-        "放宽详情封面提取逻辑，优先使用正文图片并保留封面兜底",
-        "增加详情与分页读取前的短等待，降低 WordPress 懒加载和分页 DOM 未稳定导致的空列表概率"
-      ]
-    },
     {
       "version": "2.0.0",
       "date": "2026-05-09",

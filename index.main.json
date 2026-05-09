@@ -77,7 +77,7 @@
     "type": "manga",
     "lang": "all",
     "code": 8,
-    "version": "1.0.1",
+    "version": "2.0.3",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -85,7 +85,7 @@
         "name": "Everia.club",
         "lang": "all",
         "id": "672475187360186901",
-        "baseUrl": "https://www.everiaclub.com/"
+        "baseUrl": "https://everia.club"
       }
     ]
   },
@@ -202,8 +202,8 @@
     "pkg": "com.manxia.extension.zh.jinmantiantang",
     "type": "manga",
     "lang": "zh",
-    "code": 15,
-    "version": "1.0.0",
+    "code": 56,
+    "version": "1.0.56",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
