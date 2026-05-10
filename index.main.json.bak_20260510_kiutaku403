@@ -95,7 +95,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 9,
-    "version": "1.0.1",
+    "version": "1.0.0",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -455,7 +455,7 @@
       "type": "manga",
       "lang": "all",
       "code": 29,
-      "version": "1.0.2",
+      "version": "1.0.0",
       "nsfw": 1,
       "hasIcon": true,
       "sources": [

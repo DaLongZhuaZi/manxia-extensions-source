@@ -95,7 +95,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 9,
-    "version": "1.0.1",
+    "version": "1.0.0",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -446,24 +446,6 @@
           "lang": "zh",
           "id": "2472475187360186920",
           "baseUrl": "https://godamh.com"
-        }
-      ]
-    },
-    {
-      "name": "ManXia: Kiutaku",
-      "pkg": "com.manxia.extension.all.kiutaku",
-      "type": "manga",
-      "lang": "all",
-      "code": 29,
-      "version": "1.0.2",
-      "nsfw": 1,
-      "hasIcon": true,
-      "sources": [
-        {
-          "name": "Kiutaku",
-          "lang": "all",
-          "id": "3040035304874076216",
-          "baseUrl": "https://kiutaku.com"
         }
       ]
     }

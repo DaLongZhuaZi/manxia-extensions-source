@@ -1,0 +1,283 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.kiutaku",
+    "name": "Kiutaku",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://kiutaku.com",
+    "description": "Kiutaku - cosplay photo galleries",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": [
+      "cosplay",
+      "gallery",
+      "webview",
+      "all-language"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 13; HarmonyOS; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 500,
+    "headers": {
+      "Referer": "https://kiutaku.com/",
+      "Accept-Language": "en-US,en;q=0.9"
+    }
+  },
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入作品名、角色或作者",
+        "description": "搜索图集",
+        "isDefault": true
+      },
+      {
+        "id": "searchById",
+        "label": "作品 ID / 链接",
+        "placeholder": "输入数字 ID 或详情链接",
+        "description": "直接进入图集详情"
+      }
+    ]
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取热门图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}') || 1); const start = (page - 1) * 20; return '{{baseUrl}}/hot?start=' + start; })();",
+          "description": "构建热门页面 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到热门页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.items-row",
+          "timeout": 15000,
+          "description": "等待图集列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const mangas = []; const items = Array.from(document.querySelectorAll('div.blog > div.items-row, div.items-row')); items.forEach((item) => { const link = item.querySelector('a.item-link:not(.popunder)') || item.querySelector('a.item-link'); const img = item.querySelector('img'); const href = link ? (link.getAttribute('href') || '') : ''; let fullUrl = ''; let id = item.getAttribute('data-id') || ''; try { fullUrl = new URL(href, location.href).href; const parts = new URL(fullUrl).pathname.split('/').filter(Boolean); if (!id && parts.length > 0) id = parts[0]; } catch (e) {} const titleEl = item.querySelector('h2'); const title = clean(titleEl ? titleEl.textContent : '') || clean(img ? img.getAttribute('alt') : '') || 'Cosplay'; const coverRaw = img ? (img.getAttribute('data-src') || img.getAttribute('src') || '') : ''; let cover = ''; try { cover = coverRaw ? new URL(coverRaw, location.href).href : ''; } catch (e) { cover = coverRaw; } if (id && title) { mangas.push({ id: id, title: title, cover: cover, url: id, author: '', status: 'completed' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取热门图集列表"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取最新图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}') || 1); const start = (page - 1) * 20; return '{{baseUrl}}/?start=' + start; })();",
+          "description": "构建最新页面 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到最新页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.items-row",
+          "timeout": 15000,
+          "description": "等待图集列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const mangas = []; const items = Array.from(document.querySelectorAll('div.blog > div.items-row, div.items-row')); items.forEach((item) => { const link = item.querySelector('a.item-link:not(.popunder)') || item.querySelector('a.item-link'); const img = item.querySelector('img'); const href = link ? (link.getAttribute('href') || '') : ''; let fullUrl = ''; let id = item.getAttribute('data-id') || ''; try { fullUrl = new URL(href, location.href).href; const parts = new URL(fullUrl).pathname.split('/').filter(Boolean); if (!id && parts.length > 0) id = parts[0]; } catch (e) {} const titleEl = item.querySelector('h2'); const title = clean(titleEl ? titleEl.textContent : '') || clean(img ? img.getAttribute('alt') : '') || 'Cosplay'; const coverRaw = img ? (img.getAttribute('data-src') || img.getAttribute('src') || '') : ''; let cover = ''; try { cover = coverRaw ? new URL(coverRaw, location.href).href : ''; } catch (e) { cover = coverRaw; } if (id && title) { mangas.push({ id: id, title: title, cover: cover, url: id, author: '', status: 'completed' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取最新图集列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}') || 1); const start = (page - 1) * 20; const query = String(`{{searchKeyword}}`).trim(); return '{{baseUrl}}/?search=' + encodeURIComponent(query) + '&start=' + start; })();",
+          "description": "构建搜索页面 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到搜索页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.items-row",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const mangas = []; const items = Array.from(document.querySelectorAll('div.blog > div.items-row, div.items-row')); items.forEach((item) => { const link = item.querySelector('a.item-link:not(.popunder)') || item.querySelector('a.item-link'); const img = item.querySelector('img'); const href = link ? (link.getAttribute('href') || '') : ''; let fullUrl = ''; let id = item.getAttribute('data-id') || ''; try { fullUrl = new URL(href, location.href).href; const parts = new URL(fullUrl).pathname.split('/').filter(Boolean); if (!id && parts.length > 0) id = parts[0]; } catch (e) {} const titleEl = item.querySelector('h2'); const title = clean(titleEl ? titleEl.textContent : '') || clean(img ? img.getAttribute('alt') : '') || 'Cosplay'; const coverRaw = img ? (img.getAttribute('data-src') || img.getAttribute('src') || '') : ''; let cover = ''; try { cover = coverRaw ? new URL(coverRaw, location.href).href : ''; } catch (e) { cover = coverRaw; } if (id && title) { mangas.push({ id: id, title: title, cover: cover, url: id, author: '', status: 'completed' }); } }); return JSON.stringify(mangas); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "searchById": {
+      "description": "通过作品 ID 或详情链接直达",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const raw = String('{{illustId}}' || '').trim(); let id = raw; try { if (raw.indexOf('http') === 0) { const url = new URL(raw); const parts = url.pathname.split('/').filter(Boolean); id = parts.length > 0 ? parts[0] : raw; } } catch (e) {} id = id.replace(/^\\//, '').split('?')[0].trim(); return JSON.stringify(id ? [{ id: id, title: 'Kiutaku #' + id, cover: '', url: id, status: 'completed' }] : []); })();",
+          "description": "提取作品 ID"
+        }
+      ]
+    },
+    "directSearch": {
+      "description": "作品 ID 或详情链接直达详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const raw = String('{{query}}' || '').trim(); let id = raw; try { if (raw.indexOf('http') === 0) { const url = new URL(raw); const parts = url.pathname.split('/').filter(Boolean); id = parts.length > 0 ? parts[0] : raw; } } catch (e) {} id = id.replace(/^\\//, '').split('?')[0].trim(); return JSON.stringify({ type: 'detail', manga: { id: id, title: id ? ('Kiutaku #' + id) : '', cover: '', url: id, status: 'completed' }, error: id ? null : '作品ID为空' }); })();",
+          "description": "提取作品 ID 并进入详情"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{mangaId}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到图集详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.article-header, div.article-fulltext img",
+          "timeout": 15000,
+          "description": "等待详情内容加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const pathParts = window.location.pathname.split('/').filter(Boolean); const id = pathParts.length > 0 ? pathParts[0] : String('{{mangaId}}'); const title = clean(document.querySelector('div.article-header')) || clean(document.querySelector('h1')) || ('Kiutaku #' + id); const tags = Array.from(document.querySelectorAll('div.article-tags a.tag > span')).map((el) => clean(el.textContent).replace(/^#+/, '')).filter(Boolean); const dateText = clean(document.querySelector('div.article-info small')); const firstImg = document.querySelector('div.article-fulltext img[src]'); const coverRaw = firstImg ? (firstImg.getAttribute('src') || '') : ''; let cover = ''; try { cover = coverRaw ? new URL(coverRaw, location.href).href : ''; } catch (e) { cover = coverRaw; } const pageCount = document.querySelectorAll('div.article-fulltext img[src]').length; const descriptionParts = []; if (dateText) descriptionParts.push(dateText); if (tags.length > 0) descriptionParts.push('Tags: ' + tags.join(', ')); if (pageCount > 0) descriptionParts.push('Pages on first chapter: ' + pageCount); return JSON.stringify({ id: id, title: title, cover: cover, author: '', status: 'completed', description: descriptionParts.join('\\n'), genre: tags.join(', '), url: id }); })();",
+          "description": "提取图集详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取图集分页章节",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/{{mangaId}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到图集详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.article-header, nav.pagination, div.article-fulltext img",
+          "timeout": 15000,
+          "description": "等待分页信息加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const currentParts = window.location.pathname.split('/').filter(Boolean); const currentId = currentParts.length > 0 ? currentParts[0] : String('{{mangaId}}'); const nav = document.querySelector('nav.pagination'); const links = nav ? Array.from(nav.querySelectorAll('a')) : []; const seen = []; const chapters = []; links.forEach((a) => { const label = clean(a.textContent); const href = a.getAttribute('href') || ''; let id = ''; try { const url = new URL(href, location.href); const parts = url.pathname.split('/').filter(Boolean); id = (parts.length > 0 ? parts[0] : currentId) + url.search; } catch (e) {} if (id && seen.indexOf(id) < 0) { seen.push(id); chapters.push({ id: id, title: 'Page ' + (label || String(chapters.length + 1)), url: id, publishTime: '' }); } }); if (chapters.length === 0) { chapters.push({ id: currentId, title: 'Page 1', url: currentId, publishTime: '' }); } return JSON.stringify(chapters); })();",
+          "description": "提取分页章节列表"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取分页图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const chapterId = String('{{chapterId}}' || '').replace(/^\\//, ''); return '{{baseUrl}}/' + chapterId; })();",
+          "description": "构建分页页面 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "导航到分页页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "div.article-fulltext img[src]",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const images = Array.from(document.querySelectorAll('div.article-fulltext img[src]')); images.forEach((img, index) => { const src = img.getAttribute('src') || ''; let imageUrl = src; try { imageUrl = src ? new URL(src, location.href).href : ''; } catch (e) {} if (imageUrl) { pages.push({ index: index, imageUrl: imageUrl, width: Number(img.getAttribute('width') || 0), height: Number(img.getAttribute('height') || 0) }); } }); return JSON.stringify({ pages: pages, totalPages: pages.length, hasNextPage: false, nextPageUrl: null }); })();",
+          "description": "提取当前分页图片"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "获取图片 URL（直接返回）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return '{{imageUrl}}'; })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-05-10",
+      "changes": [
+        "初始版本，移植自 keiyoushi Kiutaku 扩展",
+        "支持最新、热门、搜索、ID/链接直达",
+        "按站点分页将图集分页映射为章节",
+        "支持从 div.article-fulltext 直接提取图片 URL"
+      ]
+    }
+  ]
+}
