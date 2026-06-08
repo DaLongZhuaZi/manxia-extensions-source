@@ -1,0 +1,610 @@
+﻿{
+    "metadata":  {
+                     "id":  "com.manxia.extension.all.zlibrary",
+                     "name":  "Z-Library",
+                     "type":  "ebook",
+                     "version":  "1.0.0",
+                     "language":  "all",
+                     "baseUrl":  "https://zh.chris101.ru",
+                     "description":  "需要开代理（不开的话非常慢）。如果主站无法访问，可在设置中切换镜像站点。",
+                     "author":  "ManXia Team",
+                     "nsfw":  false,
+                     "tags":  [
+                                  "ebook",
+                                  "library",
+                                  "pdf",
+                                  "epub"
+                              ],
+                     "Internet":  true,
+                     "notes":  "需要开代理（不开的话非常慢）。如果主站无法访问，可在设置中切换镜像站点。"
+                 },
+    "capabilities":  {
+                         "urlResolver":  true,
+                         "pagination":  true,
+                         "errorRetry":  true,
+                         "sessionManagement":  true
+                     },
+    "network":  {
+                    "userAgent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "forceDesktopUA":  true,
+                    "headers":  {
+                                    "Accept":  "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                                    "Accept-Language":  "zh-CN,zh;q=0.9,en;q=0.8",
+                                    "Accept-Encoding":  "gzip, deflate, br",
+                                    "DNT":  "1",
+                                    "Connection":  "keep-alive",
+                                    "Upgrade-Insecure-Requests":  "1",
+                                    "Cache-Control":  "max-age=0"
+                                },
+                    "timeout":  30000,
+                    "retryCount":  3,
+                    "retryDelay":  2000
+                },
+    "searchConfig":  {
+                         "types":  [
+                                       {
+                                           "id":  "search",
+                                           "label":  "关键词",
+                                           "placeholder":  "输入书名、作者或ISBN",
+                                           "description":  "搜索电子书",
+                                           "isDefault":  true
+                                       },
+                                       {
+                                           "id":  "searchByIsbn",
+                                           "label":  "ISBN",
+                                           "placeholder":  "输入ISBN号，如：9787111544937",
+                                           "description":  "通过ISBN精确查找"
+                                       }
+                                   ]
+                     },
+    "settings":  {
+                     "mirrorSite":  {
+                                        "type":  "select",
+                                        "name":  "镜像站点",
+                                        "description":  "选择要使用的镜像站点，主站无法访问时可切换",
+                                        "default":  "https://zh.chris101.ru",
+                                        "options":  [
+                                                        {
+                                                            "value":  "https://zh.chris101.ru",
+                                                            "label":  "主站 (chris101.ru)"
+                                                        },
+                                                        {
+                                                            "value":  "https://zh.z-lib.gs",
+                                                            "label":  "镜像1 (z-lib.gs)"
+                                                        },
+                                                        {
+                                                            "value":  "https://zh.zlibrary-global.se",
+                                                            "label":  "镜像2 (zlibrary-global.se)"
+                                                        },
+                                                        {
+                                                            "value":  "https://zh.z-lib.fm",
+                                                            "label":  "镜像3 (z-lib.fm)"
+                                                        },
+                                                        {
+                                                            "value":  "https://singlelogin.re",
+                                                            "label":  "SingleLogin入口"
+                                                        }
+                                                    ]
+                                    },
+                     "preferredFormat":  {
+                                             "type":  "select",
+                                             "name":  "首选格式",
+                                             "description":  "下载时优先选择的电子书格式",
+                                             "default":  "epub",
+                                             "options":  [
+                                                             {
+                                                                 "value":  "epub",
+                                                                 "label":  "EPUB"
+                                                             },
+                                                             {
+                                                                 "value":  "pdf",
+                                                                 "label":  "PDF"
+                                                             },
+                                                             {
+                                                                 "value":  "mobi",
+                                                                 "label":  "MOBI"
+                                                             },
+                                                             {
+                                                                 "value":  "azw3",
+                                                                 "label":  "AZW3"
+                                                             }
+                                                         ]
+                                         },
+                     "preferredLanguage":  {
+                                               "type":  "select",
+                                               "name":  "首选语言",
+                                               "description":  "搜索结果优先显示的语言",
+                                               "default":  "chinese",
+                                               "options":  [
+                                                               {
+                                                                   "value":  "chinese",
+                                                                   "label":  "中文"
+                                                               },
+                                                               {
+                                                                   "value":  "english",
+                                                                   "label":  "英文"
+                                                               },
+                                                               {
+                                                                   "value":  "japanese",
+                                                                   "label":  "日文"
+                                                               },
+                                                               {
+                                                                   "value":  "all",
+                                                                   "label":  "全部语言"
+                                                               }
+                                                           ]
+                                           }
+                 },
+    "workflows":  {
+                      "initialize":  {
+                                         "description":  "初始化访问Z-Library",
+                                         "actions":  [
+                                                         {
+                                                             "type":  "navigate",
+                                                             "url":  "https://zh.chris101.ru",
+                                                             "timeout":  30000,
+                                                             "waitAfterLoad":  1000
+                                                         },
+                                                         {
+                                                             "type":  "condition",
+                                                             "selector":  ".cookie-notice, .gdpr-notice, #cookie-consent",
+                                                             "exists":  true,
+                                                             "then":  [
+                                                                          {
+                                                                              "type":  "click",
+                                                                              "selector":  ".accept-cookies, .accept-all, #accept-cookies",
+                                                                              "optional":  true,
+                                                                              "waitAfter":  1000
+                                                                          }
+                                                                      ]
+                                                         }
+                                                     ]
+                                     },
+                      "popular":  {
+                                      "description":  "获取热门电子书",
+                                      "actions":  [
+                                                      {
+                                                          "type":  "navigate",
+                                                          "url":  "https://zh.chris101.ru",
+                                                          "timeout":  30000
+                                                      },
+                                                      {
+                                                          "type":  "wait",
+                                                          "condition":  "time",
+                                                          "duration":  5000,
+                                                          "description":  "等待页面完全加载"
+                                                      },
+                                                      {
+                                                          "type":  "script",
+                                                          "code":  "(() =\u003e { const results = []; const items = document.querySelectorAll(\u0027.masonry-endless .item\u0027); items.forEach((item) =\u003e { const link = item.querySelector(\u0027a\u0027); const cover = item.querySelector(\u0027z-cover.ready\u0027); if (link \u0026\u0026 cover) { const fullUrl = link.href || \u0027\u0027; const title = cover.getAttribute(\u0027title\u0027) || \u0027\u0027; const author = cover.getAttribute(\u0027author\u0027) || \u0027\u0027; let coverUrl = \u0027\u0027; try { if (cover.shadowRoot) { const shadowImg = cover.shadowRoot.querySelector(\u0027img\u0027); if (shadowImg \u0026\u0026 shadowImg.src) { coverUrl = shadowImg.src; } } } catch(e) { console.log(\u0027shadowRoot access error:\u0027, e); } results.push({ id: fullUrl, title: title, author: author, cover: coverUrl, url: fullUrl }); } }); return JSON.stringify(results); })();",
+                                                          "description":  "提取热门电子书列表"
+                                                      }
+                                                  ]
+                                  },
+                      "search":  {
+                                     "description":  "搜索电子书",
+                                     "actions":  [
+                                                     {
+                                                         "type":  "navigate",
+                                                         "url":  "{{baseUrl}}/s/{{query}}?page={{page}}",
+                                                         "timeout":  30000,
+                                                         "waitAfterLoad":  15000
+                                                     },
+                                                     {
+                                                         "type":  "wait",
+                                                         "condition":  "element",
+                                                         "selector":  "z-bookcard",
+                                                         "timeout":  15000
+                                                     },
+                                                     {
+                                                         "type":  "script",
+                                                         "code":  "(() =\u003e {\n  const baseUrl = String(((globalThis \u0026\u0026 globalThis.__baseUrl) || location.origin));\n  const toAbs = (href) =\u003e { try { return new URL(String(href || \u0027\u0027), baseUrl).toString(); } catch (_) { return String(href || \u0027\u0027); } };\n  const results = [];\n  const cards = Array.from(document.querySelectorAll(\u0027z-bookcard\u0027));\n  for (let i = 0; i \u003c cards.length; i += 1) {\n    const card = cards[i];\n    const href = card.getAttribute(\u0027href\u0027) || \u0027\u0027;\n    const fullUrl = toAbs(href);\n    const titleEl = card.querySelector(\u0027[slot=\"title\"]\u0027);\n    const authorEl = card.querySelector(\u0027[slot=\"author\"]\u0027);\n    const img = card.querySelector(\u0027img\u0027);\n    const title = (titleEl?.textContent || \u0027\u0027).trim();\n    const author = (authorEl?.textContent || \u0027\u0027).trim();\n    const cover = img?.getAttribute(\u0027data-src\u0027) || img?.getAttribute(\u0027src\u0027) || \u0027\u0027;\n    const extension = card.getAttribute(\u0027extension\u0027) || \u0027\u0027;\n    const filesize = card.getAttribute(\u0027filesize\u0027) || \u0027\u0027;\n    const year = card.getAttribute(\u0027year\u0027) || \u0027\u0027;\n    results.push({ id: fullUrl, title: title, author: author, cover: cover, url: fullUrl, extension: extension, fileSize: filesize, year: year });\n  }\n  return JSON.stringify(results);\n})();",
+                                                         "description":  "提取搜索结果"
+                                                     }
+                                                 ]
+                                 },
+                      "getMangaDetail":  {
+                                             "description":  "获取电子书详情",
+                                             "actions":  [
+                                                             {
+                                                                 "type":  "navigate",
+                                                                 "url":  "{{mangaUrl}}",
+                                                                 "timeout":  30000,
+                                                                 "waitAfterLoad":  15000
+                                                             },
+                                                             {
+                                                                 "type":  "wait",
+                                                                 "condition":  "element",
+                                                                 "selector":  "h1",
+                                                                 "timeout":  5000
+                                                             },
+                                                             {
+                                                                 "type":  "script",
+                                                                 "code":  "(() =\u003e { const h1 = document.querySelector(\u0027h1\u0027); const authorEl = document.querySelector(\u0027a[href*=\"/author/\"]\u0027); const categoryEl = document.querySelector(\u0027.property_categories .property_value\u0027); const title = h1?.textContent?.trim() || \u0027\u0027; const author = authorEl?.textContent?.trim() || \u0027\u0027; const categories = categoryEl?.textContent?.trim() || \u0027\u0027; return JSON.stringify({ id: \u0027\u0027, title: title, author: author, description: \u0027\u0027, cover: \u0027\u0027, categories: categories, tags: categories }); })();",
+                                                                 "description":  "提取电子书详情"
+                                                             }
+                                                         ]
+                                         },
+                      "getBookDetail":  {
+                                            "description":  "获取电子书详情（电子书专用）",
+                                            "actions":  [
+                                                            {
+                                                                "type":  "navigate",
+                                                                "url":  "{{mangaUrl}}",
+                                                                "timeout":  30000,
+                                                                "waitAfterLoad":  15000
+                                                            },
+                                                            {
+                                                                "type":  "wait",
+                                                                "condition":  "element",
+                                                                "selector":  "h1",
+                                                                "timeout":  10000
+                                                            },
+                                                            {
+                                                                "type":  "script",
+                                                                "code":  "(() =\u003e {\n  const clean = (v) =\u003e String(v || \u0027\u0027).replace(/\\s+/g, \u0027 \u0027).trim();\n  const h1 = document.querySelector(\u0027h1\u0027);\n  const authorEl = document.querySelector(\u0027a[href*=\"/author/\"]\u0027);\n  const categoryEl = document.querySelector(\u0027.property_categories .property_value\u0027);\n  const yearEl = document.querySelector(\u0027.property_year .property_value\u0027);\n  const publisherEl = document.querySelector(\u0027.property_publisher .property_value\u0027);\n  const languageEl = document.querySelector(\u0027.property_language .property_value\u0027);\n  const isbnEl = document.querySelector(\u0027.property_isbn .property_value\u0027);\n\n  const title = clean(h1?.textContent);\n  const author = clean(authorEl?.textContent);\n  const categories = clean(categoryEl?.textContent);\n  const year = clean(yearEl?.textContent);\n  const publisher = clean(publisherEl?.textContent);\n  const language = clean(languageEl?.textContent);\n  const isbn = clean(isbnEl?.textContent);\n\n  let cover = \u0027\u0027;\n  try {\n    const meta = document.querySelector(\u0027meta[property=\"og:image\"], meta[name=\"twitter:image\"]\u0027);\n    if (meta) cover = meta.getAttribute(\u0027content\u0027) || \u0027\u0027;\n  } catch (_) {}\n  if (!cover) {\n    const zCover = document.querySelector(\u0027z-cover\u0027);\n    if (zCover \u0026\u0026 zCover.shadowRoot) {\n      const img = zCover.shadowRoot.querySelector(\u0027img\u0027);\n      if (img) cover = img.getAttribute(\u0027src\u0027) || img.getAttribute(\u0027data-src\u0027) || \u0027\u0027;\n    }\n  }\n  if (!cover) {\n    const img = document.querySelector(\u0027.details-info img, .row img, img[src*=\"cover\"]\u0027);\n    if (img) cover = img.getAttribute(\u0027src\u0027) || img.getAttribute(\u0027data-src\u0027) || \u0027\u0027;\n  }\n\n  const description = [publisher ? `出版社: ${publisher}` : \u0027\u0027, year ? `年份: ${year}` : \u0027\u0027, language ? `语言: ${language}` : \u0027\u0027, isbn ? `ISBN: ${isbn}` : \u0027\u0027].filter(Boolean).join(\u0027 | \u0027);\n\n  return JSON.stringify({\n    id: \u0027\u0027,\n    title: title,\n    author: author,\n    description: description,\n    cover: cover,\n    categories: categories,\n    tags: categories,\n    year: year,\n    publisher: publisher,\n    language: language,\n    isbn: isbn\n  });\n})();",
+                                                                "description":  "提取电子书详情"
+                                                            }
+                                                        ]
+                                        },
+                      "getChapterList":  {
+                                             "description":  "获取下载选项（电子书格式列表）",
+                                             "actions":  [
+                                                             {
+                                                                 "type":  "navigate",
+                                                                 "url":  "{{mangaUrl}}",
+                                                                 "timeout":  30000,
+                                                                 "waitAfterLoad":  15000
+                                                             },
+                                                             {
+                                                                 "type":  "wait",
+                                                                 "condition":  "element",
+                                                                 "selector":  "h1",
+                                                                 "timeout":  15000
+                                                             },
+                                                             {
+                                                                 "type":  "script",
+                                                                 "code":  "(() =\u003e {\n  const prefers = String(((globalThis \u0026\u0026 globalThis.__preferredFormat) || \u0027\u0027)).toLowerCase();\n  const buttons = Array.from(document.querySelectorAll(\u0027a[href].dlButton, a[href][class*=dl], button[onclick]\u0027));\n  const candidates = [];\n  for (let i = 0; i \u003c buttons.length; i += 1) {\n    const btn = buttons[i];\n    const href = btn.getAttribute(\u0027href\u0027) || btn.getAttribute(\u0027onclick\u0027) || \u0027\u0027;\n    const text = (btn.textContent || \u0027\u0027).trim();\n    const m = href.match(/\\.(epub|pdf|mobi|azw3|txt|djvu)/i);\n    const format = m ? m[1].toLowerCase() : (text.match(/(epub|pdf|mobi|azw3|txt|djvu)/i) || [\u0027\u0027,\u0027\u0027])[1].toLowerCase();\n    if (href \u0026\u0026 href !== \u0027#\u0027) {\n      candidates.push({ id: String(candidates.length + 1), title: format ? format.toUpperCase() : (text || \u0027下载\u0027), url: href, format: format, order: i + 1, recommended: format === prefers ? 1 : 0 });\n    }\n  }\n  if (candidates.length === 0) {\n    const readerBtn = document.querySelector(\u0027a[href*=\"reader.\"]\u0027);\n    if (readerBtn) {\n      const href = readerBtn.getAttribute(\u0027href\u0027) || \u0027\u0027;\n      if (href) candidates.push({ id: \u00271\u0027, title: \u0027在线阅读\u0027, url: href, format: \u0027\u0027, order: 1, recommended: 0 });\n    }\n  }\n  candidates.sort((a,b) =\u003e (b.recommended - a.recommended) || (a.order - b.order));\n  return JSON.stringify(candidates);\n})();",
+                                                                 "description":  "提取下载/阅读入口列表"
+                                                             }
+                                                         ]
+                                         },
+                      "getPageList":  {
+                                          "description":  "获取下载链接或在线阅读链接",
+                                          "actions":  [
+                                                          {
+                                                              "type":  "script",
+                                                              "code":  "(() =\u003e {\n  const url = String((globalThis \u0026\u0026 globalThis.__currentUrl) || location.href);\n  const m = url.match(/\\.(epub|pdf|mobi|azw3|txt|djvu)/i);\n  return JSON.stringify([{ id: \u00271\u0027, url: url, format: m ? m[1].toLowerCase() : \u0027\u0027 }]);\n})();",
+                                                              "description":  "将当前链接作为下载页面返回"
+                                                          }
+                                                      ]
+                                      },
+                      "getImageUrl":  {
+                                          "description":  "获取封面图片URL",
+                                          "actions":  [
+                                                          {
+                                                              "type":  "direct",
+                                                              "description":  "直接返回图片URL",
+                                                              "extract":  {
+                                                                              "type":  "passthrough",
+                                                                              "field":  "url"
+                                                                          }
+                                                          }
+                                                      ]
+                                      },
+                      "waitForDownloadSources":  {
+                                                     "description":  "等待页面渲染下载按钮并提取可用格式",
+                                                     "actions":  [
+                                                                     {
+                                                                         "type":  "wait",
+                                                                         "condition":  "time",
+                                                                         "duration":  3000,
+                                                                         "description":  "等待详情页主要脚本完成渲染"
+                                                                     },
+                                                                     {
+                                                                         "type":  "wait",
+                                                                         "condition":  "element",
+                                                                         "selector":  "h1",
+                                                                         "timeout":  15000
+                                                                     },
+                                                                     {
+                                                                         "type":  "script",
+                                                                         "code":  "(() =\u003e {\n  const clean = (v) =\u003e String(v || \u0027\u0027).replace(/\\s+/g, \u0027 \u0027).trim();\n  const toAbs = (v) =\u003e { try { return new URL(String(v || \u0027\u0027), location.href).toString(); } catch (_) { return String(v || \u0027\u0027); } };\n  const prefers = clean(((globalThis \u0026\u0026 globalThis.__preferredFormat) || \u0027\u0027)).toLowerCase();\n  const result = { sources: [], recommendedSourceUrl: null };\n  const seen = {};\n  const add = (name, href, order, format) =\u003e {\n    const url = toAbs(href);\n    if (!url || url === \u0027about:blank\u0027 || url.startsWith(\u0027javascript:\u0027)) return;\n    if (seen[url]) return;\n    seen[url] = true;\n    const rec = format \u0026\u0026 format === prefers ? 1 : 0;\n    result.sources.push({ id: String(result.sources.length + 1), name: name || format.toUpperCase() || \u0027下载\u0027, url: url, format: format, recommended: rec, order: order });\n  };\n  const btns = document.querySelectorAll(\u0027a[href].dlButton, a[href][class*=dl], a[href][class*=download], button[onclick]\u0027);\n  for (let i = 0; i \u003c btns.length; i += 1) {\n    const el = btns[i];\n    const href = el.getAttribute(\u0027href\u0027) || el.getAttribute(\u0027onclick\u0027) || \u0027\u0027;\n    const text = clean(el.textContent);\n    const m = href.match(/\\.(epub|pdf|mobi|azw3|txt|djvu)/i);\n    const fmt = m ? m[1].toLowerCase() : (text.match(/(epub|pdf|mobi|azw3|txt|djvu)/i) || [\u0027\u0027,\u0027\u0027])[1].toLowerCase();\n    add(text || (fmt ? fmt.toUpperCase() : \u0027下载\u0027), href, i + 1, fmt);\n  }\n  if (result.sources.length === 0) {\n    const readerBtn = document.querySelector(\u0027a[href*=\"reader.\"]\u0027);\n    if (readerBtn) add(\u0027在线阅读\u0027, readerBtn.getAttribute(\u0027href\u0027) || \u0027\u0027, 1, \u0027\u0027);\n  }\n  result.sources.sort((a,b) =\u003e (b.recommended - a.recommended) || (a.order - b.order));\n  if (result.sources.length \u003e 0 \u0026\u0026 !result.recommendedSourceUrl) {\n    const best = result.sources.find((s) =\u003e s.recommended === 1) || result.sources[0];\n    result.recommendedSourceUrl = best.url;\n  }\n  console.log(\u0027[waitForDownloadSources] sources=\u0027 + result.sources.length + \u0027 recommended=\u0027 + (result.recommendedSourceUrl || \u0027none\u0027));\n  return JSON.stringify(result);\n})();",
+                                                                         "description":  "收集可用的下载源并给出推荐链接"
+                                                                     }
+                                                                 ]
+                                                 },
+                      "selectDownloadSource":  {
+                                                   "description":  "导航到目标下载源页面",
+                                                   "actions":  [
+                                                                   {
+                                                                       "type":  "navigate",
+                                                                       "url":  "{{sourceUrl}}",
+                                                                       "timeout":  30000,
+                                                                       "waitAfterLoad":  2000
+                                                                   },
+                                                                   {
+                                                                       "type":  "wait",
+                                                                       "condition":  "element",
+                                                                       "selector":  "body",
+                                                                       "timeout":  10000
+                                                                   }
+                                                               ]
+                                               },
+                      "extractFileList":  {
+                                              "description":  "从下载源页面提取真实文件链接",
+                                              "actions":  [
+                                                              {
+                                                                  "type":  "wait",
+                                                                  "condition":  "time",
+                                                                  "duration":  2000,
+                                                                  "description":  "等待跳转或脚本渲染"
+                                                              },
+                                                              {
+                                                                  "type":  "script",
+                                                                  "code":  "(() =\u003e {\n  const result = { debug: { url: location.href, title: document.title }, files: [] };\n  const seen = {};\n  const push = (url, name, fmt, size) =\u003e {\n    const href = String(url || \u0027\u0027).trim();\n    if (!href || href === \u0027#\u0027 || href.startsWith(\u0027javascript:\u0027)) return;\n    if (seen[href]) return;\n    seen[href] = true;\n    result.files.push({ url: href, name: name || fmt.toUpperCase() || \u0027文件\u0027, format: fmt, size: size || \u0027\u0027 });\n  };\n  const anchors = Array.from(document.querySelectorAll(\u0027a[href]\u0027));\n  for (let i = 0; i \u003c anchors.length; i += 1) {\n    const a = anchors[i];\n    const href = a.getAttribute(\u0027href\u0027) || \u0027\u0027;\n    const text = (a.textContent || \u0027\u0027).replace(/\\s+/g, \u0027 \u0027).trim();\n    const m = href.match(/\\.(epub|pdf|mobi|azw3|txt|djvu)(?:\\b|\\?)/i) || text.match(/\\.(epub|pdf|mobi|azw3|txt|djvu)\\b/i);\n    if (m) push(href, text, m[1].toLowerCase(), \u0027\u0027);\n  }\n  if (result.files.length === 0) {\n    const form = document.querySelector(\u0027form[action]\u0027);\n    if (form) {\n      const action = form.getAttribute(\u0027action\u0027) || \u0027\u0027;\n      const method = (form.getAttribute(\u0027method\u0027) || \u0027GET\u0027).toUpperCase();\n      const data = {};\n      const fields = form.querySelectorAll(\u0027input[name],select[name],textarea[name]\u0027);\n      for (let i = 0; i \u003c fields.length; i += 1) {\n        const el = fields[i];\n        const name = el.getAttribute(\u0027name\u0027) || \u0027\u0027;\n        if (!name) continue;\n        data[name] = el.value || el.getAttribute(\u0027value\u0027) || \u0027\u0027;\n      }\n      result.form = { action: action, method: method, data: data };\n    }\n  }\n  console.log(\u0027[extractFileList] files=\u0027 + result.files.length + \u0027 hasForm=\u0027 + !!result.form);\n  return JSON.stringify(result);\n})();",
+                                                                  "description":  "提取页面中的文件链接，必要时回退到表单匹配"
+                                                              }
+                                                          ]
+                                          }
+                  },
+    "tabs":  [
+                 {
+                     "id":  "popular",
+                     "type":  "popular",
+                     "name":  "推荐",
+                     "enabled":  true,
+                     "order":  0,
+                     "requiresLogin":  false
+                 },
+                 {
+                     "id":  "search",
+                     "type":  "search",
+                     "name":  "搜索",
+                     "enabled":  true,
+                     "order":  1,
+                     "requiresLogin":  false
+                 }
+             ],
+    "filters":  {
+                    "language":  {
+                                     "type":  "select",
+                                     "name":  "语言",
+                                     "default":  "",
+                                     "options":  [
+                                                     {
+                                                         "value":  "",
+                                                         "label":  "全部"
+                                                     },
+                                                     {
+                                                         "value":  "chinese",
+                                                         "label":  "中文"
+                                                     },
+                                                     {
+                                                         "value":  "english",
+                                                         "label":  "英文"
+                                                     },
+                                                     {
+                                                         "value":  "japanese",
+                                                         "label":  "日文"
+                                                     },
+                                                     {
+                                                         "value":  "korean",
+                                                         "label":  "韩文"
+                                                     },
+                                                     {
+                                                         "value":  "russian",
+                                                         "label":  "俄文"
+                                                     },
+                                                     {
+                                                         "value":  "german",
+                                                         "label":  "德文"
+                                                     },
+                                                     {
+                                                         "value":  "french",
+                                                         "label":  "法文"
+                                                     }
+                                                 ]
+                                 },
+                    "extension":  {
+                                      "type":  "select",
+                                      "name":  "格式",
+                                      "default":  "",
+                                      "options":  [
+                                                      {
+                                                          "value":  "",
+                                                          "label":  "全部"
+                                                      },
+                                                      {
+                                                          "value":  "epub",
+                                                          "label":  "EPUB"
+                                                      },
+                                                      {
+                                                          "value":  "pdf",
+                                                          "label":  "PDF"
+                                                      },
+                                                      {
+                                                          "value":  "mobi",
+                                                          "label":  "MOBI"
+                                                      },
+                                                      {
+                                                          "value":  "azw3",
+                                                          "label":  "AZW3"
+                                                      },
+                                                      {
+                                                          "value":  "djvu",
+                                                          "label":  "DJVU"
+                                                      },
+                                                      {
+                                                          "value":  "txt",
+                                                          "label":  "TXT"
+                                                      }
+                                                  ]
+                                  },
+                    "year":  {
+                                 "type":  "select",
+                                 "name":  "年份",
+                                 "default":  "",
+                                 "options":  [
+                                                 {
+                                                     "value":  "",
+                                                     "label":  "全部"
+                                                 },
+                                                 {
+                                                     "value":  "2024",
+                                                     "label":  "2024"
+                                                 },
+                                                 {
+                                                     "value":  "2023",
+                                                     "label":  "2023"
+                                                 },
+                                                 {
+                                                     "value":  "2022",
+                                                     "label":  "2022"
+                                                 },
+                                                 {
+                                                     "value":  "2021",
+                                                     "label":  "2021"
+                                                 },
+                                                 {
+                                                     "value":  "2020",
+                                                     "label":  "2020"
+                                                 }
+                                             ]
+                             }
+                },
+    "imageProcessing":  {
+                            "urlTransform":  {
+                                                 "enabled":  false
+                                             },
+                            "headers":  {
+                                            "User-Agent":  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                                            "Referer":  "https://zh.chris101.ru"
+                                        }
+                        },
+    "notes":  [
+                  "Z-Library是全球最大的电子书图书馆",
+                  "需要科学网络才能访问",
+                  "如果主站无法访问，请在设置中切换镜像站点",
+                  "登录后可获得更多下载配额",
+                  "支持EPUB、PDF、MOBI等多种格式"
+              ],
+    "changelog":  [
+                      {
+                          "version":  "1.0.0",
+                          "date":  "2025-01-14",
+                          "changes":  [
+                                          "初始版本",
+                                          "支持搜索电子书",
+                                          "支持查看电子书详情",
+                                          "支持多镜像站点切换",
+                                          "强制使用PC UA以获得完整功能"
+                                      ]
+                      }
+                  ],
+    "tasks":  {
+                  "downloadEbook":  {
+                                        "id":  "downloadEbook",
+                                        "name":  "下载电子书",
+                                        "description":  "完整电子书下载流程：获取下载源 -\u003e 导航到源 -\u003e 提取文件",
+                                        "mode":  "sequential",
+                                        "steps":  [
+                                                      {
+                                                          "id":  "step1_clickSearch",
+                                                          "name":  "获取下载源",
+                                                          "workflow":  "waitForDownloadSources",
+                                                          "outputMapping":  {
+                                                                                "sources":  "$.sources",
+                                                                                "recommendedSourceUrl":  "$.recommendedSourceUrl",
+                                                                                "result":  "$.sources"
+                                                                            },
+                                                          "timeout":  30000
+                                                      },
+                                                      {
+                                                          "id":  "step2_waitSources",
+                                                          "name":  "选择下载源",
+                                                          "workflow":  "selectDownloadSource",
+                                                          "condition":  "recommendedSourceUrl",
+                                                          "inputMapping":  {
+                                                                               "sourceUrl":  "${recommendedSourceUrl}"
+                                                                           },
+                                                          "timeout":  60000
+                                                      },
+                                                      {
+                                                          "id":  "step3_extractFiles",
+                                                          "name":  "提取文件列表",
+                                                          "workflow":  "extractFileList",
+                                                          "condition":  "recommendedSourceUrl",
+                                                          "outputMapping":  {
+                                                                                "fileList":  "$.files",
+                                                                                "form":  "$.form",
+                                                                                "result":  "$.files"
+                                                                            },
+                                                          "timeout":  30000
+                                                      }
+                                                  ],
+                                        "initialParams":  {
+                                                              "bookId":  ""
+                                                          },
+                                        "timeout":  180000
+                                    },
+                  "getDownloadSources":  {
+                                             "id":  "getDownloadSources",
+                                             "name":  "获取下载源列表",
+                                             "description":  "在详情页收集可用格式与推荐链接",
+                                             "mode":  "sequential",
+                                             "steps":  [
+                                                           {
+                                                               "id":  "step2_waitSources",
+                                                               "name":  "获取下载源",
+                                                               "workflow":  "waitForDownloadSources",
+                                                               "inputMapping":  {
+                                                                                    "bookId":  "${bookId}"
+                                                                                },
+                                                               "outputMapping":  {
+                                                                                     "sources":  "$.sources",
+                                                                                     "recommendedSourceUrl":  "$.recommendedSourceUrl",
+                                                                                     "result":  "$.sources"
+                                                                                 },
+                                                               "timeout":  30000
+                                                           }
+                                                       ],
+                                             "initialParams":  {
+                                                                   "bookId":  ""
+                                                               },
+                                             "timeout":  60000
+                                         },
+                  "getFileListFromSource":  {
+                                                "id":  "getFileListFromSource",
+                                                "name":  "从下载源获取文件列表",
+                                                "description":  "导航到下载源页面并提取可用文件",
+                                                "mode":  "sequential",
+                                                "steps":  [
+                                                              {
+                                                                  "id":  "step1_navigate",
+                                                                  "name":  "导航到下载源",
+                                                                  "workflow":  "selectDownloadSource",
+                                                                  "inputMapping":  {
+                                                                                       "sourceUrl":  "${sourceUrl}"
+                                                                                   },
+                                                                  "timeout":  60000
+                                                              },
+                                                              {
+                                                                  "id":  "step2_extractFiles",
+                                                                  "name":  "提取文件列表",
+                                                                  "workflow":  "extractFileList",
+                                                                  "outputMapping":  {
+                                                                                        "files":  "$.files",
+                                                                                        "form":  "$.form",
+                                                                                        "result":  "$.files"
+                                                                                    },
+                                                                  "timeout":  30000
+                                                              }
+                                                          ],
+                                                "initialParams":  {
+                                                                      "sourceUrl":  ""
+                                                                  },
+                                                "timeout":  120000
+                                            }
+              }
+}

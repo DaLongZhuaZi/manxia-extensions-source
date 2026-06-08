@@ -1,0 +1,362 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.zlibrary",
+    "name": "Z-Library",
+    "type": "ebook",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://zh.chris101.ru",
+    "description": "需要开代理（不开的话非常慢）。如果主站无法访问，可在设置中切换镜像站点。",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["ebook", "library", "pdf", "epub"],
+    "Internet": true,
+    "notes": "需要开代理（不开的话非常慢）。如果主站无法访问，可在设置中切换镜像站点。"
+  },
+
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "sessionManagement": true
+  },
+
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "forceDesktopUA": true,
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+      "Accept-Encoding": "gzip, deflate, br",
+      "DNT": "1",
+      "Connection": "keep-alive",
+      "Upgrade-Insecure-Requests": "1",
+      "Cache-Control": "max-age=0"
+    },
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000
+  },
+
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入书名、作者或ISBN",
+        "description": "搜索电子书",
+        "isDefault": true
+      },
+      {
+        "id": "searchByIsbn",
+        "label": "ISBN",
+        "placeholder": "输入ISBN号，如：9787111544937",
+        "description": "通过ISBN精确查找"
+      }
+    ]
+  },
+
+  "settings": {
+    "mirrorSite": {
+      "type": "select",
+      "name": "镜像站点",
+      "description": "选择要使用的镜像站点，主站无法访问时可切换",
+      "default": "https://zh.chris101.ru",
+      "options": [
+        {"value": "https://zh.chris101.ru", "label": "主站 (chris101.ru)"},
+        {"value": "https://zh.z-lib.gs", "label": "镜像1 (z-lib.gs)"},
+        {"value": "https://zh.zlibrary-global.se", "label": "镜像2 (zlibrary-global.se)"},
+        {"value": "https://zh.z-lib.fm", "label": "镜像3 (z-lib.fm)"},
+        {"value": "https://singlelogin.re", "label": "SingleLogin入口"}
+      ]
+    },
+    "preferredFormat": {
+      "type": "select",
+      "name": "首选格式",
+      "description": "下载时优先选择的电子书格式",
+      "default": "epub",
+      "options": [
+        {"value": "epub", "label": "EPUB"},
+        {"value": "pdf", "label": "PDF"},
+        {"value": "mobi", "label": "MOBI"},
+        {"value": "azw3", "label": "AZW3"}
+      ]
+    },
+    "preferredLanguage": {
+      "type": "select",
+      "name": "首选语言",
+      "description": "搜索结果优先显示的语言",
+      "default": "chinese",
+      "options": [
+        {"value": "chinese", "label": "中文"},
+        {"value": "english", "label": "英文"},
+        {"value": "japanese", "label": "日文"},
+        {"value": "all", "label": "全部语言"}
+      ]
+    }
+  },
+
+  "workflows": {
+    "initialize": {
+      "description": "初始化访问Z-Library",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://zh.chris101.ru",
+          "timeout": 30000,
+          "waitAfterLoad": 1000
+        },
+        {
+          "type": "condition",
+          "selector": ".cookie-notice, .gdpr-notice, #cookie-consent",
+          "exists": true,
+          "then": [
+            {
+              "type": "click",
+              "selector": ".accept-cookies, .accept-all, #accept-cookies",
+              "optional": true,
+              "waitAfter": 1000
+            }
+          ]
+        }
+      ]
+    },
+
+    "popular": {
+      "description": "获取热门电子书",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://zh.chris101.ru",
+          "timeout": 30000
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 5000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const items = document.querySelectorAll('.masonry-endless .item'); items.forEach((item) => { const link = item.querySelector('a'); const cover = item.querySelector('z-cover.ready'); if (link && cover) { const fullUrl = link.href || ''; const title = cover.getAttribute('title') || ''; const author = cover.getAttribute('author') || ''; let coverUrl = ''; try { if (cover.shadowRoot) { const shadowImg = cover.shadowRoot.querySelector('img'); if (shadowImg && shadowImg.src) { coverUrl = shadowImg.src; } } } catch(e) { console.log('shadowRoot access error:', e); } results.push({ id: fullUrl, title: title, author: author, cover: coverUrl, url: fullUrl }); } }); return JSON.stringify(results); })();",
+          "description": "提取热门电子书列表"
+        }
+      ]
+    },
+
+    "search": {
+      "description": "搜索电子书",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://zh.chris101.ru/s/{query}?page={page}",
+          "timeout": 30000,
+          "waitAfterLoad": 15000
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "z-bookcard",
+          "timeout": 15000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const cards = document.querySelectorAll('z-bookcard'); cards.forEach((card) => { const href = card.getAttribute('href') || ''; const fullUrl = 'https://zh.chris101.ru' + href; const titleEl = card.querySelector('[slot=\"title\"]'); const authorEl = card.querySelector('[slot=\"author\"]'); const img = card.querySelector('img'); const title = titleEl?.textContent?.trim() || ''; const author = authorEl?.textContent?.trim() || ''; const cover = img?.getAttribute('data-src') || ''; const extension = card.getAttribute('extension') || ''; const filesize = card.getAttribute('filesize') || ''; const year = card.getAttribute('year') || ''; results.push({ id: fullUrl, title: title, author: author, cover: cover, url: fullUrl, extension: extension, fileSize: filesize, year: year }); }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+
+    "getMangaDetail": {
+      "description": "获取电子书详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 15000
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "h1",
+          "timeout": 5000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const h1 = document.querySelector('h1'); const authorEl = document.querySelector('a[href*=\"/author/\"]'); const categoryEl = document.querySelector('.property_categories .property_value'); const title = h1?.textContent?.trim() || ''; const author = authorEl?.textContent?.trim() || ''; const categories = categoryEl?.textContent?.trim() || ''; return JSON.stringify({ id: '', title: title, author: author, description: '', cover: '', categories: categories, tags: categories }); })();",
+          "description": "提取电子书详情"
+        }
+      ]
+    },
+
+    "getBookDetail": {
+      "description": "获取电子书详情（电子书专用）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 30000
+        },
+        {
+          "type": "wait",
+          "condition": "time",
+          "duration": 20000,
+          "description": "等待页面完全加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const h1 = document.querySelector('h1'); const authorEl = document.querySelector('a[href*=\"/author/\"]'); const categoryEl = document.querySelector('.property_categories .property_value'); const yearEl = document.querySelector('.property_year .property_value'); const publisherEl = document.querySelector('.property_publisher .property_value'); const languageEl = document.querySelector('.property_language .property_value'); const isbnEl = document.querySelector('.property_isbn .property_value'); let readerUrl = ''; const readerBtn = document.querySelector('.reader-link'); if (readerBtn) { readerUrl = readerBtn.href || readerBtn.getAttribute('href') || ''; } if (!readerUrl) { const allLinks = document.querySelectorAll('a[href*=\"reader.chris101.ru\"]'); if (allLinks.length > 0) { readerUrl = allLinks[0].href || ''; } } const title = h1?.textContent?.trim() || ''; const author = authorEl?.textContent?.trim() || ''; const categories = categoryEl?.textContent?.trim() || ''; const year = yearEl?.textContent?.trim() || ''; const publisher = publisherEl?.textContent?.trim() || ''; const language = languageEl?.textContent?.trim() || ''; const isbn = isbnEl?.textContent?.trim() || ''; let cover = ''; const zCover = document.querySelector('z-cover'); if (zCover && zCover.shadowRoot) { const shadowImg = zCover.shadowRoot.querySelector('img'); if (shadowImg && shadowImg.src) { cover = shadowImg.src; } } const description = '出版社: ' + publisher + ' | 年份: ' + year + ' | 语言: ' + language + ' | ISBN: ' + isbn; console.log('readerUrl:', readerUrl); return JSON.stringify({ id: '', title: title, author: author, description: description, cover: cover, categories: categories, tags: categories, year: year, publisher: publisher, language: language, isbn: isbn, readerUrl: readerUrl }); })();",
+          "description": "提取电子书详情"
+        }
+      ]
+    },
+
+    "getChapterList": {
+      "description": "获取下载选项（电子书格式列表）",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{mangaUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 15000
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".dlButton",
+          "timeout": 15000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const dlBtn = document.querySelector('.dlButton.reader-link'); if (dlBtn) { const href = dlBtn.getAttribute('href') || ''; results.push({ id: '1', title: '下载', url: href, order: 1 }); } return JSON.stringify(results); })();",
+          "description": "提取下载链接"
+        }
+      ]
+    },
+
+    "getPageList": {
+      "description": "获取下载链接",
+      "actions": [
+        {
+          "type": "direct",
+          "description": "电子书直接返回下载链接",
+          "extract": {
+            "type": "passthrough",
+            "field": "url"
+          }
+        }
+      ]
+    },
+
+    "getImageUrl": {
+      "description": "获取封面图片URL",
+      "actions": [
+        {
+          "type": "direct",
+          "description": "直接返回图片URL",
+          "extract": {
+            "type": "passthrough",
+            "field": "url"
+          }
+        }
+      ]
+    }
+  },
+
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "推荐",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "search",
+      "type": "search",
+      "name": "搜索",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    }
+  ],
+
+  "filters": {
+    "language": {
+      "type": "select",
+      "name": "语言",
+      "default": "",
+      "options": [
+        {"value": "", "label": "全部"},
+        {"value": "chinese", "label": "中文"},
+        {"value": "english", "label": "英文"},
+        {"value": "japanese", "label": "日文"},
+        {"value": "korean", "label": "韩文"},
+        {"value": "russian", "label": "俄文"},
+        {"value": "german", "label": "德文"},
+        {"value": "french", "label": "法文"}
+      ]
+    },
+    "extension": {
+      "type": "select",
+      "name": "格式",
+      "default": "",
+      "options": [
+        {"value": "", "label": "全部"},
+        {"value": "epub", "label": "EPUB"},
+        {"value": "pdf", "label": "PDF"},
+        {"value": "mobi", "label": "MOBI"},
+        {"value": "azw3", "label": "AZW3"},
+        {"value": "djvu", "label": "DJVU"},
+        {"value": "txt", "label": "TXT"}
+      ]
+    },
+    "year": {
+      "type": "select",
+      "name": "年份",
+      "default": "",
+      "options": [
+        {"value": "", "label": "全部"},
+        {"value": "2024", "label": "2024"},
+        {"value": "2023", "label": "2023"},
+        {"value": "2022", "label": "2022"},
+        {"value": "2021", "label": "2021"},
+        {"value": "2020", "label": "2020"}
+      ]
+    }
+  },
+
+  "imageProcessing": {
+    "urlTransform": {
+      "enabled": false
+    },
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Referer": "https://zh.chris101.ru"
+    }
+  },
+
+  "notes": [
+    "Z-Library是全球最大的电子书图书馆",
+    "需要科学网络才能访问",
+    "如果主站无法访问，请在设置中切换镜像站点",
+    "登录后可获得更多下载配额",
+    "支持EPUB、PDF、MOBI等多种格式"
+  ],
+
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-01-14",
+      "changes": [
+        "初始版本",
+        "支持搜索电子书",
+        "支持查看电子书详情",
+        "支持多镜像站点切换",
+        "强制使用PC UA以获得完整功能"
+      ]
+    }
+  ]
+}

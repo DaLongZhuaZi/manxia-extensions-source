@@ -1,0 +1,153 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.en.gutenberg",
+    "name": "Project Gutenberg",
+    "type": "ebook",
+    "version": "1.0.0",
+    "language": "en",
+    "baseUrl": "https://www.gutenberg.org",
+    "description": "公开版权电子书站点，提供免登录 EPUB、TXT 等格式下载，可用于测试完整下载到本地阅读流程。",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["ebook", "public-domain", "epub", "txt"],
+    "Internet": true,
+    "notes": "用于免登录测试完整电子书下载与本地阅读链路。"
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "sessionManagement": false,
+    "loginSupport": false,
+    "downloadSupport": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "timeout": 20000,
+    "retryCount": 2,
+    "retryDelay": 1200
+  },
+  "searchConfig": {
+    "types": [
+      {
+        "id": "search",
+        "label": "关键词",
+        "placeholder": "输入书名或作者，例如 Pride and Prejudice",
+        "description": "搜索公开版权电子书",
+        "isDefault": true
+      }
+    ]
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取常看电子书列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.gutenberg.org/browse/scores/top",
+          "timeout": 20000,
+          "waitAfterLoad": 1500
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = {}; const links = document.querySelectorAll('#books-last1 + ol li a[href*=\"/ebooks/\"]'); links.forEach((link, index) => { if (index >= 30) { return; } const href = link.getAttribute('href') || ''; let url = ''; let bookId = ''; try { const absoluteUrl = new URL(href, location.href); url = absoluteUrl.toString(); bookId = absoluteUrl.pathname.replace('/ebooks/', '').replace(/^\\/+/, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } seen[bookId] = true; const rawText = String(link.textContent || '').replace(/\\s+/g, ' ').trim(); const cleanedText = rawText.replace(/\\s*\\(\\d+\\)\\s*$/, ''); const marker = ' by '; const markerIndex = cleanedText.lastIndexOf(marker); let title = cleanedText; let author = ''; if (markerIndex > 0) { title = cleanedText.substring(0, markerIndex).trim(); author = cleanedText.substring(markerIndex + marker.length).trim(); } results.push({ id: bookId, title: title, author: author, cover: 'https://www.gutenberg.org/cache/epub/' + bookId + '/pg' + bookId + '.cover.small.jpg', url: url }); }); return JSON.stringify(results); })();",
+          "description": "提取热门电子书列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索电子书",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.gutenberg.org/ebooks/search/?query={{query}}",
+          "timeout": 20000,
+          "waitAfterLoad": 1500
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "li.booklink a.link",
+          "timeout": 10000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = {}; const links = document.querySelectorAll('li.booklink a.link[href*=\"/ebooks/\"]'); links.forEach((link) => { const href = link.getAttribute('href') || ''; let url = ''; let bookId = ''; try { const absoluteUrl = new URL(href, location.href); url = absoluteUrl.toString(); bookId = absoluteUrl.pathname.replace('/ebooks/', '').replace(/^\\/+/, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } seen[bookId] = true; const title = String(link.querySelector('.title')?.textContent || '').replace(/\\s+/g, ' ').trim(); const author = String(link.querySelector('.subtitle')?.textContent || '').replace(/\\s+/g, ' ').trim(); const cover = link.querySelector('img.cover-thumb')?.getAttribute('src') || ''; const absoluteCover = cover ? new URL(cover, location.href).toString() : ''; if (!title) { return; } results.push({ id: bookId, title: title, author: author, cover: absoluteCover, url: url }); }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "getBookDetail": {
+      "description": "获取电子书详情",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.gutenberg.org/ebooks/{{bookId}}",
+          "timeout": 20000,
+          "waitAfterLoad": 1500
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#book_title",
+          "timeout": 10000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const detail = { id: location.pathname.replace('/ebooks/', '').replace(/^\\/+/, ''), title: '', cover: '', author: '', publisher: 'Project Gutenberg', publishDate: '', description: '', categories: '', isbn: '', fileSize: '', formats: [] }; const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const titleText = clean(document.querySelector('#book_title')?.textContent || ''); const marker = ' by '; const markerIndex = titleText.lastIndexOf(marker); if (markerIndex > 0) { detail.title = clean(titleText.substring(0, markerIndex)); detail.author = clean(titleText.substring(markerIndex + marker.length)); } else { detail.title = titleText; } const cover = document.querySelector('#cover img.cover-art')?.getAttribute('src') || ''; detail.cover = cover ? new URL(cover, location.href).toString() : ''; const summary = document.querySelector('.summary-text-container'); if (summary) { detail.description = clean(summary.textContent || ''); } const rows = document.querySelectorAll('#about_book_table tr'); const subjects = []; rows.forEach((row) => { const key = clean(row.querySelector('th')?.textContent || ''); const value = clean(row.querySelector('td')?.textContent || ''); if (key === 'Release Date') { detail.publishDate = value; } if (key === 'Subject' && value) { subjects.push(value); } }); detail.categories = subjects.slice(0, 3).join(' | '); const formats = []; const seen = {}; const registerFormat = (name, href) => { const normalizedName = clean(name).toUpperCase(); const normalizedHref = String(href || ''); if (!normalizedHref) { return; } let format = ''; const lowerHref = normalizedHref.toLowerCase(); const lowerName = normalizedName.toLowerCase(); if (lowerHref.includes('.epub') || lowerHref.includes('.epub3') || lowerName.includes('epub')) { format = 'EPUB'; } else if (lowerHref.includes('.txt') || lowerName.includes('plain text') || lowerName.includes('txt')) { format = 'TXT'; } else if (lowerHref.includes('.mobi') || lowerHref.includes('.kf8') || lowerHref.includes('.kindle') || lowerName.includes('kindle') || lowerName.includes('mobi')) { format = 'MOBI'; } if (!format || seen[format]) { return; } seen[format] = true; formats.push(format); }; const featured = document.querySelector('.featured-format-link'); if (featured) { registerFormat(featured.textContent || '', featured.getAttribute('href') || ''); } const others = document.querySelectorAll('.other-format-link'); others.forEach((link) => { registerFormat(link.textContent || '', link.getAttribute('href') || ''); }); detail.formats = formats; return JSON.stringify(detail); })();",
+          "description": "提取电子书详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取下载格式列表",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.gutenberg.org/ebooks/{{mangaId}}",
+          "timeout": 20000,
+          "waitAfterLoad": 1500
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".featured-format-link, .other-format-link",
+          "timeout": 10000
+        },
+        {
+          "type": "script",
+          "code": "(() => { const results = []; const seen = {}; const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const pushFormat = (titleText, href, preferred) => { const absoluteUrl = href ? new URL(href, location.href).toString() : ''; const lowerHref = absoluteUrl.toLowerCase(); const lowerTitle = clean(titleText).toLowerCase(); let format = ''; if (lowerHref.includes('.epub') || lowerHref.includes('.epub3') || lowerTitle.includes('epub')) { format = 'EPUB'; } else if (lowerHref.includes('.txt') || lowerTitle.includes('plain text') || lowerTitle.includes('txt')) { format = 'TXT'; } else if (lowerHref.includes('.mobi') || lowerHref.includes('.kf8') || lowerHref.includes('.kindle') || lowerTitle.includes('kindle') || lowerTitle.includes('mobi')) { format = 'MOBI'; } if (!format || !absoluteUrl || seen[format]) { return; } seen[format] = true; results.push({ id: format.toLowerCase(), title: format, url: absoluteUrl, number: preferred ? 1 : results.length + 1 }); }; const featured = document.querySelector('.featured-format-link'); if (featured) { pushFormat(featured.textContent || '', featured.getAttribute('href') || '', true); } const others = document.querySelectorAll('.other-format-link'); others.forEach((link) => { pushFormat(link.textContent || '', link.getAttribute('href') || '', false); }); return JSON.stringify(results); })();",
+          "description": "提取可下载格式"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "返回最终文件链接",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify([{ url: '{{chapterId}}' }]); })();",
+          "description": "直接返回下载链接"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "search",
+      "type": "search",
+      "name": "搜索",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    }
+  ]
+}

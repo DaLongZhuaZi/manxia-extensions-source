@@ -185,7 +185,7 @@
     "type": "ebook",
     "lang": "zh",
     "code": 14,
-    "version": "1.2.0",
+    "version": "1.0.0",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -464,24 +464,6 @@
           "lang": "all",
           "id": "3040035304874076216",
           "baseUrl": "https://kiutaku.com"
-        }
-      ]
-    },
-    {
-      "name": "ManXia: Project Gutenberg",
-      "pkg": "com.manxia.extension.en.gutenberg",
-      "type": "ebook",
-      "lang": "en",
-      "code": 30,
-      "version": "1.0.0",
-      "nsfw": 0,
-      "hasIcon": false,
-      "sources": [
-        {
-          "name": "Project Gutenberg",
-          "lang": "en",
-          "id": "3140035304874076217",
-          "baseUrl": "https://www.gutenberg.org"
         }
       ]
     }

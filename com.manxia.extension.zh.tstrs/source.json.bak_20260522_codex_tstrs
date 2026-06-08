@@ -1,16 +1,16 @@
 {
   "metadata": {
     "id": "com.manxia.extension.zh.tstrs",
-    "name": "SaltyLeo 的书架",
+    "name": "(用不了)SaltyLeo 的书架",
     "type": "ebook",
-    "version": "1.2.0",
+    "version": "1.0.0",
     "language": "zh-CN",
     "baseUrl": "https://tstrs.me",
-    "description": "免费电子书下载网站，支持多级跳转识别并提取最终 EPUB/MOBI/PDF/AZW3 文件链接",
+    "description": "暂时用不了 - 免费电子书下载网站，提供EPUB/MOBI/PDF格式",
     "author": "ManXia Team",
     "nsfw": false,
     "tags": ["chinese", "ebook", "epub", "pdf"],
-    "Internet": true
+    "Internet": false
   },
 
   "capabilities": {
@@ -75,7 +75,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const books = []; const seen = {}; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach((link) => { const href = link.getAttribute('href') || ''; if (!href) { return; } let absoluteUrl = ''; let bookId = ''; try { const url = new URL(href, location.href); absoluteUrl = url.toString(); bookId = url.pathname.replace('/book/', '').replace(/^\\//, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } const img = link.querySelector('img'); const text = clean(link.textContent); const lines = text.split(/\\n+/).map((item) => clean(item)).filter((item) => item); const spans = Array.from(link.querySelectorAll('span')).map((span) => clean(span.textContent)).filter((item) => item); const title = spans[0] || lines[0] || ''; let author = spans.length > 1 ? spans[1] : ''; if (!author) { lines.forEach((line) => { if (line.startsWith('作者：')) { author = line.replace('作者：', '').trim(); } }); } if (!title) { return; } seen[bookId] = true; books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.getAttribute('src') || img.src || '') : '', author: author, url: absoluteUrl }); }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const container = link.closest('.text-left') || link.closest('div'); const img = container?.querySelector('img'); const text = link.textContent || ''; const lines = text.split('\\n').map(s => s.trim()).filter(s => s); const title = lines[0] || ''; let author = ''; let publisher = ''; lines.forEach(line => { if (line.startsWith('作者：')) author = line.replace('作者：', '').trim(); if (line.startsWith('出版社：')) publisher = line.replace('出版社：', '').trim(); }); const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取搜索结果"
         }
       ]
@@ -109,7 +109,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const books = []; const seen = {}; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach((link) => { const href = link.getAttribute('href') || ''; if (!href) { return; } let absoluteUrl = ''; let bookId = ''; try { const url = new URL(href, location.href); absoluteUrl = url.toString(); bookId = url.pathname.replace('/book/', '').replace(/^\\//, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } const img = link.querySelector('img'); const spans = Array.from(link.querySelectorAll('span')).map((span) => clean(span.textContent)).filter((item) => item); const title = spans[0] || clean(link.querySelector('h5,h6,strong')?.textContent || ''); const author = spans.length > 1 ? spans[1] : ''; const description = spans.length > 0 ? spans[spans.length - 1] : ''; if (!title) { return; } seen[bookId] = true; books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.getAttribute('src') || img.src || '') : '', author: author, description: description, url: absoluteUrl }); }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const img = link.querySelector('img'); const spans = link.querySelectorAll('.text-center span'); const title = spans[0]?.textContent?.trim() || ''; const author = spans[1]?.textContent?.trim() || ''; const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取分类下的电子书"
         }
       ]
@@ -167,18 +167,18 @@
     },
 
     "waitForDownloadSources": {
-      "description": "等待 obtain 页面加载并提取下载源列表",
+      "description": "等待下载源列表加载并提交ManyBooks表单（增强验证）",
       "actions": [
         {
           "type": "wait",
           "condition": "time",
-          "duration": 25000,
-          "description": "等待 PoW 校验、one_link 获取和 obtain 页面加载"
+          "duration": 15000,
+          "description": "等待页面跳转和搜索结果加载"
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const toAbsoluteUrl = (value) => { try { return new URL(String(value || ''), location.href).toString(); } catch (_error) { return String(value || ''); } }; const collectPairs = (form) => { const pairs = []; const fields = form.querySelectorAll('input[name], select[name], textarea[name]'); fields.forEach((field) => { const name = field.getAttribute('name') || ''; const tag = (field.tagName || '').toLowerCase(); const type = (field.getAttribute('type') || '').toLowerCase(); if (!name || field.hasAttribute('disabled')) { return; } if ((type === 'checkbox' || type === 'radio') && !field.checked) { return; } let value = ''; if (tag === 'select') { value = field.value || ''; } else if (tag === 'textarea') { value = field.value || ''; } else { value = field.getAttribute('value') || field.value || ''; } pairs.push([name, value]); }); return pairs; }; const buildResolvedUrl = (form) => { const action = form.getAttribute('action') || location.href; const absoluteAction = toAbsoluteUrl(action); const method = String(form.getAttribute('method') || 'GET').toUpperCase(); const pairs = collectPairs(form); if (method !== 'GET' || pairs.length === 0) { return { url: absoluteAction, method: method, paramCount: pairs.length }; } const searchParams = new URLSearchParams(); pairs.forEach((pair) => { searchParams.append(pair[0], pair[1]); }); const query = searchParams.toString(); return { url: query ? absoluteAction + (absoluteAction.includes('?') ? '&' : '?') + query : absoluteAction, method: method, paramCount: pairs.length }; }; const debug = { url: location.href, title: document.title, pageType: location.pathname.includes('/obtain/') ? 'obtain' : 'other', formCount: 0, sourceCount: 0, recommendedSourceUrl: '', bodyPreview: clean(document.body.innerText).slice(0, 320) }; const forms = Array.from(document.querySelectorAll('form')); debug.formCount = forms.length; const sources = []; forms.forEach((form, index) => { const resolved = buildResolvedUrl(form); if (!resolved.url) { return; } const card = form.closest('.ob2-card') || form.closest('.card') || form.parentElement; const cardText = clean(card ? card.textContent : form.textContent); const titleElement = card ? card.querySelector('h1,h2,h3,h4,h5,h6,strong,.card-title,.title,.source-name') : null; let name = clean(titleElement ? titleElement.textContent : ''); if (!name) { const match = cardText.match(/^(.+?)(推荐)?\\s*下载/i); if (match && match[1]) { name = clean(match[1]); } } if (!name) { name = `下载源 ${index + 1}`; } const recommended = /manybooks/i.test(name) || /推荐/.test(cardText); const icon = card && card.querySelector('img') ? ((card.querySelector('img').getAttribute('src') || card.querySelector('img').src || '')) : ''; sources.push({ id: String(index), name: name, icon: icon, url: resolved.url, recommended: recommended, description: `${resolved.method} · ${resolved.paramCount} fields` }); if (!debug.recommendedSourceUrl && recommended) { debug.recommendedSourceUrl = resolved.url; } }); debug.sourceCount = sources.length; return { sources: sources, recommendedSourceUrl: debug.recommendedSourceUrl, formSubmitted: false, error: sources.length > 0 ? null : '未在 obtain 页面找到可用下载源表单', debug: debug }; })();",
-          "description": "提取 obtain 页面中的下载源表单并生成可直接访问的 URL"
+          "code": "(() => { const debug = { url: location.href, phase: 'init', hasFindResults: false, formCount: 0, manyBooksFormFound: false, formSubmitted: false, submitMethod: '', error: null }; const sources = []; const seen = new Set(); debug.phase = 'check_find_results'; const findResults = document.querySelector('#find_results'); if (!findResults) { debug.error = 'find_results元素不存在'; debug.bodyText = document.body.innerText.substring(0, 300); return JSON.stringify({ sources: [], formSubmitted: false, error: debug.error, debug: debug }); } debug.hasFindResults = true; debug.phase = 'find_forms'; const allForms = findResults.querySelectorAll('form'); debug.formCount = allForms.length; if (allForms.length === 0) { debug.error = '未找到任何表单'; return JSON.stringify({ sources: [], formSubmitted: false, error: debug.error, debug: debug }); } debug.phase = 'find_manybooks'; let manyBooksForm = null; let manyBooksButton = null; allForms.forEach((form, index) => { const card = form.closest('div'); const img = card?.querySelector('img') || form.querySelector('img'); const title = card?.querySelector('.card-title, h5, .title, strong') || form.querySelector('.card-title, h5, .title, strong'); const name = title?.textContent?.trim() || ''; if (form.action && name && !seen.has(name)) { seen.add(name); if (name.toLowerCase().includes('manybooks') && !manyBooksForm) { manyBooksForm = form; manyBooksButton = form.querySelector('button[type=submit], button, input[type=submit]'); debug.manyBooksFormFound = true; debug.manyBooksFormAction = form.action; debug.manyBooksFormMethod = form.method || 'GET'; debug.hasSubmitButton = !!manyBooksButton; } sources.push({ id: String(index), name: name, icon: img?.src || '', url: form.action, recommended: false }); } }); if (!manyBooksForm) { debug.error = '未找到ManyBooks表单'; debug.phase = 'no_manybooks'; return JSON.stringify({ sources: sources, formSubmitted: false, error: debug.error, debug: debug }); } debug.phase = 'submit_form'; try { if (manyBooksButton) { debug.submitMethod = 'button_click'; console.log('[tstrs] Clicking ManyBooks submit button...'); manyBooksButton.click(); debug.formSubmitted = true; } else { debug.submitMethod = 'form_submit'; console.log('[tstrs] Submitting ManyBooks form directly...'); manyBooksForm.submit(); debug.formSubmitted = true; } debug.phase = 'submitted'; } catch(e) { debug.error = 'submit_error: ' + e.message; debug.formSubmitted = false; debug.phase = 'submit_failed'; } return JSON.stringify({ sources: sources, formSubmitted: debug.formSubmitted, error: debug.error, debug: debug }); })();",
+          "description": "提取下载源列表并提交ManyBooks表单（增强验证：检查每一步状态）"
         }
       ]
     },
@@ -189,8 +189,8 @@
         {
           "type": "navigate",
           "url": "{{sourceUrl}}",
-          "waitAfterLoad": 6000,
-          "timeout": 60000,
+          "waitAfterLoad": 3000,
+          "timeout": 30000,
           "description": "导航到下载源页面（ManyBooks等外部站点）"
         }
       ]
@@ -202,13 +202,13 @@
         {
           "type": "wait",
           "condition": "time",
-          "duration": 5000,
-          "description": "等待外部站点跳转和文件列表渲染"
+          "duration": 3000,
+          "description": "等待页面加载"
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const parseFinalUrl = (rawValue) => { const raw = String(rawValue || ''); const patterns = [/window\\.location\\.href=['\"]([^'\"]+)['\"]/i, /href=['\"]([^'\"]+)['\"]/i]; for (let i = 0; i < patterns.length; i++) { const match = raw.match(patterns[i]); if (match && match[1]) { return match[1]; } } return ''; }; const pushFile = (target, list, seen) => { const text = clean(target.textContent); const trigger = target.querySelector('button, a[href], [onclick]'); const onclick = (trigger && trigger.getAttribute('onclick')) || target.getAttribute('onclick') || ''; const directHref = (trigger && trigger.getAttribute('href')) || ''; const finalUrl = parseFinalUrl(onclick) || directHref || ''; const formatMatch = (finalUrl || text).match(/\\.(epub|mobi|pdf|azw3|txt)(?:[?#]|$)/i) || text.match(/\\b(epub|mobi|pdf|azw3|txt)\\b/i); const sizeMatch = text.match(/\\(([\\d.]+\\s*[KMGT]?B)\\)/i); const format = formatMatch && formatMatch[1] ? String(formatMatch[1]).toLowerCase() : ''; if (!format && !finalUrl) { return; } const normalizedName = clean(text.replace(/download/ig, ' ').replace(/\\(([\\d.]+\\s*[KMGT]?B)\\)/ig, ' ').replace(/\\b(epub|mobi|pdf|azw3|txt)\\b/ig, ' ').trim()).replace(/[._-]+$/, ''); const name = normalizedName || `文件 ${list.length + 1}`; const key = `${format}|${finalUrl}`; if (seen[key]) { return; } seen[key] = true; list.push({ name: name, format: format, size: sizeMatch && sizeMatch[1] ? sizeMatch[1] : '', url: finalUrl }); }; const debug = { url: location.href, host: location.host, pathname: location.pathname, title: document.title, isTemporaryLink: location.href.includes('temporary_link'), hasFileList: !!document.querySelector('.file-list'), bodyTextPreview: clean(document.body.innerText).slice(0, 320), fileItemCount: 0 }; const files = []; const seen = {}; const items = Array.from(document.querySelectorAll('.file-item, .file-list li')); debug.fileItemCount = items.length; items.forEach((item) => { pushFile(item, files, seen); }); if (files.length === 0) { const fallbacks = Array.from(document.querySelectorAll('button[onclick], a[href], [onclick]')); fallbacks.forEach((item) => { pushFile(item, files, seen); }); } return { debug: debug, files: files, error: files.length > 0 ? null : `未找到文件列表，当前URL=${location.href}` }; })();",
-          "description": "从 temporary_link 页面提取最终文件链接和格式列表"
+          "code": "(() => { const debug = { url: location.href, host: location.host, pathname: location.pathname, isTemporaryLink: location.href.includes('temporary_link'), isManyBooks: location.href.includes('manybooks'), isTstrs: location.href.includes('tstrs.me'), hasFileList: !!document.querySelector('.file-list'), title: document.title, bodyTextPreview: document.body.innerText.substring(0, 300).replace(/\\s+/g, ' ') }; console.log('[extractFileList] Debug:', JSON.stringify(debug)); const files = []; const items = document.querySelectorAll('.file-item, .file-list li'); debug.fileItemCount = items.length; debug.allLinks = []; document.querySelectorAll('a[href]').forEach((a, i) => { if (i < 20) { const href = a.getAttribute('href') || ''; const text = a.textContent?.trim().substring(0, 50) || ''; if (href.match(/\\.(epub|mobi|pdf|azw3|txt)/i) || text.match(/\\.(epub|mobi|pdf|azw3|txt)/i)) { debug.allLinks.push({ href: href.substring(0, 100), text: text }); } } }); if (items.length === 0) { return JSON.stringify({ debug: debug, files: [], error: 'No file items found. URL: ' + location.href }); } items.forEach(item => { const span = item.querySelector('span'); const btn = item.querySelector('button'); if (span && btn) { const text = span.textContent || ''; const onclick = btn.getAttribute('onclick') || ''; const urlMatch = onclick.match(/href='([^']+)'/); const sizeMatch = text.match(/\\(([\\.\\d]+\\s*[KMGT]?B)\\)/i); const formatMatch = text.match(/\\.(epub|mobi|pdf|azw3|txt)/i); files.push({ name: text.replace(/\\s*\\([^)]+\\)\\s*/g, '').trim(), format: formatMatch ? formatMatch[1].toLowerCase() : '', size: sizeMatch ? sizeMatch[1] : '', url: urlMatch ? urlMatch[1] : '' }); } }); return JSON.stringify({ debug: debug, files: files }); })();",
+          "description": "提取文件下载列表（增强调试）"
         }
       ]
     }
@@ -238,10 +238,7 @@
           "name": "等待下载源",
           "workflow": "waitForDownloadSources",
           "outputMapping": {
-            "downloadSources": "$.sources",
-            "recommendedSourceUrl": "$.recommendedSourceUrl",
-            "formSubmitted": "$.formSubmitted",
-            "result": "$.sources"
+            "downloadSources": "$.scriptResult"
           },
           "timeout": 15000
         },
@@ -249,20 +246,19 @@
           "id": "step3_selectSource",
           "name": "选择下载源",
           "workflow": "selectDownloadSource",
-          "condition": "recommendedSourceUrl",
           "inputMapping": {
-            "sourceUrl": "${recommendedSourceUrl}"
+            "sourceUrl": "${selectedSourceUrl}"
           },
+          "waitForUserInteraction": true,
+          "userInteractionPrompt": "请选择一个下载源",
           "timeout": 60000
         },
         {
           "id": "step4_extractFiles",
           "name": "提取文件列表",
-          "condition": "recommendedSourceUrl",
           "workflow": "extractFileList",
           "outputMapping": {
-            "fileList": "$.files",
-            "result": "$.files"
+            "fileList": "$.scriptResult"
           },
           "timeout": 15000
         }
@@ -293,9 +289,7 @@
           "name": "等待下载源",
           "workflow": "waitForDownloadSources",
           "outputMapping": {
-            "result": "$.sources",
-            "recommendedSourceUrl": "$.recommendedSourceUrl",
-            "formSubmitted": "$.formSubmitted"
+            "result": "$.scriptResult"
           },
           "timeout": 15000
         }
@@ -322,7 +316,7 @@
           "name": "提取文件列表",
           "workflow": "extractFileList",
           "outputMapping": {
-            "result": "$.files"
+            "result": "$.scriptResult"
           },
           "timeout": 15000
         }
@@ -340,7 +334,7 @@
           "name": "提取文件列表",
           "workflow": "extractFileList",
           "outputMapping": {
-            "result": "$.files"
+            "result": "$.scriptResult"
           },
           "timeout": 15000
         }
@@ -350,85 +344,76 @@
 
   "tabs": [
     {
-      "id": "fiction",
+      "id": "newBooks",
       "type": "category",
-      "name": "精品小说",
+      "name": "新书速递",
       "enabled": true,
       "order": 0,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/100000"
+      "categoryUrl": "https://tstrs.me/class/%E6%96%B0%E4%B9%A6%E9%80%9F%E9%80%92"
     },
     {
-      "id": "history",
+      "id": "classics",
       "type": "category",
-      "name": "历史",
+      "name": "经典必读",
       "enabled": true,
       "order": 1,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/200000"
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E5%85%B8%E5%BF%85%E8%AF%BB"
+    },
+    {
+      "id": "doubanTop",
+      "type": "category",
+      "name": "豆瓣高分",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E8%B1%86%E7%93%A3%E9%AB%98%E5%88%86"
     },
     {
       "id": "literature",
       "type": "category",
-      "name": "文学",
-      "enabled": true,
-      "order": 2,
-      "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/300000"
-    },
-    {
-      "id": "art",
-      "type": "category",
-      "name": "艺术",
+      "name": "文学小说",
       "enabled": true,
       "order": 3,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/400000"
+      "categoryUrl": "https://tstrs.me/class/%E6%96%87%E5%AD%A6%E5%B0%8F%E8%AF%B4"
     },
     {
-      "id": "biography",
+      "id": "history",
       "type": "category",
-      "name": "人物传记",
+      "name": "历史传记",
       "enabled": true,
       "order": 4,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/500000"
+      "categoryUrl": "https://tstrs.me/class/%E5%8E%86%E5%8F%B2%E4%BC%A0%E8%AE%B0"
     },
     {
-      "id": "philosophy",
+      "id": "science",
       "type": "category",
-      "name": "哲学宗教",
+      "name": "科普百科",
       "enabled": true,
       "order": 5,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/600000"
+      "categoryUrl": "https://tstrs.me/class/%E7%A7%91%E6%99%AE%E7%99%BE%E7%A7%91"
     },
     {
-      "id": "computer",
+      "id": "business",
       "type": "category",
-      "name": "计算机",
+      "name": "经济管理",
       "enabled": true,
       "order": 6,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/700000"
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E6%B5%8E%E7%AE%A1%E7%90%86"
     },
     {
       "id": "psychology",
       "type": "category",
-      "name": "心理",
+      "name": "心理励志",
       "enabled": true,
       "order": 7,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/800000"
-    },
-    {
-      "id": "society",
-      "type": "category",
-      "name": "社会文化",
-      "enabled": true,
-      "order": 8,
-      "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/900000"
+      "categoryUrl": "https://tstrs.me/class/%E5%BF%83%E7%90%86%E5%8A%B1%E5%BF%97"
     },
     {
       "id": "search",

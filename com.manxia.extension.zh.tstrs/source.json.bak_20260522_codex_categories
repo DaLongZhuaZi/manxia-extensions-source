@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.zh.tstrs",
     "name": "SaltyLeo 的书架",
     "type": "ebook",
-    "version": "1.2.0",
+    "version": "1.1.0",
     "language": "zh-CN",
     "baseUrl": "https://tstrs.me",
     "description": "免费电子书下载网站，支持多级跳转识别并提取最终 EPUB/MOBI/PDF/AZW3 文件链接",
@@ -75,7 +75,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const books = []; const seen = {}; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach((link) => { const href = link.getAttribute('href') || ''; if (!href) { return; } let absoluteUrl = ''; let bookId = ''; try { const url = new URL(href, location.href); absoluteUrl = url.toString(); bookId = url.pathname.replace('/book/', '').replace(/^\\//, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } const img = link.querySelector('img'); const text = clean(link.textContent); const lines = text.split(/\\n+/).map((item) => clean(item)).filter((item) => item); const spans = Array.from(link.querySelectorAll('span')).map((span) => clean(span.textContent)).filter((item) => item); const title = spans[0] || lines[0] || ''; let author = spans.length > 1 ? spans[1] : ''; if (!author) { lines.forEach((line) => { if (line.startsWith('作者：')) { author = line.replace('作者：', '').trim(); } }); } if (!title) { return; } seen[bookId] = true; books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.getAttribute('src') || img.src || '') : '', author: author, url: absoluteUrl }); }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const container = link.closest('.text-left') || link.closest('div'); const img = container?.querySelector('img'); const text = link.textContent || ''; const lines = text.split('\\n').map(s => s.trim()).filter(s => s); const title = lines[0] || ''; let author = ''; let publisher = ''; lines.forEach(line => { if (line.startsWith('作者：')) author = line.replace('作者：', '').trim(); if (line.startsWith('出版社：')) publisher = line.replace('出版社：', '').trim(); }); const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[搜索] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取搜索结果"
         }
       ]
@@ -109,7 +109,7 @@
         },
         {
           "type": "script",
-          "code": "(() => { const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim(); const books = []; const seen = {}; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach((link) => { const href = link.getAttribute('href') || ''; if (!href) { return; } let absoluteUrl = ''; let bookId = ''; try { const url = new URL(href, location.href); absoluteUrl = url.toString(); bookId = url.pathname.replace('/book/', '').replace(/^\\//, ''); } catch (_error) { return; } if (!bookId || seen[bookId]) { return; } const img = link.querySelector('img'); const spans = Array.from(link.querySelectorAll('span')).map((span) => clean(span.textContent)).filter((item) => item); const title = spans[0] || clean(link.querySelector('h5,h6,strong')?.textContent || ''); const author = spans.length > 1 ? spans[1] : ''; const description = spans.length > 0 ? spans[spans.length - 1] : ''; if (!title) { return; } seen[bookId] = true; books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.getAttribute('src') || img.src || '') : '', author: author, description: description, url: absoluteUrl }); }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
+          "code": "(() => { const books = []; const bookLinks = document.querySelectorAll('a[href*=\"/book/\"]'); bookLinks.forEach(link => { const img = link.querySelector('img'); const spans = link.querySelectorAll('.text-center span'); const title = spans[0]?.textContent?.trim() || ''; const author = spans[1]?.textContent?.trim() || ''; const href = link.getAttribute('href'); if (href && title && !href.includes('/class/')) { const bookId = href.replace('..', '').replace('/book/', ''); books.push({ id: bookId, title: title, cover: img ? (img.getAttribute('data-src') || img.src) : '', author: author }); } }); console.log('[分类] 提取到', books.length, '本书'); return JSON.stringify(books); })();",
           "description": "提取分类下的电子书"
         }
       ]
@@ -350,85 +350,76 @@
 
   "tabs": [
     {
-      "id": "fiction",
+      "id": "newBooks",
       "type": "category",
-      "name": "精品小说",
+      "name": "新书速递",
       "enabled": true,
       "order": 0,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/100000"
+      "categoryUrl": "https://tstrs.me/class/%E6%96%B0%E4%B9%A6%E9%80%9F%E9%80%92"
     },
     {
-      "id": "history",
+      "id": "classics",
       "type": "category",
-      "name": "历史",
+      "name": "经典必读",
       "enabled": true,
       "order": 1,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/200000"
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E5%85%B8%E5%BF%85%E8%AF%BB"
+    },
+    {
+      "id": "doubanTop",
+      "type": "category",
+      "name": "豆瓣高分",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "categoryUrl": "https://tstrs.me/class/%E8%B1%86%E7%93%A3%E9%AB%98%E5%88%86"
     },
     {
       "id": "literature",
       "type": "category",
-      "name": "文学",
-      "enabled": true,
-      "order": 2,
-      "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/300000"
-    },
-    {
-      "id": "art",
-      "type": "category",
-      "name": "艺术",
+      "name": "文学小说",
       "enabled": true,
       "order": 3,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/400000"
+      "categoryUrl": "https://tstrs.me/class/%E6%96%87%E5%AD%A6%E5%B0%8F%E8%AF%B4"
     },
     {
-      "id": "biography",
+      "id": "history",
       "type": "category",
-      "name": "人物传记",
+      "name": "历史传记",
       "enabled": true,
       "order": 4,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/500000"
+      "categoryUrl": "https://tstrs.me/class/%E5%8E%86%E5%8F%B2%E4%BC%A0%E8%AE%B0"
     },
     {
-      "id": "philosophy",
+      "id": "science",
       "type": "category",
-      "name": "哲学宗教",
+      "name": "科普百科",
       "enabled": true,
       "order": 5,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/600000"
+      "categoryUrl": "https://tstrs.me/class/%E7%A7%91%E6%99%AE%E7%99%BE%E7%A7%91"
     },
     {
-      "id": "computer",
+      "id": "business",
       "type": "category",
-      "name": "计算机",
+      "name": "经济管理",
       "enabled": true,
       "order": 6,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/700000"
+      "categoryUrl": "https://tstrs.me/class/%E7%BB%8F%E6%B5%8E%E7%AE%A1%E7%90%86"
     },
     {
       "id": "psychology",
       "type": "category",
-      "name": "心理",
+      "name": "心理励志",
       "enabled": true,
       "order": 7,
       "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/800000"
-    },
-    {
-      "id": "society",
-      "type": "category",
-      "name": "社会文化",
-      "enabled": true,
-      "order": 8,
-      "requiresLogin": false,
-      "categoryUrl": "https://tstrs.me/category/900000"
+      "categoryUrl": "https://tstrs.me/class/%E5%BF%83%E7%90%86%E5%8A%B1%E5%BF%97"
     },
     {
       "id": "search",
