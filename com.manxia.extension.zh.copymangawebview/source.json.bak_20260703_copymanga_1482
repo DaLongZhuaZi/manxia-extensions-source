@@ -3,10 +3,10 @@
     "id": "com.manxia.extension.zh.copymangawebview",
     "name": "拷贝漫画",
     "type": "manga",
-    "version": "3.2.0",
+    "version": "3.1.4",
     "language": "zh-CN",
     "baseUrl": "https://www.mangacopy.com",
-    "description": "拷贝漫画 - API版本，支持新版域名、多分组章节与手动网页登录",
+    "description": "拷贝漫画 - 日漫为主，API版本，支持手动网页登录",
     "author": "ManXia Team",
     "nsfw": true,
     "tags": ["chinese", "api", "popular"],
@@ -15,18 +15,13 @@
       "copy20": "https://mapi.copy20.com",
       "copy2000": "https://mapi.copy2000.site",
       "2025copy": "https://api.2025copy.com",
-      "2026copy": "https://api.2026copy.com",
-      "copy3000": "https://api.copy3000.com",
       "hotmanga": "https://mapi.hotmangasd.com",
       "hotmanga2": "https://api.manga2025.com",
       "hotmanga3": "https://mapi.hotmangasf.com",
-      "hotmanga4": "https://mapi.hotmangasg.com",
-      "hotmanga5": "https://mapi.elfgjfghkk.club",
-      "hotmanga6": "https://mapi.fgjfghkk.club",
-      "hotmanga7": "https://mapi.fgjfghkkcenter.club"
+      "hotmanga4": "https://mapi.hotmangasg.com"
     },
     "Internet": true,
-    "notes": "基于拷贝漫画 Tachiyomi 扩展 v1.4.82 更新域名、platform 请求头和多分组章节。默认保留本机验证可用的 api.manga2025.com；如遇 210 或空列表，请切换 API 域名或 platform。"
+    "notes": "如果无法获取漫画列表，请尝试切换API域名。"
   },
 
   "capabilities": {
@@ -52,13 +47,7 @@
       "Referer": "https://www.mangacopy.com/",
       "Version": "2025.11.21",
       "Region": "0",
-      "Webp": "0",
-      "platform": "1",
-      "sec-fetch-dest": "document",
-      "sec-fetch-mode": "navigate",
-      "sec-fetch-site": "same-origin",
-      "sec-fetch-user": "?1",
-      "upgrade-insecure-requests": "1"
+      "Webp": "0"
     },
     "timeout": 30000,
     "retryCount": 3,
@@ -94,41 +83,10 @@
         {"value": "https://mapi.hotmangasd.com", "label": "mapi.hotmangasd.com (熱辣漫畫)"},
         {"value": "https://mapi.hotmangasf.com", "label": "mapi.hotmangasf.com (熱辣線路3)"},
         {"value": "https://mapi.hotmangasg.com", "label": "mapi.hotmangasg.com (熱辣線路4)"},
-        {"value": "https://mapi.elfgjfghkk.club", "label": "mapi.elfgjfghkk.club (熱辣線路5)"},
-        {"value": "https://mapi.fgjfghkk.club", "label": "mapi.fgjfghkk.club (熱辣線路6)"},
-        {"value": "https://mapi.fgjfghkkcenter.club", "label": "mapi.fgjfghkkcenter.club (熱辣線路7)"},
         {"value": "https://api.mangacopy.com", "label": "api.mangacopy.com (國際服)"},
         {"value": "https://mapi.copy20.com", "label": "mapi.copy20.com (大陸專線1)"},
         {"value": "https://mapi.copy2000.site", "label": "mapi.copy2000.site (大陸專線2)"},
-        {"value": "https://api.2025copy.com", "label": "api.2025copy.com (大陸專線3)"},
-        {"value": "https://api.2026copy.com", "label": "api.2026copy.com (大陸專線4)"},
-        {"value": "https://api.copy3000.com", "label": "api.copy3000.com (拷貝新站)"}
-      ]
-    },
-    "platform": {
-      "type": "select",
-      "name": "platform 请求头",
-      "description": "新版拷贝漫画扩展默认使用 platform=1；遇到 210 或域名限制时可尝试切换",
-      "default": "1",
-      "options": [
-        {"value": "1", "label": "1 (默认)"},
-        {"value": "2", "label": "2"},
-        {"value": "3", "label": "3"},
-        {"value": "4", "label": "4"},
-        {"value": "5", "label": "5"},
-        {"value": "", "label": "不发送"}
-      ]
-    },
-    "searchType": {
-      "type": "select",
-      "name": "搜索类型",
-      "description": "对应新版 q_type 参数",
-      "default": "",
-      "options": [
-        {"value": "", "label": "全部"},
-        {"value": "name", "label": "名称"},
-        {"value": "author", "label": "作者"},
-        {"value": "local", "label": "汉化组"}
+        {"value": "https://api.2025copy.com", "label": "api.2025copy.com (拷貝新站)"}
       ]
     },
     "filterOrdering": {
@@ -154,17 +112,6 @@
         {"value": "korea", "label": "韩漫"},
         {"value": "west", "label": "美漫"},
         {"value": "finish", "label": "已完结"}
-      ]
-    },
-    "filterFreeType": {
-      "type": "select",
-      "name": "收费状态",
-      "description": "对应新版 free_type 参数",
-      "default": "",
-      "options": [
-        {"value": "", "label": "全部"},
-        {"value": "1", "label": "免费"},
-        {"value": "2", "label": "付费"}
       ]
     },
     "filterTheme": {
@@ -260,9 +207,6 @@
             "limit": "21",
             "offset": "{{offset}}"
           },
-          "headers": {
-            "platform": "{{platform}}"
-          },
           "extract": {
             "type": "json",
             "path": "results.list",
@@ -292,9 +236,6 @@
           "params": {
             "limit": "21",
             "offset": "{{offset}}"
-          },
-          "headers": {
-            "platform": "{{platform}}"
           },
           "extract": {
             "type": "json",
@@ -326,11 +267,7 @@
             "limit": "21",
             "offset": "{{offset}}",
             "q": "{{query}}",
-            "q_type": "{{searchType}}",
             "_update": "true"
-          },
-          "headers": {
-            "platform": "{{platform}}"
           },
           "extract": {
             "type": "json",
@@ -353,9 +290,6 @@
           "type": "api",
           "method": "GET",
           "url": "{{domain}}/api/v3/comic2/{{query}}",
-          "headers": {
-            "platform": "{{platform}}"
-          },
           "extract": {
             "type": "json",
             "path": "results",
@@ -385,8 +319,7 @@
       "defaults": {
         "filterOrdering": "-datetime_updated",
         "filterRegion": "",
-        "filterTheme": "",
-        "filterFreeType": ""
+        "filterTheme": ""
       },
       "actions": [
         {
@@ -399,11 +332,7 @@
             "ordering": "{{filterOrdering}}",
             "top": "{{filterRegion}}",
             "theme": "{{filterTheme}}",
-            "free_type": "{{filterFreeType}}",
             "_update": "true"
-          },
-          "headers": {
-            "platform": "{{platform}}"
           },
           "extract": {
             "type": "json",
@@ -487,8 +416,7 @@
           "headers": {
             "Accept": "application/json, text/plain, */*",
             "Referer": "https://www.mangacopy.com/web/person/shujia",
-            "X-Requested-With": "XMLHttpRequest",
-            "platform": "{{platform}}"
+            "X-Requested-With": "XMLHttpRequest"
           },
           "extract": {
             "type": "json",
@@ -519,8 +447,7 @@
           "headers": {
             "Accept": "application/json, text/plain, */*",
             "Referer": "https://www.mangacopy.com/web/person/liulan",
-            "X-Requested-With": "XMLHttpRequest",
-            "platform": "{{platform}}"
+            "X-Requested-With": "XMLHttpRequest"
           },
           "extract": {
             "type": "json",
@@ -543,9 +470,6 @@
           "type": "api",
           "method": "GET",
           "url": "{{domain}}/api/v3/comic2/{{mangaId}}",
-          "headers": {
-            "platform": "{{platform}}"
-          },
           "extract": {
             "type": "json",
             "path": "results",
@@ -573,9 +497,6 @@
           "type": "api",
           "method": "GET",
           "url": "{{domain}}/api/v3/comic2/{{mangaId}}",
-          "headers": {
-            "platform": "{{platform}}"
-          },
           "extract": {
             "type": "json",
             "path": "results",
@@ -596,23 +517,50 @@
     },
 
     "getChapterList": {
-      "description": "获取章节列表（v1.4.82 多分组聚合）",
+      "description": "获取章节列表",
+      "pagination": {
+        "type": "offset",
+        "pageSize": 100,
+        "startOffset": 0
+      },
       "actions": [
         {
-          "type": "script",
-          "code": "(function(){const domain=\u0027{{domain}}\u0027.replace(/\\/+$/,\u0027\u0027);const mangaId=\u0027{{mangaId}}\u0027;const platform=\u0027{{platform}}\u0027;const isHot=/manga2025|hotmanga|fgjf|elfgj|relamanhua/i.test(domain);const webp=isHot?\u00271\u0027:\u00270\u0027;const seen={};function setHeaders(xhr){xhr.setRequestHeader(\u0027Accept\u0027,\u0027application/json\u0027);xhr.setRequestHeader(\u0027Accept-Language\u0027,\u0027en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7\u0027);xhr.setRequestHeader(\u0027Version\u0027,\u00272025.11.21\u0027);xhr.setRequestHeader(\u0027Region\u0027,\u00270\u0027);xhr.setRequestHeader(\u0027Webp\u0027,webp);if(platform.length\u003e0){xhr.setRequestHeader(\u0027platform\u0027,platform);}}function failPrefix(data){if(!data||typeof data!==\u0027object\u0027){return \u0027\u0027;}const code=Number(data.code||data.status||200);if(code===200){return \u0027\u0027;}const msg=String(data.message||data.detail||data.msg||data.error||\u0027\u0027);return \u0027code=\u0027+code+(msg?(\u0027, \u0027+msg):\u0027\u0027);}function request(url){const xhr=new XMLHttpRequest();xhr.open(\u0027GET\u0027,url,false);xhr.withCredentials=true;setHeaders(xhr);xhr.send(null);if(xhr.status\u003c200||xhr.status\u003e=300){throw new Error(\u0027拷贝漫画请求失败 HTTP \u0027+xhr.status+\u0027 \u0027+url);}const data=JSON.parse(xhr.responseText||\u0027{}\u0027);const reason=failPrefix(data);if(reason){throw new Error(\u0027拷贝漫画API拒绝请求: \u0027+reason+\u0027; URL=\u0027+url);}return data.results||data.data||data;}function toGroups(groups){const fallback=[{path_word:\u0027default\u0027,name:\u0027\u0027}];if(!groups){return fallback;}if(Array.isArray(groups)){return groups.length\u003e0?groups:fallback;}const keys=Object.keys(groups);const out=[];for(let i=0;i\u003ckeys.length;i++){const key=keys[i];const g=groups[key]||{};const path=String(g.path_word||g.pathWord||g.path||key||\u0027\u0027);if(!path){continue;}out.push({path_word:path,name:String(g.name||g.title||g.display||\u0027\u0027)});}return out.length\u003e0?out:fallback;}function chapterTitle(group,ch){const base=String(ch.name||ch.title||ch.uuid||\u0027\u0027);const path=String(group.path_word||\u0027\u0027);const name=String(group.name||\u0027\u0027);if(path\u0026\u0026path!==\u0027default\u0027\u0026\u0026name){return \u0027[\u0027+name+\u0027] \u0027+base;}return base;}const detail=request(domain+\u0027/api/v3/comic2/\u0027+encodeURIComponent(mangaId));const groups=toGroups(detail.groups);const chapters=[];for(let gi=0;gi\u003cgroups.length;gi++){const group=groups[gi];const path=String(group.path_word||\u0027default\u0027);let offset=0;let total=0;let guard=0;const groupChapters=[];do{const url=domain+\u0027/api/v3/comic/\u0027+encodeURIComponent(mangaId)+\u0027/group/\u0027+encodeURIComponent(path)+\u0027/chapters?limit=100\u0026offset=\u0027+offset+\u0027\u0026_update=true\u0027;const result=request(url);const list=Array.isArray(result.list)?result.list:[];total=Number(result.total||result.count||list.length);for(let i=0;i\u003clist.length;i++){const ch=list[i]||{};const uuid=String(ch.uuid||ch.id||\u0027\u0027);if(!uuid||seen[uuid]){continue;}seen[uuid]=1;const size=Number(ch.size||ch.words_count||ch.count||0);const item={id:mangaId+\u0027/chapter/\u0027+uuid,url:mangaId+\u0027/chapter/\u0027+uuid,title:chapterTitle(group,ch),index:Number(ch.index||0),publishTime:String(ch.datetime_created||ch.datetime_updated||\u0027\u0027),updateTime:String(ch.datetime_updated||ch.datetime_created||\u0027\u0027)};if(size\u003e0){item.size=size;}groupChapters.push(item);}offset+=list.length;guard++;if(list.length===0){break;}if(total\u003c=0\u0026\u0026list.length\u003c100){break;}}while(offset\u003ctotal\u0026\u0026guard\u003c60);groupChapters.sort(function(a,b){return Number(b.index||0)-Number(a.index||0);});for(let ci=0;ci\u003cgroupChapters.length;ci++){chapters.push(groupChapters[ci]);}}return JSON.stringify(chapters);})()",
-          "description": "读取 comic2.groups 并逐分组分页获取章节"
+          "type": "api",
+          "method": "GET",
+          "url": "{{domain}}/api/v3/comic/{{mangaId}}/group/default/chapters",
+          "params": {
+            "limit": "100",
+            "offset": "{{offset}}",
+            "_update": "true"
+          },
+          "extract": {
+            "type": "json",
+            "path": "results.list",
+            "fields": {
+              "id": "uuid",
+              "title": "name",
+              "index": "index",
+              "dateUpload": "datetime_created"
+            }
+          }
         }
       ]
     },
 
     "getPageList": {
-      "description": "获取章节页面列表（兼容 chapter/chapter2 与旧 uuid）",
+      "description": "获取章节页面列表",
       "actions": [
         {
-          "type": "script",
-          "code": "(function(){const domain=\u0027{{domain}}\u0027.replace(/\\/+$/,\u0027\u0027);let chapterId=\u0027{{chapterId}}\u0027;const mangaId=\u0027{{mangaId}}\u0027;const platform=\u0027{{platform}}\u0027;const isHot=/manga2025|hotmanga|fgjf|elfgj|relamanhua/i.test(domain);const webp=isHot?\u00271\u0027:\u00270\u0027;function setHeaders(xhr){xhr.setRequestHeader(\u0027Accept\u0027,\u0027application/json\u0027);xhr.setRequestHeader(\u0027Accept-Language\u0027,\u0027en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7\u0027);xhr.setRequestHeader(\u0027Version\u0027,\u00272025.11.21\u0027);xhr.setRequestHeader(\u0027Region\u0027,\u00270\u0027);xhr.setRequestHeader(\u0027Webp\u0027,webp);if(platform.length\u003e0){xhr.setRequestHeader(\u0027platform\u0027,platform);}}function failPrefix(data){if(!data||typeof data!==\u0027object\u0027){return \u0027\u0027;}const code=Number(data.code||data.status||200);if(code===200){return \u0027\u0027;}const msg=String(data.message||data.detail||data.msg||data.error||\u0027\u0027);return \u0027code=\u0027+code+(msg?(\u0027, \u0027+msg):\u0027\u0027);}function request(url){const xhr=new XMLHttpRequest();xhr.open(\u0027GET\u0027,url,false);xhr.withCredentials=true;setHeaders(xhr);xhr.send(null);if(xhr.status\u003c200||xhr.status\u003e=300){throw new Error(\u0027拷贝漫画章节图片请求失败 HTTP \u0027+xhr.status+\u0027 \u0027+url);}const data=JSON.parse(xhr.responseText||\u0027{}\u0027);const reason=failPrefix(data);if(reason){throw new Error(\u0027拷贝漫画章节图片API拒绝请求: \u0027+reason+\u0027; URL=\u0027+url);}return data.results||data.data||data;}function normalizePath(raw){let path=String(raw||\u0027\u0027).trim();if(path.indexOf(\u0027/api/v3/comic/\u0027)\u003e=0){path=path.substring(path.indexOf(\u0027/api/v3/comic/\u0027)+14);}else if(path.indexOf(\u0027/comic/\u0027)\u003e=0){path=path.substring(path.indexOf(\u0027/comic/\u0027)+7);}path=path.replace(/^\\/+|\\/+$/g,\u0027\u0027);if(path.indexOf(\u0027/chapter/\u0027)\u003c0\u0026\u0026path.indexOf(\u0027/chapter2/\u0027)\u003c0){path=String(mangaId||\u0027\u0027).replace(/^\\/+|\\/+$/g,\u0027\u0027)+\u0027/chapter/\u0027+path;}if(isHot){path=path.replace(\u0027/chapter2/\u0027,\u0027/chapter/\u0027);}else{path=path.replace(\u0027/chapter/\u0027,\u0027/chapter2/\u0027);}return path.split(\u0027/\u0027).map(function(part){return encodeURIComponent(part);}).join(\u0027/\u0027);}const path=normalizePath(chapterId);const result=request(domain+\u0027/api/v3/comic/\u0027+path);const chapter=result.chapter||result;const contents=Array.isArray(chapter.contents)?chapter.contents:[];const pages=[];for(let i=0;i\u003ccontents.length;i++){const p=contents[i]||{};const url=String(p.url||p.image||p.src||\u0027\u0027);if(!url){continue;}const item={imageUrl:url,url:url,index:i};const width=Number(p.width||0);const height=Number(p.height||0);if(width\u003e0){item.width=width;}if(height\u003e0){item.height=height;}pages.push(item);}return JSON.stringify(pages);})()",
-          "description": "按当前域名规范化章节路径并提取图片 URL"
+          "type": "api",
+          "method": "GET",
+          "url": "{{domain}}/api/v3/comic/{{mangaId}}/chapter/{{chapterId}}",
+          "extract": {
+            "type": "json",
+            "path": "results.chapter.contents",
+            "fields": {
+              "imageUrl": "url"
+            }
+          }
         }
       ]
     },
@@ -680,16 +628,6 @@
             ]
           },
           {
-            "id": "filterFreeType",
-            "title": "收费状态",
-            "defaultValue": "",
-            "options": [
-              {"value": "", "label": "全部"},
-              {"value": "1", "label": "免费"},
-              {"value": "2", "label": "付费"}
-            ]
-          },
-          {
             "id": "filterTheme",
             "title": "题材",
             "defaultValue": "",
@@ -738,16 +676,6 @@
         {"value": "korea", "label": "韩漫"},
         {"value": "west", "label": "美漫"},
         {"value": "finish", "label": "已完结"}
-      ]
-    },
-    "filterFreeType": {
-      "type": "select",
-      "name": "收费状态",
-      "default": "",
-      "options": [
-        {"value": "", "label": "全部"},
-        {"value": "1", "label": "免费"},
-        {"value": "2", "label": "付费"}
       ]
     },
     "filterTheme": {
@@ -841,14 +769,12 @@
   },
 
   "notes": [
-    "API版本 v3.2 - 基于Tachiyomi拷贝漫画扩展v1.4.82分析",
-    "支持拷贝漫画域名: api.mangacopy.com, mapi.copy20.com, mapi.copy2000.site, api.2025copy.com, api.2026copy.com, api.copy3000.com",
-    "支持热辣漫画域名: mapi.hotmangasd.com, api.manga2025.com, mapi.hotmangasf.com, mapi.hotmangasg.com, mapi.elfgjfghkk.club, mapi.fgjfghkk.club, mapi.fgjfghkkcenter.club",
-    "域名切换: 在设置中选择API域名即可生效；本机验证 api.manga2025.com 详情和章节接口可用",
-    "章节列表: 先读取 comic2.groups，再逐分组分页拉取，支持番外/单行本等非 default 分组",
-    "章节路径: 新章节使用 mangaPath/chapter/uuid；读取图片时按域名自动兼容 chapter/chapter2，并兼容旧 uuid 缓存",
-    "请求头: Version=2025.11.21, platform 默认 1，可在设置中调整",
-    "筛选: 支持 q_type 搜索类型与 free_type 免费/付费筛选",
+    "API版本 v3.1 - 基于Tachiyomi拷贝漫画扩展v1.4.78分析",
+    "支持拷贝漫画域名: api.mangacopy.com, mapi.copy20.com, api.2025copy.com",
+    "支持热辣漫画域名: mapi.hotmangasd.com, api.manga2025.com等",
+    "域名切换: 在设置中选择API域名即可生效",
+    "图片需要根据words数组索引进行排序",
+    "请求头: Version=2025.11.21, Region=0, Webp=0",
     "支持手动网页登录并保存 Cookie",
     "当前登录入口绑定 www.mangacopy.com，镜像 API 的登录态复用情况仍需继续联调确认"
   ]

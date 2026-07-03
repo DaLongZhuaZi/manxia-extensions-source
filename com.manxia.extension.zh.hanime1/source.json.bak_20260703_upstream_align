@@ -3,9 +3,9 @@
     "id": "com.manxia.extension.zh.hanime1",
     "name": "Hanime1.me",
     "type": "manga",
-    "version": "1.0.3",
+    "version": "1.0.2",
     "language": "zh-CN",
-    "baseUrl": "https://hanimeone.me",
+    "baseUrl": "https://hanime1.me",
     "description": "Hanime1.me - 成人漫画网站，需要科学上网",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
@@ -27,7 +27,7 @@
     "retryDelay": 2000,
     "rateLimit": 500,
     "headers": {
-      "Referer": "https://hanimeone.me/"
+      "Referer": "https://hanime1.me/"
     }
   },
 
@@ -222,14 +222,6 @@
   },
 
   "changelog": [
-    {
-      "version": "1.0.3",
-      "date": "2026-07-03",
-      "changes": [
-        "同步上游主域名为 hanimeone.me",
-        "更新页面请求 Referer，图片防盗链 Referer 保持原有配置"
-      ]
-    },
     {
       "version": "1.0.2",
       "date": "2026-02-01",

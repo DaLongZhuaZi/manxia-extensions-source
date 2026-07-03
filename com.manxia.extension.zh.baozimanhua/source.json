@@ -3,7 +3,7 @@
     "id": "com.manxia.extension.zh.baozimanhua",
     "name": "包子漫画",
     "type": "manga",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "language": "zh-CN",
     "baseUrl": "https://cn.baozimh.com",
     "description": "包子漫画 - 需要科学网络，国漫为主",
@@ -62,7 +62,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/classify?page={{page}}",
+          "url": "{{baseUrl}}/classify?page={{page}}",
           "timeout": 15000,
           "description": "导航到分类页面"
         },
@@ -98,7 +98,7 @@
        "actions": [
          {
            "type": "navigate",
-           "url": "https://cn.baozimh.com/classify?page={{page}}{{#if type}}&type={{type}}{{/if}}{{#if region}}&region={{region}}{{/if}}{{#if state}}&state={{state}}{{/if}}{{#if filter}}&filter={{filter}}{{/if}}",
+           "url": "{{baseUrl}}/classify?page={{page}}{{#if type}}&type={{type}}{{/if}}{{#if region}}&region={{region}}{{/if}}{{#if state}}&state={{state}}{{/if}}{{#if filter}}&filter={{filter}}{{/if}}",
            "timeout": 15000,
            "description": "导航到筛选结果页面"
          },
@@ -128,7 +128,7 @@
        "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/list/new",
+          "url": "{{baseUrl}}/list/new",
           "timeout": 15000,
           "description": "导航到最新更新页"
         },
@@ -153,7 +153,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/search?q={{query}}",
+          "url": "{{baseUrl}}/search?q={{query}}",
           "timeout": 15000,
           "description": "导航到搜索结果页"
         },
@@ -177,7 +177,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
+          "url": "{{baseUrl}}/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -201,7 +201,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
+          "url": "{{baseUrl}}/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -230,7 +230,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com/comic/{{mangaId}}",
+          "url": "{{baseUrl}}/comic/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -255,7 +255,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "https://cn.baozimh.com{{chapterId}}",
+          "url": "{{baseUrl}}{{chapterId}}",
           "timeout": 20000,
           "description": "导航到章节阅读页（直接URL格式，无需重定向）"
         },
@@ -456,6 +456,14 @@
    },
 
    "changelog": [
+     {
+       "version": "1.0.1",
+       "date": "2026-07-03",
+       "changes": [
+         "将页面工作流中的主站硬编码改为 baseUrl 模板",
+         "保持上游镜像列表一致，便于后续主域名切换"
+       ]
+     },
      {
        "version": "1.0.0",
        "date": "2026-01-04",

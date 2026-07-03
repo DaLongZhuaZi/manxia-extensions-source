@@ -3,15 +3,20 @@
     "id": "com.manxia.extension.all.noyacg",
     "name": "NoyAcg",
     "type": "manga",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "language": "zh",
-    "baseUrl": "https://noy1.top",
-    "description": "NoyAcg - 需要登录后才能访问全部工作流",
+    "baseUrl": "https://beta.noyteam.online",
+    "description": "NoyAcg - 需要登录后才能访问全部工作流，已同步新版 API",
     "author": "ManXia Team",
     "nsfw": true,
-    "tags": ["chinese", "authenticated", "api", "nsfw"],
+    "tags": [
+      "chinese",
+      "authenticated",
+      "api",
+      "nsfw"
+    ],
     "Internet": true,
-    "notes": "已验证站点依赖 NOY_SESSION Cookie，初始化阶段会使用已保存账号自动登录。"
+    "notes": "已同步上游新版域名 beta.noyteam.online、v4 搜索/详情接口与 img.noymanga.com 图片 CDN；站点仍依赖 NOY_SESSION Cookie。"
   },
   "capabilities": {
     "urlResolver": true,
@@ -23,7 +28,7 @@
   },
   "authentication": {
     "type": "cookie",
-    "loginUrl": "https://noy1.top/api/login",
+    "loginUrl": "https://beta.noyteam.online/api/login",
     "loginMethod": "POST",
     "requiresLogin": true
   },
@@ -34,9 +39,10 @@
     "retryDelay": 1000,
     "rateLimit": 500,
     "headers": {
-      "Referer": "https://noy1.top/",
+      "Referer": "https://beta.noyteam.online/",
       "Accept": "application/json, text/plain, */*",
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
+      "allow-adult": "both"
     }
   },
   "settings": {
@@ -56,19 +62,63 @@
       "type": "select",
       "name": "图片分流",
       "description": "阅读图片使用的 CDN 分流",
-      "default": "https://img.noy.asia",
+      "default": "https://img.noymanga.com",
       "options": [
         {
+          "value": "https://img.noymanga.com",
+          "label": "主分流"
+        },
+        {
           "value": "https://img.noy.asia",
-          "label": "分流 1"
+          "label": "旧分流 1"
         },
         {
           "value": "https://img.noyteam.online",
-          "label": "分流 2"
+          "label": "旧分流 2"
         },
         {
           "value": "https://img.457475.xyz",
-          "label": "分流 3"
+          "label": "旧分流 3"
+        }
+      ]
+    },
+    "popularType": {
+      "type": "select",
+      "name": "热门榜单",
+      "description": "热门页使用的阅读榜类型",
+      "default": "day",
+      "options": [
+        {
+          "value": "day",
+          "label": "日阅读榜"
+        },
+        {
+          "value": "week",
+          "label": "周阅读榜"
+        },
+        {
+          "value": "month",
+          "label": "月阅读榜"
+        }
+      ]
+    },
+    "adultContent": {
+      "type": "select",
+      "name": "内容类型",
+      "description": "传递给站点 allow-adult 请求头的内容偏好",
+      "default": "both",
+      "options": [
+        {
+          "value": "false",
+          "label": "仅全年龄"
+        },
+        {
+          "value": "true",
+          "label": "仅成人内容"
+        },
+        {
+          "value": "both",
+          "label": "全部内容"
         }
       ]
     }
@@ -148,7 +198,7 @@
       ]
     },
     "popular": {
-      "description": "获取阅读榜（日榜）",
+      "description": "获取阅读榜",
       "supportsPagination": true,
       "actions": [
         {
@@ -165,8 +215,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/readLeaderboard', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&type=day'); if (xhr.status !== 200) { throw new Error('NoyAcg 热门获取失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
-          "description": "调用阅读榜接口并映射作品数据"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const toStatus = (item) => (Number(item.Mode || item.mode || 0) === 0 || Number(item.Status || item.status || 0) === 1) ? 'completed' : 'ongoing'; const toGenre = (item) => formatTextList(item.Ptag || item.tags || ''); const toDesc = (item) => ['\\u65f6\\u95f4\\uff1a' + formatTime(item.Time || item.time), '\\u8bc4\\u5206\\uff1a' + String(item.RatingSUM || item.rating_sum || item.rating || 0), '\\u9875\\u6570\\uff1a' + String(item.Len || item.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(item.Otag || item.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(item.Pname || item.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (item.Description || item.description ? '\\n---\\n' + String(item.Description || item.description) : ''); const toManga = (item) => { const id = String(item.Bid || item.id || ''); return { id: id, url: id, title: String(item.Bookname || item.name || ''), author: formatNames(item.Author || item.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: toStatus(item), description: toDesc(item), genre: toGenre(item) }; }; const parseJson = (xhr) => JSON.parse(xhr.responseText || '{}'); const assertOk = (data, label) => { if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error(label + ': ' + data.status); } }; const post = (url, body) => { const xhr = new XMLHttpRequest(); xhr.open('POST', url, false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(body); if (xhr.status !== 200) { throw new Error('NoyAcg API failed: HTTP ' + xhr.status); } const data = parseJson(xhr); assertOk(data, 'NoyAcg API error'); return data; }; const popularType = placeholder('{{popularType}}', 'day'); const data = post('{{baseUrl}}/api/readLeaderboard', 'type=' + encodeURIComponent(popularType) + '&page=' + encodeURIComponent(String(page))); const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : (Array.isArray(data.data) ? data.data : [])); const total = Number(data.len || data.count || list.length || 0); const mangas = list.map(toManga).filter((item) => item.id); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用新版阅读榜接口并映射作品数据"
         }
       ]
     },
@@ -188,8 +238,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/booklist_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page))); if (xhr.status !== 200) { throw new Error('NoyAcg 最新获取失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
-          "description": "调用最新更新接口并映射作品数据"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const toStatus = (item) => (Number(item.Mode || item.mode || 0) === 0 || Number(item.Status || item.status || 0) === 1) ? 'completed' : 'ongoing'; const toGenre = (item) => formatTextList(item.Ptag || item.tags || ''); const toDesc = (item) => ['\\u65f6\\u95f4\\uff1a' + formatTime(item.Time || item.time), '\\u8bc4\\u5206\\uff1a' + String(item.RatingSUM || item.rating_sum || item.rating || 0), '\\u9875\\u6570\\uff1a' + String(item.Len || item.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(item.Otag || item.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(item.Pname || item.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (item.Description || item.description ? '\\n---\\n' + String(item.Description || item.description) : ''); const toManga = (item) => { const id = String(item.Bid || item.id || ''); return { id: id, url: id, title: String(item.Bookname || item.name || ''), author: formatNames(item.Author || item.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: toStatus(item), description: toDesc(item), genre: toGenre(item) }; }; const parseJson = (xhr) => JSON.parse(xhr.responseText || '{}'); const assertOk = (data, label) => { if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error(label + ': ' + data.status); } }; const post = (url, body) => { const xhr = new XMLHttpRequest(); xhr.open('POST', url, false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(body); if (xhr.status !== 200) { throw new Error('NoyAcg API failed: HTTP ' + xhr.status); } const data = parseJson(xhr); assertOk(data, 'NoyAcg API error'); return data; }; const data = post('{{baseUrl}}/api/b1/booklist', 'page=' + encodeURIComponent(String(page)) + '&sort=new'); const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : (Array.isArray(data.data) ? data.data : [])); const total = Number(data.len || data.count || list.length || 0); const mangas = list.map(toManga).filter((item) => item.id); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用新版最新更新接口并映射作品数据"
         }
       ]
     },
@@ -211,8 +261,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const query = String(`{{query}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&info=' + encodeURIComponent(query) + '&type=de&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
-          "description": "调用综合搜索接口"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const toStatus = (item) => (Number(item.Mode || item.mode || 0) === 0 || Number(item.Status || item.status || 0) === 1) ? 'completed' : 'ongoing'; const toGenre = (item) => formatTextList(item.Ptag || item.tags || ''); const toDesc = (item) => ['\\u65f6\\u95f4\\uff1a' + formatTime(item.Time || item.time), '\\u8bc4\\u5206\\uff1a' + String(item.RatingSUM || item.rating_sum || item.rating || 0), '\\u9875\\u6570\\uff1a' + String(item.Len || item.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(item.Otag || item.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(item.Pname || item.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (item.Description || item.description ? '\\n---\\n' + String(item.Description || item.description) : ''); const toManga = (item) => { const id = String(item.Bid || item.id || ''); return { id: id, url: id, title: String(item.Bookname || item.name || ''), author: formatNames(item.Author || item.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: toStatus(item), description: toDesc(item), genre: toGenre(item) }; }; const parseJson = (xhr) => JSON.parse(xhr.responseText || '{}'); const assertOk = (data, label) => { if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error(label + ': ' + data.status); } }; const post = (url, body) => { const xhr = new XMLHttpRequest(); xhr.open('POST', url, false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(body); if (xhr.status !== 200) { throw new Error('NoyAcg API failed: HTTP ' + xhr.status); } const data = parseJson(xhr); assertOk(data, 'NoyAcg API error'); return data; }; const query = String(`{{query}}` || '').trim(); const data = post('{{baseUrl}}/api/v4/search/fetch', 'value=' + encodeURIComponent(query) + '&page=' + encodeURIComponent(String(page)) + '&type=book&mode=default&sort=&finished='); const list = Array.isArray(data.data) ? data.data : (Array.isArray(data.info) ? data.info : []); const total = Number(data.count || data.len || list.length || 0); const mangas = list.map(toManga).filter((item) => item.id); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用新版 v4 搜索接口"
         }
       ]
     },
@@ -234,8 +284,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const query = String(`{{tagId}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=' + encodeURIComponent(String(page)) + '&info=' + encodeURIComponent(query) + '&type=tag&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 标签搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const total = Number(data.len || 0); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
-          "description": "调用标签搜索接口"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const toStatus = (item) => (Number(item.Mode || item.mode || 0) === 0 || Number(item.Status || item.status || 0) === 1) ? 'completed' : 'ongoing'; const toGenre = (item) => formatTextList(item.Ptag || item.tags || ''); const toDesc = (item) => ['\\u65f6\\u95f4\\uff1a' + formatTime(item.Time || item.time), '\\u8bc4\\u5206\\uff1a' + String(item.RatingSUM || item.rating_sum || item.rating || 0), '\\u9875\\u6570\\uff1a' + String(item.Len || item.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(item.Otag || item.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(item.Pname || item.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (item.Description || item.description ? '\\n---\\n' + String(item.Description || item.description) : ''); const toManga = (item) => { const id = String(item.Bid || item.id || ''); return { id: id, url: id, title: String(item.Bookname || item.name || ''), author: formatNames(item.Author || item.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: toStatus(item), description: toDesc(item), genre: toGenre(item) }; }; const parseJson = (xhr) => JSON.parse(xhr.responseText || '{}'); const assertOk = (data, label) => { if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error(label + ': ' + data.status); } }; const post = (url, body) => { const xhr = new XMLHttpRequest(); xhr.open('POST', url, false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(body); if (xhr.status !== 200) { throw new Error('NoyAcg API failed: HTTP ' + xhr.status); } const data = parseJson(xhr); assertOk(data, 'NoyAcg API error'); return data; }; const query = String(`{{tagId}}` || '').trim(); const data = post('{{baseUrl}}/api/v4/search/fetch', 'value=' + encodeURIComponent(query) + '&page=' + encodeURIComponent(String(page)) + '&type=book&mode=tag&sort=&finished='); const list = Array.isArray(data.data) ? data.data : (Array.isArray(data.info) ? data.info : []); const total = Number(data.count || data.len || list.length || 0); const mangas = list.map(toManga).filter((item) => item.id); return JSON.stringify({ mangas: mangas, total: total, hasNextPage: page * 20 < total }); })();",
+          "description": "调用新版 v4 标签搜索接口"
         }
       ]
     },
@@ -256,8 +306,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const searchType = String(`{{searchType}}` || '').trim(); const query = String(`{{query}}` || '').trim(); const imageCdn = '{{imageCdn}}'; const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; const toGenre = (item) => [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const toDesc = (item) => ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); if (searchType === 'searchByAuthor') { const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/search_v2', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('page=1&info=' + encodeURIComponent(query) + '&type=author&sort=bid'); if (xhr.status !== 200) { throw new Error('NoyAcg 作者搜索失败: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const list = Array.isArray(data.info) ? data.info : (Array.isArray(data.Info) ? data.Info : []); const mangas = list.map((item) => ({ id: String(item.Bid || ''), url: String(item.Bid || ''), title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + String(item.Bid || '') + '/m1.webp', status: 'completed', description: toDesc(item), genre: toGenre(item) })); return JSON.stringify({ type: 'list', mangas: mangas, total: Number(data.len || 0), hasNext: list.length >= 20 }); } const mangaId = normalizeId(query); if (!mangaId) { return JSON.stringify({ type: 'list', mangas: [], total: 0, hasNext: false, error: 'invalid_id' }); } return JSON.stringify({ type: 'detail', manga: { id: mangaId, url: mangaId, title: '', cover: imageCdn + '/' + mangaId + '/m1.webp' }, error: null }); })();",
-          "description": "根据搜索类型执行作者搜索或作品 ID 直达"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const page = Math.max(1, parseInt('{{page}}', 10) || 1); const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const toStatus = (item) => (Number(item.Mode || item.mode || 0) === 0 || Number(item.Status || item.status || 0) === 1) ? 'completed' : 'ongoing'; const toGenre = (item) => formatTextList(item.Ptag || item.tags || ''); const toDesc = (item) => ['\\u65f6\\u95f4\\uff1a' + formatTime(item.Time || item.time), '\\u8bc4\\u5206\\uff1a' + String(item.RatingSUM || item.rating_sum || item.rating || 0), '\\u9875\\u6570\\uff1a' + String(item.Len || item.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(item.Otag || item.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(item.Pname || item.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (item.Description || item.description ? '\\n---\\n' + String(item.Description || item.description) : ''); const toManga = (item) => { const id = String(item.Bid || item.id || ''); return { id: id, url: id, title: String(item.Bookname || item.name || ''), author: formatNames(item.Author || item.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: toStatus(item), description: toDesc(item), genre: toGenre(item) }; }; const parseJson = (xhr) => JSON.parse(xhr.responseText || '{}'); const assertOk = (data, label) => { if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error(label + ': ' + data.status); } }; const post = (url, body) => { const xhr = new XMLHttpRequest(); xhr.open('POST', url, false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(body); if (xhr.status !== 200) { throw new Error('NoyAcg API failed: HTTP ' + xhr.status); } const data = parseJson(xhr); assertOk(data, 'NoyAcg API error'); return data; }; const searchType = String(`{{searchType}}` || '').trim(); const query = String(`{{query}}` || '').trim(); const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; if (searchType === 'searchByAuthor') { const data = post('{{baseUrl}}/api/v4/search/fetch', 'value=' + encodeURIComponent(query) + '&page=1&type=book&mode=author&sort=&finished='); const list = Array.isArray(data.data) ? data.data : (Array.isArray(data.info) ? data.info : []); const mangas = list.map(toManga).filter((item) => item.id); return JSON.stringify({ type: 'list', mangas: mangas, total: Number(data.count || data.len || list.length || 0), hasNext: list.length >= 20 }); } const mangaId = normalizeId(query); if (!mangaId) { return JSON.stringify({ type: 'list', mangas: [], total: 0, hasNext: false, error: 'invalid_id' }); } return JSON.stringify({ type: 'detail', manga: { id: mangaId, url: mangaId, title: '', cover: imageCdn + '/' + mangaId + '/m1.webp' }, error: null }); })();",
+          "description": "根据搜索类型执行新版作者搜索或作品 ID 直达"
         }
       ]
     },
@@ -266,7 +316,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/#/book/{{mangaId}}",
+          "url": "{{baseUrl}}/manga/{{mangaId}}",
           "timeout": 15000,
           "description": "进入作品详情路由"
         },
@@ -278,17 +328,17 @@
         },
         {
           "type": "script",
-          "code": "(() => { const mangaId = String(`{{mangaId}}` || '').match(/(\\d+)/); const bid = mangaId ? mangaId[1] : ''; const imageCdn = '{{imageCdn}}'; if (!bid) { throw new Error('NoyAcg 详情缺少作品 ID'); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 详情获取失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); if (item.status === 'login' || (Array.isArray(item) && item[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const genre = [String(item.Ptag || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''), String(item.Otag || '')].filter(Boolean).join(', '); const description = ['时间：' + (item.Time ? new Date(Number(item.Time) * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''), '页数：' + String(item.Len || 0), '原作：' + String(item.Otag || ''), '角色：' + String(item.Pname || '')].join('\\n'); return JSON.stringify({ id: bid, url: bid, title: String(item.Bookname || ''), author: String(item.Author || ''), cover: imageCdn + '/' + bid + '/m1.webp', status: 'completed', description: description, genre: genre }); })();",
-          "description": "通过详情接口组装作品信息"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; const getBookResponse = (bid) => { const xhr = new XMLHttpRequest(); xhr.open('GET', '{{baseUrl}}/api/v4/book/' + encodeURIComponent(bid), false); xhr.withCredentials = true; xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(); if (xhr.status !== 200) { throw new Error('NoyAcg detail API failed: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error('NoyAcg detail API error: ' + data.status); } return data; }; const getBookInfo = (data) => (data.book && data.book.info) ? data.book.info : (data.info || data.book || {}); const getChaptersData = (data) => data.chapters || {}; const statusValue = (book) => (Number(book.Mode || book.mode || 0) === 0 || Number(book.Status || book.status || 0) === 1) ? 'completed' : 'ongoing'; const descriptionValue = (book) => ['\\u65f6\\u95f4\\uff1a' + formatTime(book.Time || book.time), '\\u8bc4\\u5206\\uff1a' + String(book.RatingSUM || book.rating_sum || book.rating || 0), '\\u9875\\u6570\\uff1a' + String(book.Len || book.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(book.Otag || book.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(book.Pname || book.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (book.Description || book.description ? '\\n---\\n' + String(book.Description || book.description) : ''); const bid = normalizeId(`{{mangaId}}`); if (!bid) { throw new Error('NoyAcg missing manga ID'); } const data = getBookResponse(bid); const book = getBookInfo(data); const id = String(book.Bid || book.id || bid); return JSON.stringify({ id: id, url: id, title: String(book.Bookname || book.name || ''), author: formatNames(book.Author || book.author || ''), cover: imageCdn + '/' + id + '/m1.webp', status: statusValue(book), description: descriptionValue(book), genre: formatTextList(book.Ptag || book.tags || '') }); })();",
+          "description": "通过新版 v4 详情接口组装作品信息"
         }
       ]
     },
     "getChapterList": {
-      "description": "获取单章节信息",
+      "description": "获取章节列表",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/#/book/{{mangaId}}",
+          "url": "{{baseUrl}}/manga/{{mangaId}}",
           "timeout": 15000,
           "description": "进入作品详情路由"
         },
@@ -300,8 +350,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const mangaId = String(`{{mangaId}}` || '').match(/(\\d+)/); const bid = mangaId ? mangaId[1] : ''; if (!bid) { throw new Error('NoyAcg 章节缺少作品 ID'); } const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 章节获取失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); if (item.status === 'login' || (Array.isArray(item) && item[0] === 'login')) { throw new Error('NoyAcg 登录已失效'); } const pageCount = Math.max(0, Number(item.Len || 0)); const publishTime = item.Time ? String(Number(item.Time) * 1000) : ''; return JSON.stringify([{ id: bid + '#' + String(pageCount), url: bid + '#' + String(pageCount), title: '单话', publishTime: publishTime, size: pageCount }]); })();",
-          "description": "将作品映射为单章节"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; const getBookResponse = (bid) => { const xhr = new XMLHttpRequest(); xhr.open('GET', '{{baseUrl}}/api/v4/book/' + encodeURIComponent(bid), false); xhr.withCredentials = true; xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(); if (xhr.status !== 200) { throw new Error('NoyAcg detail API failed: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error('NoyAcg detail API error: ' + data.status); } return data; }; const getBookInfo = (data) => (data.book && data.book.info) ? data.book.info : (data.info || data.book || {}); const getChaptersData = (data) => data.chapters || {}; const statusValue = (book) => (Number(book.Mode || book.mode || 0) === 0 || Number(book.Status || book.status || 0) === 1) ? 'completed' : 'ongoing'; const descriptionValue = (book) => ['\\u65f6\\u95f4\\uff1a' + formatTime(book.Time || book.time), '\\u8bc4\\u5206\\uff1a' + String(book.RatingSUM || book.rating_sum || book.rating || 0), '\\u9875\\u6570\\uff1a' + String(book.Len || book.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(book.Otag || book.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(book.Pname || book.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (book.Description || book.description ? '\\n---\\n' + String(book.Description || book.description) : ''); const bid = normalizeId(`{{mangaId}}`); if (!bid) { throw new Error('NoyAcg missing manga ID'); } const data = getBookResponse(bid); const book = getBookInfo(data); const chaptersRoot = getChaptersData(data); const categories = Array.isArray(chaptersRoot.categories) ? chaptersRoot.categories : []; const dataMap = chaptersRoot.data || {}; const chapters = []; if (categories.length > 0) { for (let ci = categories.length - 1; ci >= 0; ci--) { const category = categories[ci] || {}; const items = Array.isArray(dataMap[String(category.id)]) ? dataMap[String(category.id)] : []; for (let ii = items.length - 1; ii >= 0; ii--) { const chapter = items[ii] || {}; const count = Math.max(0, Number(chapter.count || 0)); const path = bid + '/' + String(chapter.id || ''); chapters.push({ id: path + '#' + String(count), url: path + '#' + String(count), title: String(chapter.name || '\\u7ae0\\u8282') + '\\uff08' + String(count) + 'P\\uff09', scanlator: String(category.name || ''), publishTime: chapter.created_at ? String(Number(chapter.created_at) * 1000) : '', size: count }); } } } if (chapters.length === 0) { const pageCount = Math.max(0, Number(book.Len || book.len || 0)); const publishTime = (book.Time || book.time) ? String(Number(book.Time || book.time) * 1000) : ''; chapters.push({ id: bid + '#' + String(pageCount), url: bid + '#' + String(pageCount), title: '\\u5355\\u7ae0\\u8282\\uff08' + String(pageCount) + 'P\\uff09', publishTime: publishTime, size: pageCount }); } return JSON.stringify(chapters); })();",
+          "description": "解析新版详情接口中的章节分类与章节列表"
         }
       ]
     },
@@ -310,7 +360,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/#/read/{{chapterId}}",
+          "url": "{{baseUrl}}/reader/{{chapterId}}",
           "timeout": 15000,
           "description": "进入阅读路由"
         },
@@ -322,8 +372,8 @@
         },
         {
           "type": "script",
-          "code": "(() => { const raw = String(`{{chapterId}}` || '').trim(); const imageCdn = '{{imageCdn}}'; let bid = ''; let pageCount = 0; if (raw.includes('#')) { const parts = raw.split('#'); bid = String(parts[0] || '').match(/(\\d+)/)?.[1] || ''; pageCount = Math.max(0, parseInt(parts[1], 10) || 0); } else { bid = String(raw || '').match(/(\\d+)/)?.[1] || ''; } if (!bid) { throw new Error('NoyAcg 页面缺少章节 ID'); } if (!pageCount) { const xhr = new XMLHttpRequest(); xhr.open('POST', '{{baseUrl}}/api/getbookinfo', false); xhr.withCredentials = true; xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.send('bid=' + encodeURIComponent(bid)); if (xhr.status !== 200) { throw new Error('NoyAcg 页面补全失败: HTTP ' + xhr.status); } const item = JSON.parse(xhr.responseText || '{}'); pageCount = Math.max(0, Number(item.Len || 0)); } const pages = []; for (let i = 1; i <= pageCount; i++) { pages.push({ url: imageCdn + '/' + bid + '/' + String(i) + '.webp' }); } return JSON.stringify(pages); })();",
-          "description": "根据作品 ID 与页数生成图片地址"
+          "code": "(() => { const placeholder = (value, fallback) => { const text = String(value || '').trim(); return /^\\{\\{[^}]+\\}\\}$/.test(text) ? fallback : text; }; const imageCdn = placeholder('{{imageCdn}}', 'https://img.noymanga.com').replace(/\\/+$/, ''); const adult = placeholder('{{adultContent}}', 'both'); const formatTextList = (value) => Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean).join(', ') : String(value || '').replace(/\\s+/g, ', ').replace(/,+/g, ', ').replace(/^, |, $/g, ''); const formatNames = (value) => Array.isArray(value) ? value.map((item) => String(item || '').replace(/-/g, ' ')).filter(Boolean).join(', ') : String(value || '').split(/\\s+/).filter(Boolean).map((item) => item.replace(/-/g, ' ')).join(', '); const formatTime = (value) => { const n = Number(value || 0); return n ? new Date(n * 1000).toISOString().replace('T', ' ').slice(0, 19) : ''; }; const normalizeId = (value) => { const match = String(value || '').match(/(\\d+)/); return match ? match[1] : ''; }; const getBookResponse = (bid) => { const xhr = new XMLHttpRequest(); xhr.open('GET', '{{baseUrl}}/api/v4/book/' + encodeURIComponent(bid), false); xhr.withCredentials = true; xhr.setRequestHeader('Accept', 'application/json, text/plain, */*'); xhr.setRequestHeader('allow-adult', adult); xhr.send(); if (xhr.status !== 200) { throw new Error('NoyAcg detail API failed: HTTP ' + xhr.status); } const data = JSON.parse(xhr.responseText || '{}'); if (data.status === 'login' || (Array.isArray(data) && data[0] === 'login')) { throw new Error('NoyAcg login expired'); } if (data.status && data.status !== 'ok') { throw new Error('NoyAcg detail API error: ' + data.status); } return data; }; const getBookInfo = (data) => (data.book && data.book.info) ? data.book.info : (data.info || data.book || {}); const getChaptersData = (data) => data.chapters || {}; const statusValue = (book) => (Number(book.Mode || book.mode || 0) === 0 || Number(book.Status || book.status || 0) === 1) ? 'completed' : 'ongoing'; const descriptionValue = (book) => ['\\u65f6\\u95f4\\uff1a' + formatTime(book.Time || book.time), '\\u8bc4\\u5206\\uff1a' + String(book.RatingSUM || book.rating_sum || book.rating || 0), '\\u9875\\u6570\\uff1a' + String(book.Len || book.len || 0), '\\u539f\\u4f5c\\uff1a' + formatNames(book.Otag || book.otag || ''), '\\u89d2\\u8272\\uff1a' + formatNames(book.Pname || book.pname || '')].filter((line) => !line.endsWith('\\uff1a')).join('\\n') + (book.Description || book.description ? '\\n---\\n' + String(book.Description || book.description) : ''); const raw = String(`{{chapterId}}` || '').trim(); const hashParts = raw.split('#'); const path = String(hashParts[0] || '').replace(/^\\/+|\\/+$/g, ''); let pageCount = Math.max(0, parseInt(hashParts[1] || '0', 10) || 0); const pathParts = path.split('/').filter(Boolean); const bid = normalizeId(pathParts[0] || ''); const chapterPart = pathParts.length > 1 ? String(pathParts[1] || '') : ''; if (!bid) { throw new Error('NoyAcg missing chapter ID'); } if (!pageCount) { const data = getBookResponse(bid); const book = getBookInfo(data); const chaptersRoot = getChaptersData(data); const dataMap = chaptersRoot.data || {}; if (chapterPart) { const keys = Object.keys(dataMap); for (let ki = 0; ki < keys.length; ki++) { const items = Array.isArray(dataMap[keys[ki]]) ? dataMap[keys[ki]] : []; for (let ii = 0; ii < items.length; ii++) { const chapter = items[ii] || {}; if (String(chapter.id || '') === chapterPart) { pageCount = Math.max(0, Number(chapter.count || 0)); } } } } if (!pageCount) { pageCount = Math.max(0, Number(book.Len || book.len || 0)); } } const imagePath = chapterPart ? (bid + '/' + chapterPart) : bid; const pages = []; for (let i = 1; i <= pageCount; i++) { pages.push({ url: imageCdn + '/' + imagePath + '/' + String(i) + '.webp' }); } return JSON.stringify(pages); })();",
+          "description": "根据章节路径与页数生成新版 CDN 图片地址"
         }
       ]
     },
@@ -357,16 +407,27 @@
     }
   ],
   "imageHeaders": {
-    "Referer": "https://noy1.top/",
-    "User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Mobile Safari/537.36"
+    "Referer": "https://beta.noyteam.online/",
+    "User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.15 Mobile Safari/537.36",
+    "allow-adult": "both"
   },
   "notes": [
     "必须先保存账号密码后再使用。",
-    "图源会在初始化阶段自动登录，不会把凭据写进 source.json。",
-    "当前站点为单章节作品结构，章节列表会固定返回一话。",
-    "图片分流已验证可用：img.noy.asia、img.noyteam.online、img.457475.xyz。"
+    "已同步上游新版域名 beta.noyteam.online 与 /api/v4/search/fetch、/api/v4/book/{id} 接口。",
+    "多章节作品会从 chapters.categories/data 生成章节；无章节作品回退为单章节。",
+    "默认图片 CDN 已更新为 img.noymanga.com，旧分流保留为手动回退。"
   ],
   "changelog": [
+    {
+      "version": "1.1.0",
+      "date": "2026-07-03",
+      "changes": [
+        "同步上游 NoyAcg 新域名 beta.noyteam.online。",
+        "热门、最新、搜索、详情、章节、页面链路切换到新版 API。",
+        "新增热门榜单与内容类型设置，并传递 allow-adult 请求头。",
+        "默认图片分流更新为 img.noymanga.com。"
+      ]
+    },
     {
       "version": "1.0.0",
       "date": "2026-04-02",

@@ -5,7 +5,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 5,
-    "version": "3.1.4",
+    "version": "3.2.0",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -13,7 +13,7 @@
         "name": "拷贝漫画 (WebView)",
         "lang": "zh",
         "id": "324579092615598721",
-        "baseUrl": "https://www.mangacopy.com/"
+        "baseUrl": "https://www.mangacopy.com"
       }
     ]
   },
@@ -167,7 +167,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 13,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -221,7 +221,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 16,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "nsfw": 0,
     "hasIcon": true,
     "sources": [
@@ -229,7 +229,7 @@
         "name": "巴卡漫画",
         "lang": "zh",
         "id": "1472475187360186909",
-        "baseUrl": "https://bakamh.ru"
+        "baseUrl": "https://bakamh.com"
       }
     ]
   },
@@ -365,7 +365,7 @@
     "type": "manga",
     "lang": "zh",
     "code": 24,
-    "version": "1.0.0",
+    "version": "1.0.3",
     "nsfw": 1,
     "hasIcon": true,
     "sources": [
@@ -373,7 +373,7 @@
         "name": "Hanime1.me",
         "lang": "zh",
         "id": "2072475187360186916",
-        "baseUrl": "https://hanime1.me"
+        "baseUrl": "https://hanimeone.me"
       }
     ]
   },
@@ -401,7 +401,7 @@
       "type": "manga",
       "lang": "all",
       "code": 26,
-      "version": "1.0.0",
+      "version": "1.1.0",
       "nsfw": 1,
       "hasIcon": true,
       "sources": [
@@ -409,7 +409,7 @@
           "name": "NoyAcg",
           "lang": "all",
           "id": "2272475187360186918",
-          "baseUrl": "https://noy1.top"
+          "baseUrl": "https://beta.noyteam.online"
         }
       ]
     },
@@ -437,7 +437,7 @@
       "type": "manga",
       "lang": "zh",
       "code": 28,
-      "version": "3.8.0",
+      "version": "3.8.1",
       "nsfw": 0,
       "hasIcon": true,
       "sources": [
@@ -445,7 +445,7 @@
           "name": "GoDa漫画",
           "lang": "zh",
           "id": "2472475187360186920",
-          "baseUrl": "https://godamh.com"
+          "baseUrl": "https://baozimh.org"
         }
       ]
     },

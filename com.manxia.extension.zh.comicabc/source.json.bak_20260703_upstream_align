@@ -3,32 +3,30 @@
     "id": "com.manxia.extension.zh.comicabc",
     "name": "無限動漫",
     "type": "manga",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "language": "zh-TW",
     "baseUrl": "https://www.8comic.com",
     "description": "無限動漫 (8comic.com) - 需要科学网络，日漫为主",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": false,
-    "tags": [
-      "chinese",
-      "webview",
-      "free",
-      "taiwan"
-    ],
+    "tags": ["chinese", "webview", "free", "taiwan"],
     "Internet": true
   },
+
   "capabilities": {
     "urlResolver": true,
     "pagination": true,
     "errorRetry": true,
     "loginSupport": false
   },
+
   "network": {
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "timeout": 30000,
     "retryCount": 3,
     "retryDelay": 2000
   },
+
   "workflows": {
     "popular": {
       "description": "获取热门漫画列表",
@@ -59,6 +57,7 @@
         }
       ]
     },
+    
     "latest": {
       "description": "获取最新更新漫画列表",
       "supportsPagination": true,
@@ -88,6 +87,7 @@
         }
       ]
     },
+    
     "search": {
       "description": "搜索漫画",
       "supportsPagination": true,
@@ -123,6 +123,7 @@
         }
       ]
     },
+    
     "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
@@ -146,6 +147,7 @@
         }
       ]
     },
+    
     "getMangaDetailWithChapters": {
       "description": "获取漫画详情和章节列表",
       "actions": [
@@ -175,11 +177,12 @@
         },
         {
           "type": "script",
-          "code": "(() => { const chaptersBaseUrl = 'https://articles.onemoreplace.tw'; const cleanTitle = (value) => String(value || '').replace(/\\s*document\\..*$/g, '').replace(/\\s+/g, ' ').trim(); const normalizeHref = (href) => { let raw = String(href || '').trim(); if (!raw) return ''; if (raw.startsWith('/online/')) return chaptersBaseUrl + raw; if (raw.startsWith('http')) return raw; try { return new URL(raw, location.href).href; } catch (e) { return raw; } }; const chapters = []; document.querySelectorAll('#chapters a, .comic_chapters a').forEach((el) => { const onclick = el.getAttribute('onclick') || ''; let url = ''; if (onclick.indexOf('cview') >= 0) { const params = onclick.substring(onclick.indexOf(\"cview('\") + 7).split(\"'\")[0]; const comicId = params.split('-')[0] || ''; const chapterId = (params.split('-')[1] || '').split('.html')[0]; if (comicId && chapterId) url = chaptersBaseUrl + '/online/new-' + comicId + '.html?ch=' + chapterId; } if (!url) { url = normalizeHref(el.getAttribute('href') || ''); } if (url) chapters.push({ id: url, title: cleanTitle(el.textContent) || 'Chapter ' + (chapters.length + 1), url: url, date: '' }); }); return JSON.stringify(chapters.reverse()); })();",
-          "description": "提取章节列表（新版阅读域）"
+          "code": "(() => { const chapters = []; document.querySelectorAll('#chapters a').forEach(el => { const onclick = el.getAttribute('onclick') || ''; if (onclick.includes(\"cview('\")) { const match = onclick.match(/cview\\('(\\d+)-(\\d+)\\.html/); if (match) { const comicId = match[1]; const chapterId = match[2]; let title = el.textContent?.trim() || ''; const scriptIdx = title.indexOf(' document.'); if (scriptIdx > 0) title = title.substring(0, scriptIdx).trim(); chapters.push({ id: '/online/new-' + comicId + '.html?ch=' + chapterId, title: title, date: '' }); } } }); return JSON.stringify(chapters.reverse()); })();",
+          "description": "提取章节列表"
         }
       ]
     },
+    
     "getChapterList": {
       "description": "获取章节列表",
       "actions": [
@@ -204,45 +207,42 @@
         },
         {
           "type": "script",
-          "code": "(() => { const chaptersBaseUrl = 'https://articles.onemoreplace.tw'; const cleanTitle = (value) => String(value || '').replace(/\\s*document\\..*$/g, '').replace(/\\s+/g, ' ').trim(); const normalizeHref = (href) => { let raw = String(href || '').trim(); if (!raw) return ''; if (raw.startsWith('/online/')) return chaptersBaseUrl + raw; if (raw.startsWith('http')) return raw; try { return new URL(raw, location.href).href; } catch (e) { return raw; } }; const chapters = []; document.querySelectorAll('#chapters a, .comic_chapters a').forEach((el) => { const onclick = el.getAttribute('onclick') || ''; let url = ''; if (onclick.indexOf('cview') >= 0) { const params = onclick.substring(onclick.indexOf(\"cview('\") + 7).split(\"'\")[0]; const comicId = params.split('-')[0] || ''; const chapterId = (params.split('-')[1] || '').split('.html')[0]; if (comicId && chapterId) url = chaptersBaseUrl + '/online/new-' + comicId + '.html?ch=' + chapterId; } if (!url) { url = normalizeHref(el.getAttribute('href') || ''); } if (url) chapters.push({ id: url, title: cleanTitle(el.textContent) || 'Chapter ' + (chapters.length + 1), url: url, date: '' }); }); return JSON.stringify(chapters.reverse()); })();",
-          "description": "提取章节列表（新版阅读域）"
+          "code": "(() => { const chapters = []; document.querySelectorAll('#chapters a').forEach(el => { const onclick = el.getAttribute('onclick') || ''; if (onclick.includes(\"cview('\")) { const match = onclick.match(/cview\\('(\\d+)-(\\d+)\\.html/); if (match) { const comicId = match[1]; const chapterId = match[2]; let title = el.textContent?.trim() || ''; const scriptIdx = title.indexOf(' document.'); if (scriptIdx > 0) title = title.substring(0, scriptIdx).trim(); chapters.push({ id: '/online/new-' + comicId + '.html?ch=' + chapterId, title: title, date: '' }); } } }); return JSON.stringify(chapters.reverse()); })();",
+          "description": "提取章节列表"
         }
       ]
     },
+    
     "getPageList": {
       "description": "获取章节图片列表",
       "actions": [
         {
-          "type": "script",
-          "code": "(() => { const chaptersBaseUrl = 'https://articles.onemoreplace.tw'; let raw = String('{{chapterId}}' || '').trim(); if (!raw) throw new Error('Comicabc missing chapter id'); if (raw.startsWith('http')) return raw; if (!raw.startsWith('/')) raw = '/' + raw; if (raw.startsWith('/online/')) return chaptersBaseUrl + raw; return '{{baseUrl}}' + raw; })();",
-          "description": "构建新版章节阅读地址"
-        },
-        {
           "type": "navigate",
-          "url": "{{scriptResult}}",
+          "url": "{{baseUrl}}{{chapterId}}",
           "timeout": 20000,
           "description": "导航到章节阅读页"
         },
         {
           "type": "wait",
           "condition": "element",
-          "selector": "#comics-pics, script",
+          "selector": "#comics-pics",
           "timeout": 15000,
-          "description": "等待图片容器或脚本加载"
+          "description": "等待图片容器加载"
         },
         {
           "type": "wait",
           "condition": "time",
           "duration": 2000,
-          "description": "等待 JavaScript 执行完成"
+          "description": "等待JavaScript执行完成"
         },
         {
           "type": "script",
-          "code": "(() => { const pages = []; const seen = new Set(); const addUrl = (raw) => { let url = String(raw || '').trim(); if (!url) return; try { url = unescape(url); } catch (e) {} if (url.startsWith('//')) url = 'https:' + url; if (url.startsWith('/')) { try { url = new URL(url, location.href).href; } catch (e) {} } if (!/^https?:\\/\\//.test(url)) return; if (/loading|blank/i.test(url)) return; if (seen.has(url)) return; seen.add(url); pages.push({ index: pages.length, imageUrl: url, url: url }); }; document.querySelectorAll('#comics-pics img, img').forEach((img) => { addUrl(img.getAttribute('s') || img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''); }); if (pages.length > 0) return JSON.stringify(pages); const helpers = [\"function lc(l){if(l.length!=2)return l;var az='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';var a=l.substring(0,1);var b=l.substring(1,2);if(a=='Z')return 8000+az.indexOf(b);else return az.indexOf(a)*52+az.indexOf(b)}\", \"function su(a,b,c){var e=(a+'').substring(b,b+c);return e}\", \"function nn(n){return n<10?'00'+n:n<100?'0'+n:n}\", \"function mm(p){return(parseInt((p-1)/10)%10)+(((p-1)%10)*3)}\"].join(' '); const scripts = Array.from(document.querySelectorAll('script')).map((script) => script.textContent || script.innerHTML || ''); const target = scripts.find((text) => text.indexOf('$(\"#comics-pics\").html(xx)') >= 0); if (target) { try { const scriptContent = target.replace(/document\\.location/g, JSON.stringify(location.href)).split('$(\"#comics-pics\"')[0]; const match = scriptContent.match(/s\\s*=\\s*[\"']\\s*\\+\\s*(.*?)\\s*\\+\\s*[\"']\\s*draggable/); if (match && match[1]) { const generated = helpers + '\\n' + scriptContent + '\\nvar urls=[]; for (var j = 1; j <= ps; j++) { urls.push(\"https:\" + unescape(' + match[1] + ')); } return urls;'; const urls = new Function(generated)(); if (Array.isArray(urls)) urls.forEach(addUrl); } } catch (e) {} } return JSON.stringify(pages); })();",
-          "description": "提取或计算图片 URL 列表"
+          "code": "(() => { const pages = []; document.querySelectorAll('#comics-pics img').forEach((img, idx) => { let src = img.getAttribute('s') || img.getAttribute('data-src') || img.getAttribute('src') || ''; if (src) { try { src = unescape(src); } catch(e) {} if (src.startsWith('//')) src = 'https:' + src; if (src && src.includes('8comic.com') && !src.includes('loading')) { pages.push({ index: idx, imageUrl: src }); } } }); return JSON.stringify(pages); })();",
+          "description": "提取图片URL列表 - 从's'属性获取URL编码的图片地址"
         }
       ]
     },
+
     "getImageUrl": {
       "description": "获取图片URL（直接返回）",
       "actions": [
@@ -254,23 +254,14 @@
       ]
     }
   },
+  
   "imageHeaders": {
-    "Referer": "https://articles.onemoreplace.tw/",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  },
-  "coverHeaders": {
     "Referer": "https://www.8comic.com/",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
   },
-  "changelog": [
-    {
-      "version": "1.0.1",
-      "date": "2026-07-03",
-      "changes": [
-        "同步上游 8comic 阅读域 articles.onemoreplace.tw",
-        "章节列表支持 #chapters 和 .comic_chapters 两种 DOM",
-        "页面图片提取增加脚本生成 URL 回退逻辑"
-      ]
-    }
-  ]
+
+  "coverHeaders": {
+    "Referer": "https://www.8comic.com/",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  }
 }

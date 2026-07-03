@@ -3,35 +3,29 @@
     "id": "com.manxia.extension.zh.godamh",
     "name": "GoDa漫画",
     "type": "manga",
-    "version": "3.8.1",
+    "version": "3.8.0",
     "language": "zh-TW",
-    "baseUrl": "https://baozimh.org",
+    "baseUrl": "https://godamh.com",
     "description": "GoDa漫画(G站) - 提供韩漫、国漫、日漫等多种漫画资源",
     "author": "ManXia Team",
     "nsfw": false,
-    "tags": [
-      "chinese",
-      "korean",
-      "japanese",
-      "manga"
-    ],
+    "tags": ["chinese", "korean", "japanese", "manga"],
     "Internet": true
   },
+
   "capabilities": {
     "urlResolver": true,
     "pagination": true,
     "errorRetry": true
   },
+
   "network": {
     "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
     "timeout": 30000,
     "retryCount": 3,
-    "retryDelay": 2000,
-    "headers": {
-      "Referer": "https://baozimh.org/",
-      "Origin": "https://baozimh.org"
-    }
+    "retryDelay": 2000
   },
+
   "workflows": {
     "popular": {
       "description": "获取人气推荐",
@@ -39,7 +33,7 @@
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/hots?page={{page}}",
+          "url": "https://godamh.com/hots?page={{page}}",
           "timeout": 15000,
           "description": "导航到人气推荐页"
         },
@@ -56,13 +50,14 @@
         }
       ]
     },
+
     "latest": {
       "description": "获取最新上架",
       "supportsPagination": true,
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/newss?page={{page}}",
+          "url": "https://godamh.com/newss?page={{page}}",
           "timeout": 15000,
           "description": "导航到最新上架页"
         },
@@ -79,12 +74,13 @@
         }
       ]
     },
+
     "search": {
       "description": "搜索漫画",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/s/{{query}}",
+          "url": "https://godamh.com/s/{{query}}",
           "timeout": 15000,
           "description": "导航到搜索结果页"
         },
@@ -101,12 +97,13 @@
         }
       ]
     },
+
     "getMangaDetail": {
       "description": "获取漫画详情",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/manga/{{mangaId}}",
+          "url": "https://godamh.com/manga/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -123,12 +120,13 @@
         }
       ]
     },
+
     "getMangaDetailWithChapters": {
       "description": "获取漫画详情和章节列表",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/manga/{{mangaId}}",
+          "url": "https://godamh.com/manga/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -145,7 +143,7 @@
         },
         {
           "type": "script",
-          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + encodeURIComponent(mid) + '&mode=all', {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var mangaId = String(json.data.id || mid || ''); var chapters = (json.data.chapters || []).map(function(ch) { var attr = ch.attributes || {}; var chapterSlug = attr.slug || ''; var chapterId = String(ch.id || ''); var path = slug + '/' + chapterSlug; var id = path + (mangaId && chapterId ? ('#' + mangaId + '/' + chapterId) : ''); return { id: id, url: '/manga/' + path, title: attr.title || 'Chapter', date: attr.updatedAt || '' }; }).reverse(); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + mid, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var chapters = json.data.chapters.map(function(ch) { return { id: slug + '/' + (ch.attributes ? ch.attributes.slug : ''), url: '/manga/' + slug + '/' + (ch.attributes ? ch.attributes.slug : ''), title: (ch.attributes ? ch.attributes.title : '') || 'Chapter', date: (ch.attributes ? ch.attributes.updatedAt : '') || '' }; }); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
           "description": "通过API获取全部章节列表"
         },
         {
@@ -161,12 +159,13 @@
         }
       ]
     },
+
     "getChapterList": {
       "description": "获取章节列表",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/manga/{{mangaId}}",
+          "url": "https://godamh.com/manga/{{mangaId}}",
           "timeout": 15000,
           "description": "导航到漫画详情页"
         },
@@ -178,7 +177,7 @@
         },
         {
           "type": "script",
-          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + encodeURIComponent(mid) + '&mode=all', {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var mangaId = String(json.data.id || mid || ''); var chapters = (json.data.chapters || []).map(function(ch) { var attr = ch.attributes || {}; var chapterSlug = attr.slug || ''; var chapterId = String(ch.id || ''); var path = slug + '/' + chapterSlug; var id = path + (mangaId && chapterId ? ('#' + mangaId + '/' + chapterId) : ''); return { id: id, url: '/manga/' + path, title: attr.title || 'Chapter', date: attr.updatedAt || '' }; }).reverse(); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "code": "window.__godaChapters = null; (function() { var el = document.getElementById('mangachapters'); if (!el) { window.__godaChapters = '[]'; return; } var mid = el.getAttribute('data-mid'); if (!mid) { window.__godaChapters = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/manga/get?mid=' + mid, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.chapters) { window.__godaChapters = '[]'; return; } var slug = json.data.slug || ''; var chapters = json.data.chapters.map(function(ch) { return { id: slug + '/' + (ch.attributes ? ch.attributes.slug : ''), url: '/manga/' + slug + '/' + (ch.attributes ? ch.attributes.slug : ''), title: (ch.attributes ? ch.attributes.title : '') || 'Chapter', date: (ch.attributes ? ch.attributes.updatedAt : '') || '' }; }); window.__godaChapters = JSON.stringify(chapters); } catch(e) { window.__godaChapters = '[]'; } })(); })(); 'ASYNC_STARTED';",
           "description": "通过API获取全部章节列表"
         },
         {
@@ -194,12 +193,13 @@
         }
       ]
     },
+
     "getPageList": {
       "description": "获取章节图片列表",
       "actions": [
         {
           "type": "navigate",
-          "url": "{{baseUrl}}/manga/{{chapterId}}",
+          "url": "https://godamh.com/manga/{{chapterId}}",
           "timeout": 20000,
           "description": "导航到章节阅读页"
         },
@@ -211,7 +211,7 @@
         },
         {
           "type": "script",
-          "code": "window.__godaPages = null; (function() { var raw = String('{{chapterId}}' || ''); var ms = ''; var cs = ''; if (raw.indexOf('#') >= 0) { var idPart = raw.split('#')[1] || ''; var idPieces = idPart.split('/'); ms = idPieces[0] || ''; cs = idPieces[1] || ''; } var el = document.getElementById('chapterContent'); if (el) { ms = ms || el.getAttribute('data-ms') || ''; cs = cs || el.getAttribute('data-cs') || ''; } if (!ms || !cs) { window.__godaPages = '[]'; return; } var decodeImages = function(input) { var STD = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'; var CUSTOM = '_-9876543210abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; var PREFIX = 'J7r'; var MARKER1 = 'kD'; var MARKER2 = 'W4s'; var SUFFIX = 'nQ'; var GROUP = 7; var text = String(input || ''); if (!text.startsWith(PREFIX) || !text.endsWith(SUFFIX)) return text; var body = text.substring(PREFIX.length, text.length - SUFFIX.length); var payloadLen = body.length - MARKER1.length - MARKER2.length; if (payloadLen <= 0) return '[]'; var aLen = Math.floor(payloadLen / 3); var bLen = Math.floor((payloadLen - aLen) / 2); var cLen = payloadLen - aLen - bLen; var part1 = body.substring(0, bLen); var marker1 = body.substring(bLen, bLen + MARKER1.length); var part2 = body.substring(bLen + MARKER1.length, bLen + MARKER1.length + cLen); var marker2 = body.substring(bLen + MARKER1.length + cLen, bLen + MARKER1.length + cLen + MARKER2.length); var part3 = body.substring(bLen + MARKER1.length + cLen + MARKER2.length); if (marker1 !== MARKER1 || marker2 !== MARKER2 || part3.length !== aLen) return '[]'; var reordered = part3 + part1 + part2; var unzigzag = ''; for (var i = 0, block = 0; i < reordered.length; i += GROUP, block++) { var chunk = reordered.substring(i, i + GROUP); unzigzag += block % 2 === 1 ? chunk.split('').reverse().join('') : chunk; } var standard = ''; for (var j = 0; j < unzigzag.length; j++) { var idx = CUSTOM.indexOf(unzigzag[j]); if (idx < 0) return '[]'; standard += STD[idx]; } var padded = standard.replace(/-/g, '+').replace(/_/g, '/'); while (padded.length % 4 !== 0) padded += '='; var binary = atob(padded); if (typeof TextDecoder !== 'undefined') { var bytes = new Uint8Array(binary.length); for (var k = 0; k < binary.length; k++) bytes[k] = binary.charCodeAt(k); return new TextDecoder('utf-8').decode(bytes); } return decodeURIComponent(escape(binary)); }; (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/v2/chapter/getinfo?m=' + encodeURIComponent(ms) + '&c=' + encodeURIComponent(cs), {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.data || !json.data.info || !json.data.info.images) { window.__godaPages = '[]'; return; } var rawImages = json.data.info.images.images; var images = Array.isArray(rawImages) ? rawImages : JSON.parse(decodeImages(rawImages)); var pages = (images || []).map(function(img, i) { var order = typeof img.order === 'number' ? img.order : i; return { index: order, url: 'https://f40-1-4.g-mh.online' + (img.url || '') }; }).filter(function(item) { return item.url && item.url !== 'https://f40-1-4.g-mh.online'; }).sort(function(a, b) { return a.index - b.index; }); window.__godaPages = JSON.stringify(pages); } catch(e) { window.__godaPages = '[]'; } })(); })(); 'ASYNC_STARTED';",
+          "code": "window.__godaPages = null; (function() { var el = document.getElementById('chapterContent'); if (!el) { window.__godaPages = '[]'; return; } var ms = el.getAttribute('data-ms'); var cs = el.getAttribute('data-cs'); if (!ms || !cs) { window.__godaPages = '[]'; return; } (async function() { try { var resp = await fetch('https://api-get-v3.mgsearcher.com/api/chapter/getinfo?m=' + ms + '&c=' + cs, {cache:'no-cache'}); var json = await resp.json(); if (!json || !json.status || !json.data || !json.data.info || !json.data.info.images) { window.__godaPages = '[]'; return; } var imgs = json.data.info.images; var line = imgs.line; var base = line === 2 ? 'https://f40-1-4.g-mh.online' : 'https://t40-1-4.g-mh.online'; var pages = (imgs.images || []).map(function(img, i) { return {index: i, url: base + img.url}; }); window.__godaPages = JSON.stringify(pages); } catch(e) { window.__godaPages = '[]'; } })(); })(); 'ASYNC_STARTED';",
           "description": "通过API获取章节图片列表"
         },
         {
@@ -227,6 +227,7 @@
         }
       ]
     },
+
     "getImageUrl": {
       "description": "获取图片URL",
       "actions": [
@@ -238,27 +239,9 @@
       ]
     }
   },
+
   "imageHeaders": {
-    "Referer": "https://baozimh.org/",
+    "Referer": "https://godamh.com/",
     "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-  },
-  "mirrors": [
-    "https://baozimh.org",
-    "https://godamh.com",
-    "https://m.baozimh.one",
-    "https://bzmh.org",
-    "https://g-mh.org",
-    "https://m.g-mh.org"
-  ],
-  "changelog": [
-    {
-      "version": "3.8.1",
-      "date": "2026-07-03",
-      "changes": [
-        "同步上游 GoDa 主域为 baozimh.org，保留 godamh.com 等镜像",
-        "章节 ID 保留 mangaId/chapterId，便于直接请求页图 API",
-        "页图接口切换到 /api/v2/chapter/getinfo 并增加图片字段解码"
-      ]
-    }
-  ]
+  }
 }

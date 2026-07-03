@@ -3,9 +3,9 @@
     "id": "com.manxia.extension.zh.bakamh",
     "name": "巴卡漫画",
     "type": "manga",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "language": "zh-CN",
-    "baseUrl": "https://bakamh.com",
+    "baseUrl": "https://bakamh.ru",
     "description": "巴卡漫画 - 基于Madara主题的中文漫画网站",
     "author": "ManXia Team (移植自 keiyoushi)",
     "nsfw": true,
@@ -33,8 +33,8 @@
   ],
 
   "_MIRRORS": [
-    "bakamh.com (主站)",
-    "bakamh.ru",
+    "bakamh.ru (主站)",
+    "bakamh.com",
     "baka3.me",
     "baka1.my",
     "baka2.de"
@@ -282,14 +282,6 @@
   },
 
   "changelog": [
-    {
-      "version": "1.0.1",
-      "date": "2026-07-03",
-      "changes": [
-        "同步上游主域名为 bakamh.com",
-        "保留 bakamh.ru 等镜像说明作为故障回退参考"
-      ]
-    },
     {
       "version": "1.0.0",
       "date": "2026-01-03",
