@@ -574,5 +574,131 @@
         "baseUrl": "https://gravuregalaxy.hatenablog.com"
       }
     ]
+  },
+  {
+    "name": "ManXia: CosplayTele",
+    "pkg": "com.manxia.extension.all.cosplaytele",
+    "type": "manga",
+    "lang": "all",
+    "code": 83,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "CosplayTele",
+        "lang": "all",
+        "id": "8340035304874076283",
+        "baseUrl": "https://cosplaytele.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Mengteen",
+    "pkg": "com.manxia.extension.zh.mengteen",
+    "type": "manga",
+    "lang": "zh",
+    "code": 84,
+    "version": "1.0.0",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Mengteen",
+        "lang": "zh",
+        "id": "8440035304874076284",
+        "baseUrl": "https://www.635k.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: 美图公社",
+    "pkg": "com.manxia.extension.zh.tooopen",
+    "type": "manga",
+    "lang": "zh",
+    "code": 85,
+    "version": "1.0.1",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "美图公社",
+        "lang": "zh",
+        "id": "8540035304874076285",
+        "baseUrl": "https://desk.tooopen.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Cosplay联盟",
+    "pkg": "com.manxia.extension.zh.pandadiu",
+    "type": "manga",
+    "lang": "zh",
+    "code": 86,
+    "version": "1.0.2",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Cosplay联盟",
+        "lang": "zh",
+        "id": "8640035304874076286",
+        "baseUrl": "https://www.pandadiu.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: 街拍团",
+    "pkg": "com.manxia.extension.zh.jiepaituan",
+    "type": "manga",
+    "lang": "zh",
+    "code": 87,
+    "version": "1.0.2",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "街拍团",
+        "lang": "zh",
+        "id": "8740035304874076287",
+        "baseUrl": "https://jiepaiclub.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: Asian Beauty Hub",
+    "pkg": "com.manxia.extension.all.theasianbeauty",
+    "type": "manga",
+    "lang": "all",
+    "code": 88,
+    "version": "1.0.1",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "Asian Beauty Hub",
+        "lang": "all",
+        "id": "8840035304874076288",
+        "baseUrl": "https://www.theasianbeauty.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: JJGirls",
+    "pkg": "com.manxia.extension.all.jjgirls",
+    "type": "manga",
+    "lang": "all",
+    "code": 89,
+    "version": "1.0.2",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "JJGirls",
+        "lang": "all",
+        "id": "8940035304874076289",
+        "baseUrl": "https://jjgirls.com"
+      }
+    ]
   }
 ]
