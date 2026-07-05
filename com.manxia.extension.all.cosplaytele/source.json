@@ -1,0 +1,326 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.cosplaytele",
+    "name": "CosplayTele",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "all",
+    "baseUrl": "https://cosplaytele.com",
+    "description": "CosplayTele - COS 写真图集",
+    "author": "ManXia Team (移植自 keiyoushi)",
+    "nsfw": true,
+    "tags": [
+      "cosplay",
+      "gallery",
+      "photos",
+      "webview",
+      "free"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://cosplaytele.com/"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取最近 7 天热门 COS 图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const limit = 20; const offset = (page - 1) * limit; return '{{baseUrl}}/wp-json/wordpress-popular-posts/v1/popular-posts?offset=' + offset + '&limit=' + limit + '&range=last7days&embed=true&_embed=wp:featuredmedia&_fields=title,link,_embedded,_links.wp:featuredmedia'; })();",
+          "description": "构建热门 API URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1000,
+          "description": "导航到热门 API"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 10000,
+          "description": "等待 API 响应"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const decode = (value) => { const box = document.createElement('textarea'); box.innerHTML = String(value || ''); return box.value.trim(); }; const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?cosplaytele\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; let data = []; try { data = JSON.parse(document.body.innerText || document.body.textContent || '[]'); } catch (e) { data = []; } const results = data.map((item) => { const href = item && item.link ? item.link : ''; const media = item && item._embedded && item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'][0] ? item._embedded['wp:featuredmedia'][0] : null; return { id: normalizeId(href), title: decode(item && item.title ? item.title.rendered : ''), cover: media && media.source_url ? media.source_url : '', url: href, genre: 'Cosplay' }; }).filter((item) => item.id && item.title); return JSON.stringify(results); })();",
+          "description": "解析热门 API 结果"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取最新 COS 图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'; })();",
+          "description": "构建最新列表 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到最新页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "main div.box, #post-list",
+          "timeout": 15000,
+          "description": "等待图集列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?cosplaytele\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return new URL(value, '{{baseUrl}}').href; } return ''; }; const results = []; document.querySelectorAll('main div.box').forEach((box) => { const link = box.querySelector('h5 a') || box.querySelector('.post-title a') || box.querySelector('a[href]'); const img = box.querySelector('img'); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || link.getAttribute('aria-label') || '').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: 'Cosplay' }); }); return JSON.stringify(results); })();",
+          "description": "提取最新图集列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索 COS 图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const keyword = String('{{searchKeyword}}' || '{{query}}' || '').trim(); if (/^https?:\\/\\//i.test(keyword)) { try { const url = new URL(keyword); if ((url.hostname === 'cosplaytele.com' || url.hostname === 'www.cosplaytele.com') && (url.pathname.startsWith('/category/') || url.pathname.startsWith('/tag/'))) { const path = url.pathname.replace(/\\/+$/g, '') + '/page/' + page + '/'; return url.origin + path + url.search; } return keyword; } catch (e) {} } const url = new URL(page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'); if (keyword) url.searchParams.set('s', keyword); return url.href; })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到搜索页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "main",
+          "timeout": 15000,
+          "description": "等待搜索页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?cosplaytele\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return new URL(value, '{{baseUrl}}').href; } return ''; }; const results = []; const boxes = document.querySelectorAll('main div.box'); if (boxes.length > 0) { boxes.forEach((box) => { const link = box.querySelector('h5 a') || box.querySelector('.post-title a') || box.querySelector('a[href]'); const img = box.querySelector('img'); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || link.getAttribute('aria-label') || '').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: 'Cosplay' }); }); } else { const title = (document.querySelector('.entry-title')?.textContent || '').trim(); if (title) { const href = window.location.href; results.push({ id: normalizeId(href), title, cover: pickImage(document.querySelector('.gallery-item img')) || pickImage(document.querySelector('.wp-post-image')), url: href, genre: 'Cosplay' }); } } return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取 COS 图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw + '/'; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到图集详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-title",
+          "timeout": 15000,
+          "description": "等待详情标题加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return new URL(value, '{{baseUrl}}').href; } return ''; }; const title = (document.querySelector('.entry-title')?.textContent || document.title || '').replace(/\\s*-\\s*CosplayTele\\s*$/i, '').trim(); const tags = Array.from(document.querySelectorAll('#main a[href*=\"/tag/\"], #main a[href*=\"/category/\"]')).map((el) => (el.textContent || '').trim()).filter(Boolean); const cover = pickImage(document.querySelector('.gallery-item img')) || pickImage(document.querySelector('.wp-post-image')) || document.querySelector('meta[property=\"og:image\"]')?.getAttribute('content') || ''; return JSON.stringify({ title, cover, author: '', status: 'completed', description: title, genre: tags.join(', ') }); })();",
+          "description": "提取图集详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取章节列表（每个 COS 图集只有一个 Gallery 章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw + '/'; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到图集详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-title",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const href = document.querySelector('link[rel=\"canonical\"]')?.getAttribute('href') || window.location.href; let id = ''; try { id = new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = String(href || '').replace(/^https?:\\/\\/(www\\.)?cosplaytele\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } const date = (document.querySelector('time.updated')?.getAttribute('datetime') || '').split('T')[0] || ''; return JSON.stringify([{ id, title: 'Gallery', url: '{{baseUrl}}/' + id + '/', publishTime: date, date }]); })();",
+          "description": "生成单章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取图集图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{chapterId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw + '/'; })();",
+          "description": "归一化图片列表 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2500,
+          "description": "导航到图集页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".gallery-item img",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const seen = []; const pickImage = (img) => { if (!img) return ''; const link = img.closest('a[href]'); if (link) { const href = link.getAttribute('href') || ''; if (/\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(href)) return new URL(href, '{{baseUrl}}').href; } const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return new URL(value, '{{baseUrl}}').href; } return ''; }; document.querySelectorAll('.gallery-item img').forEach((img) => { const imageUrl = pickImage(img); if (imageUrl && seen.indexOf(imageUrl) < 0) { seen.push(imageUrl); pages.push({ index: pages.length, url: imageUrl, imageUrl }); } }); return JSON.stringify(pages); })();",
+          "description": "提取所有图片 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "获取单张图片 URL（图片 URL 已在 getPageList 中解析）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按 CosplayTele 分类筛选图集",
+      "supportsPagination": true,
+      "defaults": {
+        "category": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const category = String('{{category}}' || '').replace(/^\\/+|\\/+$/g, ''); if (!category) return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/page/' + page + '/'; return page <= 1 ? '{{baseUrl}}/' + category + '/' : '{{baseUrl}}/' + category + '/page/' + page + '/'; })();",
+          "description": "构建分类页面 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到分类页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "main div.box, #post-list",
+          "timeout": 15000,
+          "description": "等待筛选结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?cosplaytele\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const attrs = ['data-lazy-src', 'data-src', 'data-original', 'src']; for (let i = 0; i < attrs.length; i++) { const value = img.getAttribute(attrs[i]) || ''; if (value && !value.startsWith('data:image')) return new URL(value, '{{baseUrl}}').href; } return ''; }; const results = []; document.querySelectorAll('main div.box').forEach((box) => { const link = box.querySelector('h5 a') || box.querySelector('.post-title a') || box.querySelector('a[href]'); const img = box.querySelector('img'); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || link.getAttribute('aria-label') || '').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: 'Cosplay' }); }); return JSON.stringify(results); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "分类筛选",
+        "description": "选择 CosplayTele 分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "category/nude",
+                "label": "Cosplay Nude"
+              },
+              {
+                "value": "category/no-nude",
+                "label": "Cosplay Ero"
+              },
+              {
+                "value": "category/cosplay",
+                "label": "Cosplay"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "初始版本，移植自 keiyoushi CosplayTele 扩展",
+        "支持热门、最新、搜索和分类筛选",
+        "支持图集详情、单 Gallery 章节和图片列表解析"
+      ]
+    }
+  ]
+}

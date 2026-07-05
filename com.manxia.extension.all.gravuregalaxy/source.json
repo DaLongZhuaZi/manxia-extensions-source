@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.gravuregalaxy",
+    "name": "GravureGalaxy",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "all",
+    "baseUrl": "https://gravuregalaxy.hatenablog.com",
+    "description": "GravureGalaxy Hatenablog gravure gallery source with archive, search, category filters, detail and original photo extraction.",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "gravure",
+      "photos",
+      "webview"
+    ],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://gravuregalaxy.hatenablog.com/"
+    }
+  },
+  "workflows": {
+    "latest": {
+      "description": "Latest Hatenablog archive entries",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? base + '/' : base + '/?page=' + page; })();",
+          "description": "Build latest URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open latest archive"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a.entry-title-link[href*=\"/entry/\"]",
+          "timeout": 15000,
+          "description": "Wait for archive entries"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v, b) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), b || location.href || base).href; } catch (e) { return String(v || ''); } }; const unwrap = (v) => { let s = String(v || '').replace(/&amp;/g, '&'); const m = s.match(/(https%3A%2F%2F.+?\\.(?:jpg|jpeg|png|webp))(?:[?#].*)?$/i); if (m) { try { s = decodeURIComponent(m[1]); } catch (e) {} } return s; }; const styleImage = (el) => { const s = el ? (el.getAttribute('style') || '') : ''; const m = s.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const fetchDoc = () => { try { const xhr = new XMLHttpRequest(); xhr.open('GET', location.href || base, false); xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml'); xhr.send(null); if (xhr.status >= 200 && xhr.status < 400 && xhr.responseText) return new DOMParser().parseFromString(xhr.responseText, 'text/html'); } catch (e) {} return document; }; const doc = fetchDoc(); const out = []; const seen = {}; const parseItem = (item, link) => { if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id] || id.indexOf('entry/') !== 0) return; const title = clean(link.textContent || link.getAttribute('title') || id); if (!title) return; const thumb = item ? item.querySelector('.entry-thumb') : null; const imgEl = item ? item.querySelector('img') : null; const rawCover = styleImage(thumb) || (imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''); const cover = rawCover ? abs(unwrap(rawCover), url) : ''; const genre = item ? Array.from(item.querySelectorAll('.archive-category-link, .entry-category-link, .archive-entry-tag-label')).map((el) => clean(el.textContent)).filter(Boolean).join(', ') : ''; const date = item ? clean((item.querySelector('.archive-date time') ? item.querySelector('.archive-date time').getAttribute('datetime') : '') || (item.querySelector('time') ? item.querySelector('time').getAttribute('datetime') : '') || (item.querySelector('.archive-date') ? item.querySelector('.archive-date').textContent : '')) : ''; const desc = item ? clean((item.querySelector('.entry-description') ? item.querySelector('.entry-description').textContent : '') || '') : ''; seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, updateTime: date, description: desc }); }; Array.from(doc.querySelectorAll('.archive-entry')).forEach((item) => parseItem(item, item.querySelector('a.entry-title-link[href*=\"/entry/\"]'))); if (out.length === 0) Array.from(doc.querySelectorAll('a.entry-title-link[href*=\"/entry/\"]')).forEach((link) => parseItem(link.closest ? link.closest('.archive-entry') : link.parentElement, link)); return JSON.stringify(out); })();",
+          "description": "Extract archive entries"
+        }
+      ]
+    },
+    "popular": {
+      "description": "Stable front-page discovery list",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? base + '/' : base + '/?page=' + page; })();",
+          "description": "Build discovery URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open discovery page"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a.entry-title-link[href*=\"/entry/\"]",
+          "timeout": 15000,
+          "description": "Wait for archive entries"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v, b) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), b || location.href || base).href; } catch (e) { return String(v || ''); } }; const unwrap = (v) => { let s = String(v || '').replace(/&amp;/g, '&'); const m = s.match(/(https%3A%2F%2F.+?\\.(?:jpg|jpeg|png|webp))(?:[?#].*)?$/i); if (m) { try { s = decodeURIComponent(m[1]); } catch (e) {} } return s; }; const styleImage = (el) => { const s = el ? (el.getAttribute('style') || '') : ''; const m = s.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const fetchDoc = () => { try { const xhr = new XMLHttpRequest(); xhr.open('GET', location.href || base, false); xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml'); xhr.send(null); if (xhr.status >= 200 && xhr.status < 400 && xhr.responseText) return new DOMParser().parseFromString(xhr.responseText, 'text/html'); } catch (e) {} return document; }; const doc = fetchDoc(); const out = []; const seen = {}; const parseItem = (item, link) => { if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id] || id.indexOf('entry/') !== 0) return; const title = clean(link.textContent || link.getAttribute('title') || id); if (!title) return; const thumb = item ? item.querySelector('.entry-thumb') : null; const imgEl = item ? item.querySelector('img') : null; const rawCover = styleImage(thumb) || (imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''); const cover = rawCover ? abs(unwrap(rawCover), url) : ''; const genre = item ? Array.from(item.querySelectorAll('.archive-category-link, .entry-category-link, .archive-entry-tag-label')).map((el) => clean(el.textContent)).filter(Boolean).join(', ') : ''; const date = item ? clean((item.querySelector('.archive-date time') ? item.querySelector('.archive-date time').getAttribute('datetime') : '') || (item.querySelector('time') ? item.querySelector('time').getAttribute('datetime') : '') || (item.querySelector('.archive-date') ? item.querySelector('.archive-date').textContent : '')) : ''; const desc = item ? clean((item.querySelector('.entry-description') ? item.querySelector('.entry-description').textContent : '') || '') : ''; seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, updateTime: date, description: desc }); }; Array.from(doc.querySelectorAll('.archive-entry')).forEach((item) => parseItem(item, item.querySelector('a.entry-title-link[href*=\"/entry/\"]'))); if (out.length === 0) Array.from(doc.querySelectorAll('a.entry-title-link[href*=\"/entry/\"]')).forEach((link) => parseItem(link.closest ? link.closest('.archive-entry') : link.parentElement, link)); return JSON.stringify(out); })();",
+          "description": "Extract discovery entries"
+        }
+      ]
+    },
+    "search": {
+      "description": "Hatenablog search",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); let keyword = String('{{searchKeyword}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = String('{{query}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = ''; const q = encodeURIComponent(keyword); return base + '/search?q=' + q + (page > 1 ? '&page=' + page : ''); })();",
+          "description": "Build search URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open search"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a.entry-title-link[href*=\"/entry/\"]",
+          "timeout": 15000,
+          "description": "Wait for search results"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v, b) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), b || location.href || base).href; } catch (e) { return String(v || ''); } }; const unwrap = (v) => { let s = String(v || '').replace(/&amp;/g, '&'); const m = s.match(/(https%3A%2F%2F.+?\\.(?:jpg|jpeg|png|webp))(?:[?#].*)?$/i); if (m) { try { s = decodeURIComponent(m[1]); } catch (e) {} } return s; }; const styleImage = (el) => { const s = el ? (el.getAttribute('style') || '') : ''; const m = s.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const fetchDoc = () => { try { const xhr = new XMLHttpRequest(); xhr.open('GET', location.href || base, false); xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml'); xhr.send(null); if (xhr.status >= 200 && xhr.status < 400 && xhr.responseText) return new DOMParser().parseFromString(xhr.responseText, 'text/html'); } catch (e) {} return document; }; const doc = fetchDoc(); const out = []; const seen = {}; const parseItem = (item, link) => { if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id] || id.indexOf('entry/') !== 0) return; const title = clean(link.textContent || link.getAttribute('title') || id); if (!title) return; const thumb = item ? item.querySelector('.entry-thumb') : null; const imgEl = item ? item.querySelector('img') : null; const rawCover = styleImage(thumb) || (imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''); const cover = rawCover ? abs(unwrap(rawCover), url) : ''; const genre = item ? Array.from(item.querySelectorAll('.archive-category-link, .entry-category-link, .archive-entry-tag-label')).map((el) => clean(el.textContent)).filter(Boolean).join(', ') : ''; const date = item ? clean((item.querySelector('.archive-date time') ? item.querySelector('.archive-date time').getAttribute('datetime') : '') || (item.querySelector('time') ? item.querySelector('time').getAttribute('datetime') : '') || (item.querySelector('.archive-date') ? item.querySelector('.archive-date').textContent : '')) : ''; const desc = item ? clean((item.querySelector('.entry-description') ? item.querySelector('.entry-description').textContent : '') || '') : ''; seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, updateTime: date, description: desc }); }; Array.from(doc.querySelectorAll('.archive-entry')).forEach((item) => parseItem(item, item.querySelector('a.entry-title-link[href*=\"/entry/\"]'))); if (out.length === 0) Array.from(doc.querySelectorAll('a.entry-title-link[href*=\"/entry/\"]')).forEach((link) => parseItem(link.closest ? link.closest('.archive-entry') : link.parentElement, link)); return JSON.stringify(out); })();",
+          "description": "Extract search results"
+        }
+      ]
+    },
+    "filter": {
+      "description": "Hatenablog category filter",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "Dカップ"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); let category = String('{{category}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim(); if (!category) category = 'Dカップ'; if (/^https?:\\/\\//i.test(category)) return category + (page > 1 && category.indexOf('?') < 0 ? '?page=' + page : ''); return base + '/archive/category/' + encodeURIComponent(category) + (page > 1 ? '?page=' + page : ''); })();",
+          "description": "Build category URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open category"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a.entry-title-link[href*=\"/entry/\"]",
+          "timeout": 15000,
+          "description": "Wait for category entries"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v, b) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), b || location.href || base).href; } catch (e) { return String(v || ''); } }; const unwrap = (v) => { let s = String(v || '').replace(/&amp;/g, '&'); const m = s.match(/(https%3A%2F%2F.+?\\.(?:jpg|jpeg|png|webp))(?:[?#].*)?$/i); if (m) { try { s = decodeURIComponent(m[1]); } catch (e) {} } return s; }; const styleImage = (el) => { const s = el ? (el.getAttribute('style') || '') : ''; const m = s.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const fetchDoc = () => { try { const xhr = new XMLHttpRequest(); xhr.open('GET', location.href || base, false); xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml'); xhr.send(null); if (xhr.status >= 200 && xhr.status < 400 && xhr.responseText) return new DOMParser().parseFromString(xhr.responseText, 'text/html'); } catch (e) {} return document; }; const doc = fetchDoc(); const out = []; const seen = {}; const parseItem = (item, link) => { if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id] || id.indexOf('entry/') !== 0) return; const title = clean(link.textContent || link.getAttribute('title') || id); if (!title) return; const thumb = item ? item.querySelector('.entry-thumb') : null; const imgEl = item ? item.querySelector('img') : null; const rawCover = styleImage(thumb) || (imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src') || '') : ''); const cover = rawCover ? abs(unwrap(rawCover), url) : ''; const genre = item ? Array.from(item.querySelectorAll('.archive-category-link, .entry-category-link, .archive-entry-tag-label')).map((el) => clean(el.textContent)).filter(Boolean).join(', ') : ''; const date = item ? clean((item.querySelector('.archive-date time') ? item.querySelector('.archive-date time').getAttribute('datetime') : '') || (item.querySelector('time') ? item.querySelector('time').getAttribute('datetime') : '') || (item.querySelector('.archive-date') ? item.querySelector('.archive-date').textContent : '')) : ''; const desc = item ? clean((item.querySelector('.entry-description') ? item.querySelector('.entry-description').textContent : '') || '') : ''; seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, updateTime: date, description: desc }); }; Array.from(doc.querySelectorAll('.archive-entry')).forEach((item) => parseItem(item, item.querySelector('a.entry-title-link[href*=\"/entry/\"]'))); if (out.length === 0) Array.from(doc.querySelectorAll('a.entry-title-link[href*=\"/entry/\"]')).forEach((link) => parseItem(link.closest ? link.closest('.archive-entry') : link.parentElement, link)); return JSON.stringify(out); })();",
+          "description": "Extract category entries"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "Get entry detail",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/').href; })();",
+          "description": "Normalize detail URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open detail"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content img.hatena-fotolife, .entry-title-link",
+          "timeout": 15000,
+          "description": "Wait for detail"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const title = clean(document.querySelector('.entry-title-link')?.textContent || document.querySelector('h1.entry-title')?.textContent || document.querySelector('meta[property=\"og:title\"]')?.getAttribute('content') || document.title).replace(/\\s*-\\s*グラビア大銀河\\s*$/i, ''); const cover = document.querySelector('meta[property=\"og:image\"]')?.getAttribute('content') || document.querySelector('.entry-content img.hatena-fotolife')?.getAttribute('src') || ''; const desc = clean(document.querySelector('meta[property=\"og:description\"]')?.getAttribute('content') || document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); const genre = Array.from(document.querySelectorAll('.entry-category-link')).map((a) => clean(a.textContent)).filter(Boolean).join(', '); const time = clean(document.querySelector('time.entry-date')?.getAttribute('datetime') || document.querySelector('time')?.getAttribute('datetime') || ''); return JSON.stringify({ title, cover, author: genre, status: 'completed', description: desc, genre, updateTime: time }); })();",
+          "description": "Extract detail"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "Single gallery chapter",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; let raw = String('{{mangaId}}' || '').trim(); let url = /^https?:\\/\\//i.test(raw) ? raw : new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/').href; let id = raw; try { const u = new URL(url); id = (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "Build chapter"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "Extract original entry images",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://gravuregalaxy.hatenablog.com'; let raw = String('{{chapterId}}' || '{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/').href; })();",
+          "description": "Normalize chapter URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Open entry"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content img.hatena-fotolife",
+          "timeout": 15000,
+          "description": "Wait for images"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const seen = {}; const clean = (v) => String(v || '').replace(/&amp;/g, '&').trim(); const abs = (v, b) => { try { return new URL(clean(v), b || location.href).href; } catch (e) { return clean(v); } }; const unwrap = (v, b) => { let url = abs(v, b); const encoded = url.match(/(https%3A%2F%2F[^\\s\"'<>]+?\\.(?:jpg|jpeg|png|webp))(?:[?#].*)?$/i); if (encoded) { try { url = decodeURIComponent(encoded[1]); } catch (e) {} } return url; }; const usable = (url) => /\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(url) && !/amazon|profile|blogmura|banner|icon|svg|with2\\.net|hatena-module|blog_custom_icon/i.test(url); const push = (raw, pageUrl, width, height) => { const url = unwrap(raw, pageUrl || location.href); if (!url || /^data:/i.test(url) || !usable(url) || seen[url]) return; seen[url] = true; const item = { index: pages.length, page: pages.length, url, imageUrl: url }; const w = parseInt(String(width || ''), 10); const h = parseInt(String(height || ''), 10); if (w > 0) item.width = w; if (h > 0) item.height = h; pages.push(item); }; const collectImg = (img, pageUrl) => { if (!img) return; ['src','data-src','data-original','data-lazy-src','data-normalized-src','data-actualsrc','data-image'].forEach((name) => push(img.getAttribute(name) || '', pageUrl, img.getAttribute('width') || '', img.getAttribute('height') || '')); const srcset = clean(img.getAttribute('srcset') || img.getAttribute('data-srcset') || ''); srcset.split(',').forEach((part) => push(part.trim().split(/\\s+/)[0] || '', pageUrl, img.getAttribute('width') || '', img.getAttribute('height') || '')); const link = img.closest ? img.closest('a[href]') : null; if (link) push(link.getAttribute('href') || '', pageUrl, img.getAttribute('width') || '', img.getAttribute('height') || ''); }; const fetchDoc = () => { try { const xhr = new XMLHttpRequest(); xhr.open('GET', location.href, false); xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml'); xhr.send(null); if (xhr.status >= 200 && xhr.status < 400 && xhr.responseText) return new DOMParser().parseFromString(xhr.responseText, 'text/html'); } catch (e) {} return null; }; const collectDoc = (doc) => { if (!doc) return; const root = doc.querySelector('.entry-content') || doc.querySelector('.entry-inner') || doc; root.querySelectorAll('img.hatena-fotolife, img[itemprop=\"image\"], figure img, .entry-content img').forEach((img) => collectImg(img, location.href)); }; collectDoc(fetchDoc()); collectDoc(document); if (pages.length === 0) { const html = document.documentElement ? document.documentElement.outerHTML : ''; const re = /https?:\\/\\/[^\"'\\s<>]+?\\.(?:jpg|jpeg|png|webp)(?:\\?[^\"'\\s<>]*)?|https%3A%2F%2F[^\"'\\s<>]+?\\.(?:jpg|jpeg|png|webp)/ig; let m = null; while ((m = re.exec(html)) !== null) push(m[0], location.href, '', ''); } return JSON.stringify(pages); })();",
+          "description": "Extract images"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "Return image URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "Return direct image URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "发现",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "GravureGalaxy Filter",
+        "description": "Choose stable Hatenablog categories",
+        "groups": [
+          {
+            "id": "category",
+            "title": "Category",
+            "defaultValue": "Dカップ",
+            "options": [
+              {
+                "value": "Cカップ",
+                "label": "C Cup"
+              },
+              {
+                "value": "Dカップ",
+                "label": "D Cup"
+              },
+              {
+                "value": "Eカップ",
+                "label": "E Cup"
+              },
+              {
+                "value": "Fカップ",
+                "label": "F Cup"
+              },
+              {
+                "value": "Gカップ",
+                "label": "G Cup"
+              },
+              {
+                "value": "Hカップ",
+                "label": "H Cup"
+              },
+              {
+                "value": "Iカップ",
+                "label": "I Cup"
+              },
+              {
+                "value": "Jカップ",
+                "label": "J Cup"
+              },
+              {
+                "value": "Kカップ",
+                "label": "K Cup"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "Fixed reader page extraction returning an empty list on ArkWeb by parsing the fetched entry HTML.",
+        "Reader extraction now accepts Hatena lazy-load attributes, srcset, parent photo links and decoded Hatena proxy URLs."
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "Fixed archive list extraction returning empty results in WebView.",
+        "List workflows now parse fetched Hatenablog HTML with DOMParser and unwrap Hatena thumbnail proxy URLs."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "Added GravureGalaxy source from current Hatenablog archive structure.",
+        "Supports latest, discovery, search, category filter, detail and original image extraction.",
+        "Filters out Amazon/sidebar/banner images from reader page list."
+      ]
+    }
+  ]
+}

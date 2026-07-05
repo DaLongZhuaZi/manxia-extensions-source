@@ -1,0 +1,337 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.pandadiu",
+    "name": "Cosplay联盟",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh",
+    "baseUrl": "https://www.pandadiu.com",
+    "description": "Cosplay联盟 - 中文 COS、写真、漫展图集源，适配 PHPCMS 列表、搜索与图片详情页。",
+    "author": "ManXia Team (Legado migration)",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "cosplay",
+      "webview",
+      "legado"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.pandadiu.com/"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取首页推荐图集",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return '{{baseUrl}}/'; })();",
+          "description": "构建首页推荐 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开首页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 12000,
+          "description": "等待页面加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const out = []; const seen = []; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src','href']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } const style = el.getAttribute('style') || ''; const m = style.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const items = document.querySelectorAll('.outbox, .cos_list_con > ul > li, .pic_list_con > ul > li, a.newlist-cos, .newcos li, .content .box li'); items.forEach((item) => { const linkEl = (item.matches && item.matches('a[href*=\"show-\"]')) ? item : item.querySelector('a[href*=\"show-\"]'); if (!linkEl) return; const href = attr(linkEl); if (!href || /^javascript:/i.test(href)) return; const url = abs(href); let id = ''; try { id = new URL(url).pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = href.replace(/^\\/+|\\/+$/g, ''); } if (!id || seen.indexOf(id) >= 0) return; const titleEl = item.querySelector('.text a.elli, a.guidecontent, a.text, h4, .weui-media-box__bd h4, span.elli') || linkEl; const imgEl = item.querySelector('img'); const title = clean(titleEl.textContent || titleEl.getAttribute('title') || (imgEl && imgEl.getAttribute('alt')) || id); const coverRaw = attr(imgEl); seen.push(id); out.push({ id, title, cover: coverRaw ? abs(coverRaw) : '', url, status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取首页推荐图集"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取 COS 最新作品",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); return '{{baseUrl}}/list-30-' + page + '.html'; })();",
+          "description": "构建 COS 最新 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开 COS 最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 12000,
+          "description": "等待列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const out = []; const seen = []; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src','href']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } const style = el.getAttribute('style') || ''; const m = style.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); document.querySelectorAll('.cos_list_con > ul > li, .pic_list_con > ul > li, a.newlist-cos, .newcos li').forEach((item) => { const linkEl = (item.matches && item.matches('a[href*=\"show-\"]')) ? item : item.querySelector('a[href*=\"show-\"]'); if (!linkEl) return; const href = attr(linkEl); if (!href || /^javascript:/i.test(href)) return; const url = abs(href); let id = ''; try { id = new URL(url).pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = href.replace(/^\\/+|\\/+$/g, ''); } if (!id || seen.indexOf(id) >= 0) return; const titleEl = item.querySelector('.text a.elli, a.text, h4, .weui-media-box__bd h4, span.elli') || linkEl; const imgEl = item.querySelector('img'); const tagEl = item.querySelector('.tag span, .weui-media-box__bd p'); const title = clean(titleEl.textContent || titleEl.getAttribute('title') || (imgEl && imgEl.getAttribute('alt')) || id); const coverRaw = attr(imgEl); seen.push(id); out.push({ id, title, cover: coverRaw ? abs(coverRaw) : '', url, genre: clean(tagEl && tagEl.textContent), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取 COS 最新图集"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按分类筛选图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); let category = String('{{category}}' || '').trim(); if (!category || category.indexOf('{{') >= 0) category = '30'; category = category.replace(/[^0-9]/g, '') || '30'; return '{{baseUrl}}/list-' + category + '-' + page + '.html'; })();",
+          "description": "构建分类 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开分类页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 12000,
+          "description": "等待分类页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const out = []; const seen = []; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src','href']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } const style = el.getAttribute('style') || ''; const m = style.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); document.querySelectorAll('.cos_list_con > ul > li, .pic_list_con > ul > li, a.newlist-cos, .newcos li').forEach((item) => { const linkEl = (item.matches && item.matches('a[href*=\"show-\"]')) ? item : item.querySelector('a[href*=\"show-\"]'); if (!linkEl) return; const href = attr(linkEl); if (!href || /^javascript:/i.test(href)) return; const url = abs(href); let id = ''; try { id = new URL(url).pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = href.replace(/^\\/+|\\/+$/g, ''); } if (!id || seen.indexOf(id) >= 0) return; const titleEl = item.querySelector('.text a.elli, a.text, h4, .weui-media-box__bd h4, span.elli') || linkEl; const imgEl = item.querySelector('img'); const tagEl = item.querySelector('.tag span, .weui-media-box__bd p'); const title = clean(titleEl.textContent || titleEl.getAttribute('title') || (imgEl && imgEl.getAttribute('alt')) || id); const coverRaw = attr(imgEl); seen.push(id); out.push({ id, title, cover: coverRaw ? abs(coverRaw) : '', url, genre: clean(tagEl && tagEl.textContent), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取分类图集"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const q = encodeURIComponent(String('{{searchKeyword}}' || '{{query}}' || '').trim()); return '{{baseUrl}}/index.php?m=search&c=index&a=init&typeid=1&siteid=1&q=' + q + '&page=' + page; })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 12000,
+          "description": "等待搜索页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const out = []; const seen = []; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src','href']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } const style = el.getAttribute('style') || ''; const m = style.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); document.querySelectorAll('a.newlist-cos, .cos_list_con > ul > li, .pic_list_con > ul > li').forEach((item) => { const linkEl = (item.matches && item.matches('a[href*=\"show-\"]')) ? item : item.querySelector('a[href*=\"show-\"]'); if (!linkEl) return; const href = attr(linkEl); if (!href || /^javascript:/i.test(href)) return; const url = abs(href); let id = ''; try { id = new URL(url).pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = href.replace(/^\\/+|\\/+$/g, ''); } if (!id || seen.indexOf(id) >= 0) return; const titleEl = item.querySelector('h4, .text a.elli, a.text, .weui-media-box__bd h4, span.elli') || linkEl; const imgEl = item.querySelector('img'); const descEl = item.querySelector('.weui-media-box__bd p, .tag span'); const title = clean(titleEl.textContent || titleEl.getAttribute('title') || (imgEl && imgEl.getAttribute('alt')) || id); const coverRaw = attr(imgEl); seen.push(id); out.push({ id, title, cover: coverRaw ? abs(coverRaw) : '', url, description: clean(descEl && descEl.textContent), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".show_cos .con img",
+          "timeout": 12000,
+          "description": "等待详情页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const pick = (img) => { if (!img) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = img.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) { try { return new URL(v, base).href; } catch (e) { return v; } } } return ''; }; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const title = clean(document.querySelector('.show_cos .title h1')?.textContent || document.querySelector('h1')?.textContent || document.title).replace(/\\s*-\\s*Cosplay联盟.*$/,''); const cover = pick(document.querySelector('.show_cos .con img')); const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || document.querySelector('.show_cos .con p')?.textContent || ''); const tags = Array.from(document.querySelectorAll('.show_cos .footer .tag a, .show_cos .title li')).map((el) => clean(el.textContent)).filter(Boolean); const author = clean(document.querySelector('.show_cos .title li')?.textContent || '').replace(/^.*[：:]/, ''); return JSON.stringify({ title, cover, author, status: 'completed', description: desc, genre: tags.join(', ') }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "图集作为单章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{mangaId}}' || '').trim(); let url = raw; if (!/^https?:\\/\\//i.test(url)) { url = new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; } let id = raw; try { id = new URL(url).pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "生成 Gallery 章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取图集图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{chapterId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".show_cos .con img",
+          "timeout": 12000,
+          "description": "等待图片页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const pages = []; const seen = []; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return v || ''; } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src','href']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } const style = el.getAttribute('style') || ''; const m = style.match(/url\\(['\"]?([^'\")]+)['\"]?\\)/i); return m ? m[1] : ''; }; const push = (v) => { if (!v || /^data:/i.test(v)) return; const url = abs(v); if (!/\\.(webp|jpg|jpeg|png|gif)(\\?|#|$)/i.test(url)) return; if (seen.indexOf(url) >= 0) return; seen.push(url); pages.push({ index: pages.length, url, imageUrl: url }); }; document.querySelectorAll('.show_cos .con img').forEach((img) => push(attr(img))); return JSON.stringify(pages); })();",
+          "description": "提取图片 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "推荐",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "COS最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "分类筛选",
+        "description": "选择 Cosplay联盟 分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "30",
+            "options": [
+              {
+                "value": "30",
+                "label": "COS全部"
+              },
+              {
+                "value": "31",
+                "label": "正片"
+              },
+              {
+                "value": "75",
+                "label": "场照"
+              },
+              {
+                "value": "26",
+                "label": "写真全部"
+              },
+              {
+                "value": "65",
+                "label": "摄影"
+              },
+              {
+                "value": "89",
+                "label": "国风"
+              },
+              {
+                "value": "66",
+                "label": "JK制服"
+              },
+              {
+                "value": "88",
+                "label": "Lolita"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "重建列表、搜索、筛选和详情图片工作流",
+        "适配 list-category-page.html 与 show-category-id-page.html 页面结构",
+        "支持 COS、正片、场照、写真、摄影、国风、JK 制服、Lolita 分类筛选",
+        "避免详情页封面回退到站点 logo"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "重建列表、搜索、筛选和详情图片工作流",
+        "适配 list-category-page.html 与 show-category-id-page.html 页面结构",
+        "支持 COS、正片、场照、写真、摄影、国风、JK 制服、Lolita 分类筛选"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "初始版本，移植自 Legado 图站规则"
+      ]
+    }
+  ]
+}

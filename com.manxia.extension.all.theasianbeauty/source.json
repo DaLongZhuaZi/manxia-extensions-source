@@ -1,0 +1,319 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.theasianbeauty",
+    "name": "Asian Beauty Hub",
+    "type": "manga",
+    "version": "1.0.1",
+    "language": "all",
+    "baseUrl": "https://www.theasianbeauty.com",
+    "description": "Asian Beauty Hub - Photo Hub of Asian Beauties，按 Next.js 实际页面结构适配首页推荐、国家筛选和图集阅读。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "beauty",
+      "webview"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": false,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.theasianbeauty.com/"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取首页推荐图集",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return 'https://www.theasianbeauty.com/'; })();",
+          "description": "构建热门 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开首页推荐"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a[href*=\"/beauties/\"] img[src*=\"cdn.theasianbeauty.com/media/\"]",
+          "timeout": 15000,
+          "description": "等待图集卡片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; const pickImage = (root) => { if (!root) return ''; const img = root.querySelector('img[src*=\"cdn.theasianbeauty.com/media/\"]') || root.querySelector('img'); if (!img) return ''; const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; const url = abs(src); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return ''; if (/\\/small_|\\/thumbnail_/i.test(url)) return ''; return url; }; document.querySelectorAll('a[href*=\"/beauties/\"]').forEach((a) => { const href = a.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || id.indexOf('beauties/') !== 0 || seen.indexOf(id) >= 0) return; const cover = pickImage(a); if (!cover) return; let title = clean(a.textContent || a.getAttribute('aria-label') || ''); if (!title) { const img = a.querySelector('img'); title = clean((img ? (img.getAttribute('alt') || '') : '').replace(/^featured image of\\s*/i, '')); } if (!title) title = id.replace(/^beauties\\//, '').replace(/-/g, ' '); seen.push(id); out.push({ id, title, cover, url, status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取热门图集"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取首页最新图集",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return 'https://www.theasianbeauty.com/'; })();",
+          "description": "构建最新 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开首页最新"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a[href*=\"/beauties/\"] img[src*=\"cdn.theasianbeauty.com/media/\"]",
+          "timeout": 15000,
+          "description": "等待图集卡片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; const pickImage = (root) => { if (!root) return ''; const img = root.querySelector('img[src*=\"cdn.theasianbeauty.com/media/\"]') || root.querySelector('img'); if (!img) return ''; const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; const url = abs(src); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return ''; if (/\\/small_|\\/thumbnail_/i.test(url)) return ''; return url; }; document.querySelectorAll('a[href*=\"/beauties/\"]').forEach((a) => { const href = a.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || id.indexOf('beauties/') !== 0 || seen.indexOf(id) >= 0) return; const cover = pickImage(a); if (!cover) return; let title = clean(a.textContent || a.getAttribute('aria-label') || ''); if (!title) { const img = a.querySelector('img'); title = clean((img ? (img.getAttribute('alt') || '') : '').replace(/^featured image of\\s*/i, '')); } if (!title) title = id.replace(/^beauties\\//, '').replace(/-/g, ' '); seen.push(id); out.push({ id, title, cover, url, status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取最新图集"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索图集（站点搜索为前端交互，关键词为空时回退首页）",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let keyword = String('{{searchKeyword}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = String('{{query}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = ''; const map = { 'korea': 'south_korea', 'south korea': 'south_korea', 'japan': 'japan', 'taiwan': 'taiwan', 'vietnam': 'vietnam', 'malaysia': 'malaysia', 'thailand': 'thailand' }; const key = keyword.toLowerCase(); const category = map[key] || ''; return category ? 'https://www.theasianbeauty.com/' + category : 'https://www.theasianbeauty.com/'; })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a[href*=\"/beauties/\"] img[src*=\"cdn.theasianbeauty.com/media/\"]",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; const pickImage = (root) => { if (!root) return ''; const img = root.querySelector('img[src*=\"cdn.theasianbeauty.com/media/\"]') || root.querySelector('img'); if (!img) return ''; const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; const url = abs(src); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return ''; if (/\\/small_|\\/thumbnail_/i.test(url)) return ''; return url; }; document.querySelectorAll('a[href*=\"/beauties/\"]').forEach((a) => { const href = a.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || id.indexOf('beauties/') !== 0 || seen.indexOf(id) >= 0) return; const cover = pickImage(a); if (!cover) return; let title = clean(a.textContent || a.getAttribute('aria-label') || ''); if (!title) { const img = a.querySelector('img'); title = clean((img ? (img.getAttribute('alt') || '') : '').replace(/^featured image of\\s*/i, '')); } if (!title) title = id.replace(/^beauties\\//, '').replace(/-/g, ' '); seen.push(id); out.push({ id, title, cover, url, status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按国家筛选图集",
+      "supportsPagination": false,
+      "defaults": {
+        "category": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; let category = String('{{category}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(category)) category = ''; category = category.replace(/^\\/+|\\/+$/g, ''); return category ? base + '/' + category : base + '/'; })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开国家分类页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "a[href*=\"/beauties/\"] img[src*=\"cdn.theasianbeauty.com/media/\"]",
+          "timeout": 15000,
+          "description": "等待筛选结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; const pickImage = (root) => { if (!root) return ''; const img = root.querySelector('img[src*=\"cdn.theasianbeauty.com/media/\"]') || root.querySelector('img'); if (!img) return ''; const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; const url = abs(src); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return ''; if (/\\/small_|\\/thumbnail_/i.test(url)) return ''; return url; }; document.querySelectorAll('a[href*=\"/beauties/\"]').forEach((a) => { const href = a.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || id.indexOf('beauties/') !== 0 || seen.indexOf(id) >= 0) return; const cover = pickImage(a); if (!cover) return; let title = clean(a.textContent || a.getAttribute('aria-label') || ''); if (!title) { const img = a.querySelector('img'); title = clean((img ? (img.getAttribute('alt') || '') : '').replace(/^featured image of\\s*/i, '')); } if (!title) title = id.replace(/^beauties\\//, '').replace(/-/g, ' '); seen.push(id); out.push({ id, title, cover, url, status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "img[src*=\"cdn.theasianbeauty.com/media/\"][alt*=\"photo\"]",
+          "timeout": 15000,
+          "description": "等待详情图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return v || ''; } }; const pick = (img) => { if (!img) return ''; const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || ''; const url = abs(src); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return ''; if (/\\/small_|\\/thumbnail_/i.test(url)) return ''; return url; }; const title = clean(document.querySelector('h1')?.textContent || document.title).replace(/^Asian Beauty Hub\\s*\\|\\s*/i, ''); let cover = ''; const imgs = Array.from(document.querySelectorAll('img[src*=\"cdn.theasianbeauty.com/media/\"][alt*=\"photo\"]')); for (let i = 0; i < imgs.length; i++) { cover = pick(imgs[i]); if (cover) break; } if (!cover) cover = pick(document.querySelector('img[src*=\"cdn.theasianbeauty.com/media/\"]')); const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); const country = clean(document.querySelector('a[href=\"/south_korea\"], a[href=\"/japan\"], a[href=\"/taiwan\"], a[href=\"/vietnam\"], a[href=\"/malaysia\"], a[href=\"/thailand\"]')?.textContent || ''); return JSON.stringify({ title, cover, author: country, status: 'completed', description: desc, genre: country }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "图集作为单章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); const url = new URL(raw, base.replace(/\\/+$/, '/') ).href; let id = raw; try { const u = new URL(url); id = (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "生成 Gallery 章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取图集图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; let raw = String('{{chapterId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2400,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "img[src*=\"cdn.theasianbeauty.com/media/\"][alt*=\"photo\"]",
+          "timeout": 15000,
+          "description": "等待图片页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.theasianbeauty.com'; const pages = []; const seen = []; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return v || ''; } }; const push = (v) => { if (!v || /^data:/i.test(v)) return; const url = abs(v); if (!/cdn\\.theasianbeauty\\.com\\/media\\//i.test(url)) return; if (/\\/small_|\\/thumbnail_/i.test(url)) return; if (seen.indexOf(url) >= 0) return; seen.push(url); pages.push({ index: pages.length, url, imageUrl: url }); }; document.querySelectorAll('img[src*=\"cdn.theasianbeauty.com/media/\"][alt*=\"photo\"]').forEach((img) => push(img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || '')); return JSON.stringify(pages); })();",
+          "description": "提取图片 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "国家筛选",
+        "description": "选择 Asian Beauty Hub 国家分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "国家",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "south_korea",
+                "label": "South Korea"
+              },
+              {
+                "value": "japan",
+                "label": "Japan"
+              },
+              {
+                "value": "taiwan",
+                "label": "Taiwan"
+              },
+              {
+                "value": "vietnam",
+                "label": "Vietnam"
+              },
+              {
+                "value": "malaysia",
+                "label": "Malaysia"
+              },
+              {
+                "value": "thailand",
+                "label": "Thailand"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "按 Next.js 实际页面结构重建热门、最新和筛选工作流",
+        "移除不存在的 /page/{n} 分页规则",
+        "新增国家分类筛选：South Korea、Japan、Taiwan、Vietnam、Malaysia、Thailand",
+        "详情和图片列表仅提取作品照片，避免混入 logo、旗帜和相关推荐缩略图"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,341 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.1ybeauties",
+    "name": "1Y Beauties",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "all",
+    "baseUrl": "https://www.1y.is",
+    "description": "1Y Beauties current WordPress workflow rebuild with jpeg-proxied covers to avoid ArkUI remote WebP cover failures.",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "webview"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.1y.is"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "Updated workflow step",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? 'https://www.1y.is/' : 'https://www.1y.is/page/' + page + '/'; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".np-grid-entries .entry-card",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const decode = (v) => { const d = document.createElement('textarea'); d.innerHTML = String(v || ''); return d.value; }; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u) return ''; if (/\\.webp(\\?|#|$)/i.test(u)) return 'https://wsrv.nl/?url=' + u + '&w=480&output=jpg'; return u; }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('.np-grid-entries .entry-card').forEach((card) => { const link = card.querySelector('.np-entry-title a[href]') || card.querySelector('.post-thumbnail a[href]'); if (!link) return; const href = link.getAttribute('href') || ''; if (!/\\.html(?:\\/)?$/i.test(href)) return; const id = normalizeId(href); if (!id || seen[id]) return; const img = card.querySelector('.post-thumbnail img, img.wp-post-image'); const cover = img ? (img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; const title = clean(decode(link.textContent || (img ? (img.getAttribute('alt') || img.getAttribute('title')) : '') || id)); if (!title || !cover || /gravatar/i.test(cover)) return; seen[id] = true; out.push({ id, title, cover: coverUrl(cover), url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "latest": {
+      "description": "Updated workflow step",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? 'https://www.1y.is/' : 'https://www.1y.is/page/' + page + '/'; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".np-grid-entries .entry-card",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const decode = (v) => { const d = document.createElement('textarea'); d.innerHTML = String(v || ''); return d.value; }; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u) return ''; if (/\\.webp(\\?|#|$)/i.test(u)) return 'https://wsrv.nl/?url=' + u + '&w=480&output=jpg'; return u; }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('.np-grid-entries .entry-card').forEach((card) => { const link = card.querySelector('.np-entry-title a[href]') || card.querySelector('.post-thumbnail a[href]'); if (!link) return; const href = link.getAttribute('href') || ''; if (!/\\.html(?:\\/)?$/i.test(href)) return; const id = normalizeId(href); if (!id || seen[id]) return; const img = card.querySelector('.post-thumbnail img, img.wp-post-image'); const cover = img ? (img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; const title = clean(decode(link.textContent || (img ? (img.getAttribute('alt') || img.getAttribute('title')) : '') || id)); if (!title || !cover || /gravatar/i.test(cover)) return; seen[id] = true; out.push({ id, title, cover: coverUrl(cover), url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "search": {
+      "description": "Updated workflow step",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const q = encodeURIComponent(String('{{searchKeyword}}' || '{{query}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim()); return 'https://www.1y.is/wp-json/wp/v2/posts?search=' + q + '&per_page=20&page=' + page + '&_embed=1'; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "body",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const text = document.body ? document.body.textContent : ''; const clean = (v) => String(v || '').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim(); const coverUrl = (v) => { const u = String(v || ''); if (!u) return ''; if (/\\.webp(\\?|#|$)/i.test(u)) return 'https://wsrv.nl/?url=' + u + '&w=480&output=jpg'; return u; }; const normalizeId = (href) => { try { const u = new URL(href, base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; try { const arr = JSON.parse(text); if (Array.isArray(arr)) arr.forEach((item) => { const url = item.link || item.url || ''; const title = clean((item.title && item.title.rendered) || item.title || normalizeId(url)); const media = item._embedded && item._embedded['wp:featuredmedia'] && item._embedded['wp:featuredmedia'][0]; let cover = media ? (media.source_url || (media.media_details && media.media_details.sizes && media.media_details.sizes.medium && media.media_details.sizes.medium.source_url) || '') : ''; if (!cover && item.content && item.content.rendered) { const m = String(item.content.rendered).match(/<img[^>]+src=[\"']([^\"']+)/i); cover = m ? m[1] : ''; } const id = normalizeId(url); if (id && title) out.push({ id, title, cover: coverUrl(cover), url, status: 'completed' }); }); } catch (e) {} return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content, h1.entry-title",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u) return ''; if (/\\.webp(\\?|#|$)/i.test(u)) return 'https://wsrv.nl/?url=' + u + '&w=480&output=jpg'; return u; }; const title = clean((document.querySelector('h1.entry-title') && document.querySelector('h1.entry-title').textContent) || document.title); const img = document.querySelector('.entry-content img.alignnone, .entry-content img[src*=\"1y.is\"], .post-thumbnail img'); const cover = img ? coverUrl(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; const desc = clean((document.querySelector('.entry-content blockquote') && document.querySelector('.entry-content blockquote').textContent) || (document.querySelector('meta[name=\"description\"]') && document.querySelector('meta[name=\"description\"]').getAttribute('content')) || ''); const author = clean((document.querySelector('.author a') && document.querySelector('.author a').textContent) || '1Y Beauties'); return JSON.stringify({ title, cover, author, status: 'completed', description: desc }); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content, .page-links",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const title = ((document.querySelector('h1.entry-title') && document.querySelector('h1.entry-title').textContent) || 'Gallery').replace(/\\s+/g, ' ').trim(); const canonical = (document.querySelector('link[rel=\"canonical\"]') && document.querySelector('link[rel=\"canonical\"]').getAttribute('href')) || location.href; const stripPage = (v) => String(v || '').replace(/\\/\\d+\\/?$/, ''); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const chapterUrl = stripPage(abs(canonical)); const entries = [{ num: 1, url: chapterUrl }]; document.querySelectorAll('.entry-content .page-links a.post-page-numbers[href], .page-links a.post-page-numbers[href]').forEach((a) => { const n = parseInt((a.textContent || '').replace(/\\D+/g, ''), 10); const href = abs(a.getAttribute('href') || ''); if (n > 1 && /\\.html\\/\\d+\\/?$/i.test(href)) entries.push({ num: n, url: href }); }); const seen = {}; const chapters = []; entries.sort((a, b) => a.num - b.num).forEach((entry) => { if (seen[entry.url]) return; seen[entry.url] = true; let id = entry.url; try { const u = new URL(entry.url); id = (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) {} chapters.push({ id, title: entries.length > 1 ? ('Page ' + entry.num) : 'Gallery', url: entry.url, date: '', publishTime: '' }); }); return JSON.stringify(chapters.length ? chapters : [{ id: chapterUrl, title, url: chapterUrl, date: '', publishTime: '' }]); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; let raw = String('{{chapterId}}' || '{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content img",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const pages = []; const seen = {}; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const push = (v) => { const url = abs(v); if (!/\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(url)) return; if (/gravatar|avatar|banner|jads|favicon/i.test(url)) return; if (seen[url]) return; seen[url] = true; pages.push({ index: pages.length, page: pages.length, url, imageUrl: url }); }; document.querySelectorAll('.entry-content img.alignnone, .entry-content p img, .entry-content img[src*=\"/wp-content/uploads/\"], .entry-content img[src*=\"imgs.1y.is\"]').forEach((img) => push(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '')); return JSON.stringify(pages); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "filter": {
+      "description": "Updated workflow step",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "cosplay"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const raw = String('{{category}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().replace(/^\\/+|\\/+$/g, ''); const category = raw || 'cosplay'; const base = 'https://www.1y.is/category/' + category; return page <= 1 ? base + '/' : base + '/page/' + page + '/'; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".np-grid-entries .entry-card",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.1y.is'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const decode = (v) => { const d = document.createElement('textarea'); d.innerHTML = String(v || ''); return d.value; }; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u) return ''; if (/\\.webp(\\?|#|$)/i.test(u)) return 'https://wsrv.nl/?url=' + u + '&w=480&output=jpg'; return u; }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('.np-grid-entries .entry-card').forEach((card) => { const link = card.querySelector('.np-entry-title a[href]') || card.querySelector('.post-thumbnail a[href]'); if (!link) return; const href = link.getAttribute('href') || ''; if (!/\\.html(?:\\/)?$/i.test(href)) return; const id = normalizeId(href); if (!id || seen[id]) return; const img = card.querySelector('.post-thumbnail img, img.wp-post-image'); const cover = img ? (img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; const title = clean(decode(link.textContent || (img ? (img.getAttribute('alt') || img.getAttribute('title')) : '') || id)); if (!title || !cover || /gravatar/i.test(cover)) return; seen[id] = true; out.push({ id, title, cover: coverUrl(cover), url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "首页",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "1Y Beauties 分类",
+        "description": "选择站内分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "cosplay",
+            "options": [
+              {
+                "value": "rosi",
+                "label": "ROSI"
+              },
+              {
+                "value": "xiuren",
+                "label": "XIUREN"
+              },
+              {
+                "value": "cosplay",
+                "label": "COSPLAY"
+              },
+              {
+                "value": "chinese",
+                "label": "Chinese"
+              },
+              {
+                "value": "ugirls",
+                "label": "UGirls"
+              },
+              {
+                "value": "uncensored-asianchinese-porn-pics",
+                "label": "Uncensored"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "Proxy list, search and detail covers through wsrv.nl as JPEG.",
+        "Keep reader page image URLs unchanged.",
+        "Avoid repeated ArkUIImageProviderFail events from remote WebP covers."
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "Rebuilt workflows from current site HTML.",
+        "Fixed list, filter, detail and reader image extraction.",
+        "Updated source version for sync/import cache invalidation."
+      ]
+    }
+  ]
+}

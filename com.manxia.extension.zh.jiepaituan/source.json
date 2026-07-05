@@ -1,0 +1,304 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.jiepaituan",
+    "name": "街拍团",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh",
+    "baseUrl": "https://jiepaiclub.com",
+    "description": "街拍团 - 真实街拍图集站，按新域名 jiepaiclub.com 与 Typecho 文章结构适配。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "street",
+      "webview"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://jiepaiclub.com/"
+    }
+  },
+  "workflows": {
+    "latest": {
+      "description": "获取最新图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const rawPage = Number('{{page}}'); const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1; const base = 'https://jiepaiclub.com'; if (page <= 1) return base + '/'; return base + '/page/' + page + '/'; })();",
+          "description": "构建最新 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.post",
+          "timeout": 12000,
+          "description": "等待最新列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; document.querySelectorAll('article.post').forEach((item) => { if ((item.getAttribute('class') || '').indexOf('whisper') >= 0) return; const linkEl = item.querySelector('.post-title > a[href$=\".html\"], h2.post-title > a[href$=\".html\"], h1.post-title > a[href$=\".html\"]'); if (!linkEl) return; const href = linkEl.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || seen.indexOf(id) >= 0) return; const imgEl = item.querySelector('.thumb img, .post-content img'); const coverRaw = attr(imgEl); const cover = coverRaw ? abs(coverRaw) : ''; if (!cover || /\\/(logo|gonggao|shipin)\\.(webp|svg|png|jpg)$/i.test(cover) || !/\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(cover)) return; const title = clean(linkEl.getAttribute('title') || linkEl.textContent || id); const metas = Array.from(item.querySelectorAll('.post-meta li')).map((el) => clean(el.textContent)).filter(Boolean); const genre = Array.from(item.querySelectorAll('.post-meta a[href*=\"/tag/\"]')).map((el) => clean(el.textContent)).filter(Boolean).join(', '); seen.push(id); out.push({ id, title, cover, url, status: 'completed', author: genre, updateTime: metas.length > 0 ? metas[0] : '', genre }); }); return JSON.stringify(out); })();",
+          "description": "提取最新图集条目"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索图集",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let keyword = String('{{searchKeyword}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = String('{{query}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = ''; const q = encodeURIComponent(keyword); return 'https://jiepaiclub.com/search/' + q + '/'; })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.post",
+          "timeout": 12000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; document.querySelectorAll('article.post').forEach((item) => { if ((item.getAttribute('class') || '').indexOf('whisper') >= 0) return; const linkEl = item.querySelector('.post-title > a[href$=\".html\"], h2.post-title > a[href$=\".html\"], h1.post-title > a[href$=\".html\"]'); if (!linkEl) return; const href = linkEl.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || seen.indexOf(id) >= 0) return; const imgEl = item.querySelector('.thumb img, .post-content img'); const coverRaw = attr(imgEl); const cover = coverRaw ? abs(coverRaw) : ''; if (!cover || /\\/(logo|gonggao|shipin)\\.(webp|svg|png|jpg)$/i.test(cover) || !/\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(cover)) return; const title = clean(linkEl.getAttribute('title') || linkEl.textContent || id); const metas = Array.from(item.querySelectorAll('.post-meta li')).map((el) => clean(el.textContent)).filter(Boolean); const genre = Array.from(item.querySelectorAll('.post-meta a[href*=\"/tag/\"]')).map((el) => clean(el.textContent)).filter(Boolean).join(', '); seen.push(id); out.push({ id, title, cover, url, status: 'completed', author: genre, updateTime: metas.length > 0 ? metas[0] : '', genre }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按栏目和标签筛选图集",
+      "supportsPagination": false,
+      "defaults": {
+        "category": "photo"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; let category = String('{{category}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(category)) category = 'photo'; category = category.replace(/^\\/+|\\/+$/g, ''); if (!category) return base + '/'; if (/^https?:\\/\\//i.test(category)) return category; return base + '/' + category; })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开筛选页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.post",
+          "timeout": 12000,
+          "description": "等待筛选结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; const out = []; const seen = []; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const abs = (v) => { try { return new URL(v, base).href; } catch (e) { return v || ''; } }; const makeId = (url) => { try { const u = new URL(url); return (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) { return url; } }; document.querySelectorAll('article.post').forEach((item) => { if ((item.getAttribute('class') || '').indexOf('whisper') >= 0) return; const linkEl = item.querySelector('.post-title > a[href$=\".html\"], h2.post-title > a[href$=\".html\"], h1.post-title > a[href$=\".html\"]'); if (!linkEl) return; const href = linkEl.getAttribute('href') || ''; const url = abs(href); const id = makeId(url); if (!id || seen.indexOf(id) >= 0) return; const imgEl = item.querySelector('.thumb img, .post-content img'); const coverRaw = attr(imgEl); const cover = coverRaw ? abs(coverRaw) : ''; if (!cover || /\\/(logo|gonggao|shipin)\\.(webp|svg|png|jpg)$/i.test(cover) || !/\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(cover)) return; const title = clean(linkEl.getAttribute('title') || linkEl.textContent || id); const metas = Array.from(item.querySelectorAll('.post-meta li')).map((el) => clean(el.textContent)).filter(Boolean); const genre = Array.from(item.querySelectorAll('.post-meta a[href*=\"/tag/\"]')).map((el) => clean(el.textContent)).filter(Boolean).join(', '); seen.push(id); out.push({ id, title, cover, url, status: 'completed', author: genre, updateTime: metas.length > 0 ? metas[0] : '', genre }); }); return JSON.stringify(out); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.post",
+          "timeout": 12000,
+          "description": "等待详情页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return v || ''; } }; const title = clean(document.querySelector('article.post h1.post-title a')?.textContent || document.querySelector('article.post h1.post-title')?.textContent || document.querySelector('h1')?.textContent || document.title).replace(/\\s*-\\s*街拍团.*$/, ''); let cover = ''; const imgs = Array.from(document.querySelectorAll('article.post .post-content img')); for (let i = 0; i < imgs.length; i++) { const url = abs(attr(imgs[i])); if (url && !/\\/(logo|gonggao|shipin)\\.(webp|svg|png|jpg)$/i.test(url) && /\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(url)) { cover = url; break; } } const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); const metas = Array.from(document.querySelectorAll('article.post .post-meta li')).map((el) => clean(el.textContent)).filter(Boolean); const tags = Array.from(document.querySelectorAll('article.post a[href*=\"/tag/\"]')).map((el) => clean(el.textContent)).filter(Boolean); return JSON.stringify({ title, cover, author: tags.join(', '), status: 'completed', description: desc, genre: tags.join(', '), updateTime: metas.length > 0 ? metas[0] : '' }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "图集作为单章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); const url = new URL(raw, base.replace(/\\/+$/, '/') ).href; let id = raw; try { const u = new URL(url); id = (u.pathname + u.search).replace(/^\\/+/, '').replace(/\\/+$/, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "生成 Gallery 章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取图集图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; let raw = String('{{chapterId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { const u = new URL(raw); raw = (u.pathname + u.search).replace(/^\\/+/, ''); } catch (e) {} } raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.post .post-content img",
+          "timeout": 12000,
+          "description": "等待图片页加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://jiepaiclub.com'; const pages = []; const seen = []; const attr = (el) => { if (!el) return ''; const attrs = ['data-original','data-src','data-lazy-src','data-loadsrc','realsrc','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return v || ''; } }; const push = (v) => { if (!v || /^data:/i.test(v)) return; const url = abs(v); if (/\\/(logo|gonggao|shipin)\\.(webp|svg|png|jpg)$/i.test(url)) return; if (!/\\.(webp|jpg|jpeg|png)(\\?|#|$)/i.test(url)) return; if (seen.indexOf(url) >= 0) return; seen.push(url); pages.push({ index: pages.length, url, imageUrl: url }); }; document.querySelectorAll('article.post .post-content img').forEach((img) => push(attr(img))); return JSON.stringify(pages); })();",
+          "description": "提取图片 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "街拍团筛选",
+        "description": "选择栏目或常用标签",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "photo",
+            "options": [
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "photo",
+                "label": "街拍"
+              },
+              {
+                "value": "plus",
+                "label": "特刊"
+              },
+              {
+                "value": "tag/duanqun",
+                "label": "短裙"
+              },
+              {
+                "value": "tag/duanku",
+                "label": "短裤"
+              },
+              {
+                "value": "tag/neiyi",
+                "label": "内衣"
+              },
+              {
+                "value": "tag/qunzhuang",
+                "label": "裙装"
+              },
+              {
+                "value": "tag/yujiaku",
+                "label": "瑜伽裤"
+              },
+              {
+                "value": "tag/qingqu",
+                "label": "情趣"
+              },
+              {
+                "value": "tag/niuzaiku",
+                "label": "牛仔裤"
+              },
+              {
+                "value": "tag/siwa",
+                "label": "丝袜"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "移除无封面的热门排行工作流",
+        "新增按栏目和常用标签筛选图集",
+        "筛选入口只保留真实图片图集栏目，排除视频栏目"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "适配新域名 jiepaiclub.com",
+        "重建列表、详情和图片提取规则"
+      ]
+    }
+  ]
+}

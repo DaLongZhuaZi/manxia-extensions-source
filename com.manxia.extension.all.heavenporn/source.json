@@ -1,0 +1,342 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.heavenporn",
+    "name": "Heaven Porn",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "all",
+    "baseUrl": "https://heaven.porn",
+    "description": "Heaven Porn current site workflow rebuild with capped list cover extraction to avoid excessive ArkUI cover load failures.",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "webview"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://heaven.porn"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "Updated workflow step",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => 'https://heaven.porn/toprated/')();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gallery .photos a[href*=\"/photos/\"], #gallery .photosTOP a[href*=\"/photos/\"]",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const mode = 'popular'; const maxItems = 72; const query = String('{{searchKeyword}}' || '{{query}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().toLowerCase(); const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u || /logo|favicon|imgnew\\/ph/i.test(u)) return ''; return u; }; const scope = mode === 'popular' ? '#gallery .photosTOP a[href*=\"/photos/\"]' : (mode === 'latest' ? '#new_galls .photos a[href*=\"/photos/\"], #gallery .photos a[href*=\"/photos/\"]' : '#gallery .photos a[href*=\"/photos/\"]'); const out = []; const seen = {}; document.querySelectorAll(scope).forEach((link) => { if (out.length >= maxItems) return; const href = link.getAttribute('href') || ''; if (!/\\/photos\\//i.test(href)) return; const img = link.querySelector('img'); const title = clean(link.getAttribute('title') || (img ? (img.getAttribute('title') || img.getAttribute('alt')) : '') || link.textContent || normalizeId(href)); if (query && title.toLowerCase().indexOf(query) < 0 && href.toLowerCase().indexOf(query) < 0) return; const id = normalizeId(href); if (!id || seen[id]) return; const cover = img ? coverUrl(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; if (!cover) return; seen[id] = true; out.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "latest": {
+      "description": "Updated workflow step",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => 'https://heaven.porn/new/')();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gallery .photos a[href*=\"/photos/\"], #new_galls .photos a[href*=\"/photos/\"]",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const mode = 'latest'; const maxItems = 72; const query = String('{{searchKeyword}}' || '{{query}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().toLowerCase(); const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u || /logo|favicon|imgnew\\/ph/i.test(u)) return ''; return u; }; const scope = mode === 'popular' ? '#gallery .photosTOP a[href*=\"/photos/\"]' : (mode === 'latest' ? '#new_galls .photos a[href*=\"/photos/\"], #gallery .photos a[href*=\"/photos/\"]' : '#gallery .photos a[href*=\"/photos/\"]'); const out = []; const seen = {}; document.querySelectorAll(scope).forEach((link) => { if (out.length >= maxItems) return; const href = link.getAttribute('href') || ''; if (!/\\/photos\\//i.test(href)) return; const img = link.querySelector('img'); const title = clean(link.getAttribute('title') || (img ? (img.getAttribute('title') || img.getAttribute('alt')) : '') || link.textContent || normalizeId(href)); if (query && title.toLowerCase().indexOf(query) < 0 && href.toLowerCase().indexOf(query) < 0) return; const id = normalizeId(href); if (!id || seen[id]) return; const cover = img ? coverUrl(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; if (!cover) return; seen[id] = true; out.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "search": {
+      "description": "Updated workflow step",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => 'https://heaven.porn/')();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gallery .photos a[href*=\"/photos/\"]",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const mode = 'search'; const maxItems = 72; const query = String('{{searchKeyword}}' || '{{query}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().toLowerCase(); const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u || /logo|favicon|imgnew\\/ph/i.test(u)) return ''; return u; }; const scope = mode === 'popular' ? '#gallery .photosTOP a[href*=\"/photos/\"]' : (mode === 'latest' ? '#new_galls .photos a[href*=\"/photos/\"], #gallery .photos a[href*=\"/photos/\"]' : '#gallery .photos a[href*=\"/photos/\"]'); const out = []; const seen = {}; document.querySelectorAll(scope).forEach((link) => { if (out.length >= maxItems) return; const href = link.getAttribute('href') || ''; if (!/\\/photos\\//i.test(href)) return; const img = link.querySelector('img'); const title = clean(link.getAttribute('title') || (img ? (img.getAttribute('title') || img.getAttribute('alt')) : '') || link.textContent || normalizeId(href)); if (query && title.toLowerCase().indexOf(query) < 0 && href.toLowerCase().indexOf(query) < 0) return; const id = normalizeId(href); if (!id || seen[id]) return; const cover = img ? coverUrl(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; if (!cover) return; seen[id] = true; out.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".photosG a[href], .photosG img",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u || /logo|favicon|imgnew\\/ph/i.test(u)) return ''; return u; }; const rawTitle = clean((document.querySelector('h2') && document.querySelector('h2').textContent) || document.title || ''); const title = rawTitle.replace(/\\s*\\|\\s*Heaven\\.porn.*$/i, '').replace(/^Gallery of\\s+/i, '').trim() || clean(document.title); const thumb = document.querySelector('.photosG img'); const first = document.querySelector('.photosG a[href$=\".jpg\"], .photosG a[href$=\".jpeg\"], .photosG a[href$=\".png\"], .photosG a[href$=\".webp\"], .photosG a[href]'); const cover = thumb ? coverUrl(thumb.getAttribute('data-src') || thumb.getAttribute('data-original') || thumb.getAttribute('src') || '') : (first ? coverUrl(first.getAttribute('href') || '') : ''); const desc = clean((document.querySelector('meta[name=\"description\"]') && document.querySelector('meta[name=\"description\"]').getAttribute('content')) || ''); return JSON.stringify({ title, cover, author: 'Heaven Porn', status: 'completed', description: desc }); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; let raw = String('{{mangaId}}' || '').trim(); let url = /^https?:\\/\\//i.test(raw) ? raw : new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; let id = raw; try { const u = new URL(url); id = (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; let raw = String('{{chapterId}}' || '{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".photosG a[href], .photosG img",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const pages = []; const seen = {}; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const push = (v) => { const url = abs(v); if (!/\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(url)) return; if (/\\/thumbs\\//i.test(url) || /favicon|logo|imgnew\\/ph/i.test(url)) return; if (seen[url]) return; seen[url] = true; pages.push({ index: pages.length, page: pages.length, url, imageUrl: url }); }; document.querySelectorAll('.photosG a[href]').forEach((a) => push(a.getAttribute('href') || '')); if (pages.length === 0) document.querySelectorAll('.photosG img').forEach((img) => push(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '')); return JSON.stringify(pages); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "Updated workflow step",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    },
+    "filter": {
+      "description": "Updated workflow step",
+      "supportsPagination": false,
+      "defaults": {
+        "category": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const raw = String('{{category}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().replace(/^\\/+|\\/+$/g, ''); return raw ? base + '/' + raw + '/' : base + '/new/'; })();",
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#gallery .photos a[href*=\"/photos/\"]",
+          "timeout": 15000,
+          "description": "Updated workflow step"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://heaven.porn'; const mode = 'filter'; const maxItems = 72; const query = String('{{searchKeyword}}' || '{{query}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().toLowerCase(); const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const coverUrl = (v) => { const u = abs(v); if (!u || /logo|favicon|imgnew\\/ph/i.test(u)) return ''; return u; }; const scope = mode === 'popular' ? '#gallery .photosTOP a[href*=\"/photos/\"]' : (mode === 'latest' ? '#new_galls .photos a[href*=\"/photos/\"], #gallery .photos a[href*=\"/photos/\"]' : '#gallery .photos a[href*=\"/photos/\"]'); const out = []; const seen = {}; document.querySelectorAll(scope).forEach((link) => { if (out.length >= maxItems) return; const href = link.getAttribute('href') || ''; if (!/\\/photos\\//i.test(href)) return; const img = link.querySelector('img'); const title = clean(link.getAttribute('title') || (img ? (img.getAttribute('title') || img.getAttribute('alt')) : '') || link.textContent || normalizeId(href)); if (query && title.toLowerCase().indexOf(query) < 0 && href.toLowerCase().indexOf(query) < 0) return; const id = normalizeId(href); if (!id || seen[id]) return; const cover = img ? coverUrl(img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || '') : ''; if (!cover) return; seen[id] = true; out.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(out); })();",
+          "description": "Updated workflow step"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "Heaven Porn 分类",
+        "description": "选择站内分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "",
+                "label": "New Galleries"
+              },
+              {
+                "value": "amateurs",
+                "label": "Amateurs"
+              },
+              {
+                "value": "anal",
+                "label": "Anal"
+              },
+              {
+                "value": "art",
+                "label": "Art"
+              },
+              {
+                "value": "ass",
+                "label": "Ass"
+              },
+              {
+                "value": "beautiful",
+                "label": "Beautiful"
+              },
+              {
+                "value": "bigtits",
+                "label": "Big Tits"
+              },
+              {
+                "value": "fucking",
+                "label": "Fucking"
+              },
+              {
+                "value": "lesbians",
+                "label": "Lesbians"
+              },
+              {
+                "value": "nude",
+                "label": "Nude"
+              },
+              {
+                "value": "pussy",
+                "label": "Pussy"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "Capped Heaven list, search and filter extraction to 72 items per run.",
+        "Avoided source-detail freezes caused by hundreds of concurrent cover cache and temp metadata writes.",
+        "Kept reader image extraction unchanged."
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "Rebuilt workflows from current site HTML.",
+        "Fixed list, filter, detail and reader image extraction.",
+        "Updated source version for sync/import cache invalidation."
+      ]
+    }
+  ]
+}

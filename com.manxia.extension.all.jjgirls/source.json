@@ -1,0 +1,361 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.all.jjgirls",
+    "name": "JJGirls",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "all",
+    "baseUrl": "https://jjgirls.com",
+    "description": "JJGirls 图集源，按当前站点 archive/category/match/gallery 静态结构适配。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "cosplay",
+      "webview"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://jjgirls.com/"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取首页热门/推荐图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? '{{baseUrl}}/' : '{{baseUrl}}/archive/' + page; })();",
+          "description": "构建首页/归档 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开热门页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L996 .p160222 a, .L996 .p160160 a, .L996 .a243203 a, .L1172T .p160222 a",
+          "timeout": 15000,
+          "description": "等待图集列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const pickImage = (root) => { const img = root.querySelector ? root.querySelector('img[src*=\"/thumbs/\"]') : null; if (!img) return ''; const src = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return src ? abs(src) : ''; }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const isValid = (href) => { try { const u = new URL(href, location.href || base); if (!/jjgirls\\.com$/i.test(u.hostname)) return false; return /^\\/(gallery|uncensored|japanese|photo|asian4you|japanese-av-girls)\\//i.test(u.pathname); } catch (e) { return false; } }; const results = []; const seen = {}; const selectors = ['.L1172T .p160222 a', '.L996 .p160222 a', '.L996 .p160160 a', '.L996 .a243203 a']; document.querySelectorAll(selectors.join(',')).forEach((link) => { const href = link.getAttribute('href') || ''; if (!isValid(href)) return; const img = link.querySelector('img[src*=\"/thumbs/\"]'); if (!img) return; const id = normalizeId(href); if (!id || seen[id]) return; const title = clean(img.getAttribute('alt') || link.textContent || id); const cover = pickImage(link); if (!title || !cover) return; seen[id] = true; results.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(results); })();",
+          "description": "提取热门图集"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取最新归档图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); return '{{baseUrl}}/archive/' + page; })();",
+          "description": "构建最新归档 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L996 .p160222 a, .L996 .p160160 a, .L996 .a243203 a",
+          "timeout": 15000,
+          "description": "等待归档列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const isValid = (href) => { try { const u = new URL(href, location.href || base); if (!/jjgirls\\.com$/i.test(u.hostname)) return false; return /^\\/(gallery|uncensored|japanese|photo|asian4you|japanese-av-girls)\\//i.test(u.pathname); } catch (e) { return false; } }; const results = []; const seen = {}; document.querySelectorAll('.L996 .p160222 a, .L996 .p160160 a, .L996 .a243203 a').forEach((link) => { const href = link.getAttribute('href') || ''; if (!isValid(href)) return; const img = link.querySelector('img[src*=\"/thumbs/\"]'); if (!img) return; const id = normalizeId(href); if (!id || seen[id]) return; const src = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; const title = clean(img.getAttribute('alt') || link.textContent || id); const cover = src ? abs(src) : ''; if (!title || !cover) return; seen[id] = true; results.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(results); })();",
+          "description": "提取最新图集"
+        }
+      ]
+    },
+    "search": {
+      "description": "按模特/关键词搜索图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const raw = String('{{searchKeyword}}' || '{{query}}' || '').trim(); const q = /^\\{\\{[^}]+\\}\\}$/.test(raw) ? '' : raw; return '{{baseUrl}}/match.php?model=' + encodeURIComponent(q) + (page > 1 ? '&page=' + page : ''); })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L996 .p160160 a, .L996 .p160222 a",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const results = []; const seen = {}; document.querySelectorAll('.L996 .p160160 a, .L996 .p160222 a, .L996 .a243203 a').forEach((link) => { const href = link.getAttribute('href') || ''; if (!/\\/gallery\\//i.test(href) && !/\\/uncensored\\//i.test(href) && !/\\/japanese\\//i.test(href) && !/\\/photo\\//i.test(href)) return; const img = link.querySelector('img[src*=\"/thumbs/\"]'); if (!img) return; const id = normalizeId(href); if (!id || seen[id]) return; const src = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; const title = clean(img.getAttribute('alt') || link.textContent || id); const cover = src ? abs(src) : ''; if (!title || !cover) return; seen[id] = true; results.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L664 .p160222 a[href$=\".jpg\"], .L996 img",
+          "timeout": 15000,
+          "description": "等待详情页图片区域加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const toOriginal = (v) => String(v || '').replace(/\\/cute-([^\\/]+)$/i, '/$1'); let title = clean(document.querySelector('title') ? document.querySelector('title').textContent : ''); title = title.replace(/\\s*@\\s*JJGirls[\\s\\S]*$/i, '').trim(); let cover = ''; const firstLink = document.querySelector('.L664 .p160222 a[href$=\".jpg\"], .L664 .p160222 a[href$=\".jpeg\"], .L664 .p160222 a[href$=\".png\"], .L664 .p160222 a[href$=\".webp\"]'); if (firstLink) cover = abs(firstLink.getAttribute('href') || ''); if (!cover) { const firstImg = document.querySelector('.L664 .p160222 img[src*=\"/uncensored/\"], .L664 img[src*=\"/photo/\"], .L664 img[src*=\"/japanese/\"], .L996 img[src*=\"/thumbs/\"]'); const src = firstImg ? (firstImg.getAttribute('data-src') || firstImg.getAttribute('data-original') || firstImg.getAttribute('src') || '') : ''; cover = src ? abs(toOriginal(src)) : ''; } const tags = Array.from(document.querySelectorAll('.az a[href*=\"/wiki/\"]')).map((a) => clean(a.textContent)).filter(Boolean).slice(0, 16); const desc = clean((document.querySelector('meta[name=\"description\"]') || document.querySelector('meta[property=\"og:description\"]'))?.getAttribute('content') || title); return JSON.stringify({ title, cover, author: '', status: 'completed', description: desc, genre: tags.join(', ') }); })();",
+          "description": "提取详情信息"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "图集作为单章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{mangaId}}' || '').trim(); let url = raw; if (!/^https?:\\/\\//i.test(url)) url = new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') ).href; let id = raw; try { const u = new URL(url); id = (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) {} return JSON.stringify([{ id, title: 'Gallery', url, date: '', publishTime: '' }]); })();",
+          "description": "生成单章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取图集原图列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; let raw = String('{{chapterId}}' || '{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; raw = raw.replace(/^\\/+/, ''); return new URL(raw, base.replace(/\\/+$/, '/') ).href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L664 .p160222 a[href$=\".jpg\"], .L664 .p160222 img",
+          "timeout": 15000,
+          "description": "等待图片区域加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const toOriginal = (v) => String(v || '').replace(/\\/cute-([^\\/]+)$/i, '/$1').replace('/cute-', '/'); const pages = []; const seen = {}; const push = (value) => { if (!value || /^data:/i.test(value)) return; const url = abs(toOriginal(value)); if (!/\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(url)) return; if (/\\/thumbs\\//i.test(url) || /\\/graphics\\//i.test(url) || /templates\\//i.test(url) || /\\/qrcode\\//i.test(url)) return; if (seen[url]) return; seen[url] = true; pages.push({ index: pages.length, page: pages.length, url, imageUrl: url }); }; document.querySelectorAll('.L664 .p160222 a[href$=\".jpg\"], .L664 .p160222 a[href$=\".jpeg\"], .L664 .p160222 a[href$=\".png\"], .L664 .p160222 a[href$=\".webp\"]').forEach((a) => push(a.getAttribute('href') || '')); if (pages.length === 0) { document.querySelectorAll('.L664 .p160222 img[src*=\"/uncensored/\"], .L664 img[src*=\"/photo/\"], .L664 img[src*=\"/japanese/\"]').forEach((img) => { const src = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; push(src); }); } return JSON.stringify(pages); })();",
+          "description": "提取原图 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按 JJGirls 站内栏目筛选图集",
+      "supportsPagination": true,
+      "defaults": {
+        "category": ""
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, parseInt('{{page}}', 10) || 1); const raw = String('{{category}}' || '').trim(); const category = /^\\{\\{[^}]+\\}\\}$/.test(raw) ? '' : raw.replace(/^\\/+|\\/+$/g, ''); if (!category || category === 'archive') return '{{baseUrl}}/archive/' + page; if (/^(avgirls|amateur|hardcore|porntube|wife|asian)$/i.test(category)) return '{{baseUrl}}/' + category + '/' + page; if (category.indexOf('category/') === 0) return page <= 1 ? '{{baseUrl}}/' + category : '{{baseUrl}}/' + category + '/' + page; return page <= 1 ? '{{baseUrl}}/' + category : '{{baseUrl}}/' + category + '/' + page; })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2200,
+          "description": "打开筛选页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".L996 .p160222 a, .L996 .p160160 a, .L996 .a243203 a",
+          "timeout": 15000,
+          "description": "等待筛选列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = '{{baseUrl}}'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(v, location.href || base).href; } catch (e) { return String(v || ''); } }; const normalizeId = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const results = []; const seen = {}; document.querySelectorAll('.L996 .p160222 a, .L996 .p160160 a, .L996 .a243203 a').forEach((link) => { const href = link.getAttribute('href') || ''; if (!/\\/gallery\\//i.test(href) && !/\\/uncensored\\//i.test(href) && !/\\/japanese\\//i.test(href) && !/\\/photo\\//i.test(href)) return; const img = link.querySelector('img[src*=\"/thumbs/\"]'); if (!img) return; const id = normalizeId(href); if (!id || seen[id]) return; const src = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; const title = clean(img.getAttribute('alt') || link.textContent || id); const cover = src ? abs(src) : ''; if (!title || !cover) return; seen[id] = true; results.push({ id, title, cover, url: abs(href), status: 'completed' }); }); return JSON.stringify(results); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "JJGirls 分类",
+        "description": "选择站内栏目",
+        "groups": [
+          {
+            "id": "category",
+            "title": "栏目",
+            "defaultValue": "",
+            "options": [
+              {
+                "value": "",
+                "label": "全部归档"
+              },
+              {
+                "value": "avgirls",
+                "label": "AV Girls"
+              },
+              {
+                "value": "amateur",
+                "label": "Amateur"
+              },
+              {
+                "value": "hardcore",
+                "label": "Hardcore"
+              },
+              {
+                "value": "porntube",
+                "label": "PornTube"
+              },
+              {
+                "value": "wife",
+                "label": "Wife"
+              },
+              {
+                "value": "asian",
+                "label": "Asian"
+              },
+              {
+                "value": "category/cosplay",
+                "label": "Cosplay"
+              },
+              {
+                "value": "category/schoolgirls",
+                "label": "SchoolGirls"
+              },
+              {
+                "value": "category/busty",
+                "label": "Big Boobs"
+              },
+              {
+                "value": "category/korean",
+                "label": "Korean"
+              },
+              {
+                "value": "category/1pondo",
+                "label": "1Pondo"
+              },
+              {
+                "value": "category/Caribbeancom",
+                "label": "Caribbeancom"
+              },
+              {
+                "value": "category/JapanHDV",
+                "label": "JapanHDV"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "修复阅读器 getPageList 等待选择器包含单引号导致 WebView wait 超时的问题",
+        "详情与图片提取脚本增强原图兜底，降低站点慢加载时的失败率"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "按 JJGirls 当前 archive/category/match/gallery 页面结构重写全部工作流",
+        "新增站内分类筛选，过滤外站广告与无效栏目",
+        "详情与阅读页改为提取 .L664 图集原图，避免封面和页面列表混入 logo/广告图"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "初始 Legado 迁移版本"
+      ]
+    }
+  ]
+}

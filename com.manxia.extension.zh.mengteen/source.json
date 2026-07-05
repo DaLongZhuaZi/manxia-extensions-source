@@ -1,0 +1,345 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.mengteen",
+    "name": "Mengteen",
+    "type": "manga",
+    "version": "1.0.0",
+    "language": "zh",
+    "baseUrl": "https://www.635k.com",
+    "description": "丝袜美腿 - 中文写真套图站",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "photos",
+      "gallery",
+      "stockings",
+      "webview",
+      "free"
+    ],
+    "Internet": true
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 2000,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.635k.com/"
+    }
+  },
+  "workflows": {
+    "popular": {
+      "description": "获取首页推荐写真套图",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{baseUrl}}/",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到首页推荐区"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "ul.topsige li a",
+          "timeout": 15000,
+          "description": "等待推荐列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?635k\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return value ? new URL(value, '{{baseUrl}}').href : ''; }; const results = []; document.querySelectorAll('ul.topsige li a[href]').forEach((link) => { const href = link.getAttribute('href') || ''; const title = (link.getAttribute('title') || link.querySelector('h3')?.textContent || link.textContent || '').trim(); const id = normalizeId(href); if (id && title && id.indexOf('post/') === 0) { results.push({ id, title, cover: pickImage(link.querySelector('img')), url: new URL(href, '{{baseUrl}}').href, genre: '推荐' }); } }); return JSON.stringify(results); })();",
+          "description": "提取首页推荐列表"
+        }
+      ]
+    },
+    "latest": {
+      "description": "获取最新丝袜套图",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); return page <= 1 ? '{{baseUrl}}/siwataotu.html' : '{{baseUrl}}/siwataotu_' + page + '.html'; })();",
+          "description": "构建最新列表 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到最新列表"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#post_list_box li.lpost",
+          "timeout": 15000,
+          "description": "等待最新列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?635k\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return value ? new URL(value, '{{baseUrl}}').href : ''; }; const results = []; document.querySelectorAll('#post_list_box li.lpost').forEach((item) => { const link = item.querySelector('h2 a[href]') || item.querySelector('.list-img a[href]'); const img = item.querySelector('.list-img img'); const category = (item.querySelector('.item-meta')?.textContent || '').trim(); const date = (item.querySelector('time')?.textContent || '').trim(); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || img?.getAttribute('alt') || '').replace(/\\s+/g, ' ').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: category, date }); }); return JSON.stringify(results); })();",
+          "description": "提取最新套图列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "搜索写真套图",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const keyword = encodeURIComponent(String('{{searchKeyword}}' || '{{query}}' || '').trim()); return '{{baseUrl}}/search.php?q=' + keyword + '&page=' + page; })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到搜索结果页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#post_list_box, main",
+          "timeout": 15000,
+          "description": "等待搜索结果加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?635k\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return value ? new URL(value, '{{baseUrl}}').href : ''; }; const results = []; document.querySelectorAll('#post_list_box li.lpost').forEach((item) => { const link = item.querySelector('h2 a[href]') || item.querySelector('.list-img a[href]'); const img = item.querySelector('.list-img img'); const category = (item.querySelector('.item-meta')?.textContent || '').trim(); const date = (item.querySelector('time')?.textContent || '').trim(); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || img?.getAttribute('alt') || '').replace(/\\s+/g, ' ').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: category, date }); }); return JSON.stringify(results); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取写真套图详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到套图详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".focusbox-title, article#lightgallery",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pickImage = (img) => { if (!img) return ''; const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return value ? new URL(value, '{{baseUrl}}').href : ''; }; const title = (document.querySelector('.focusbox-title')?.textContent || document.querySelector('h1')?.textContent || document.title || '').replace(/\\s*-\\s*丝袜美腿\\s*$/i, '').trim(); const category = (document.querySelector('.list-meta a.item-meta')?.textContent || '').trim(); const date = (document.querySelector('.list-meta time')?.textContent || '').trim(); const readText = (document.querySelector('.list-meta span')?.textContent || '').trim(); const tags = Array.from(document.querySelectorAll('article#lightgallery .tags a')).map((el) => (el.textContent || '').trim()).filter(Boolean); const cover = pickImage(document.querySelector('article#lightgallery img.img')) || document.querySelector('meta[property=\"og:image\"]')?.getAttribute('content') || ''; const description = [category, date, readText].filter(Boolean).join(' / '); return JSON.stringify({ title, cover, author: '', status: 'completed', description, genre: tags.length > 0 ? tags.join(', ') : category }); })();",
+          "description": "提取套图详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取章节列表（每个套图只有一个 Gallery 章节）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1000,
+          "description": "导航到套图详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".focusbox-title, article#lightgallery",
+          "timeout": 15000,
+          "description": "等待详情加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let id = ''; try { id = new URL(window.location.href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { id = String('{{mangaId}}' || '').replace(/^\\/+|\\/+$/g, ''); } const date = (document.querySelector('.list-meta time')?.textContent || '').trim(); return JSON.stringify([{ id, title: 'Gallery', url: '{{baseUrl}}/' + id + '?page=all', publishTime: date, date }]); })();",
+          "description": "生成单章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取套图完整图片列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let raw = String('{{chapterId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) { try { raw = new URL(raw).pathname; } catch (e) {} } raw = raw.replace(/^\\/+|\\/+$/g, ''); return '{{baseUrl}}/' + raw + '?page=all'; })();",
+          "description": "构建全文图片 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 2000,
+          "description": "导航到全文图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article#lightgallery img.img",
+          "timeout": 15000,
+          "description": "等待图片加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const pages = []; const seen = []; document.querySelectorAll('article#lightgallery img.img').forEach((img) => { const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; if (!value || value.startsWith('data:image')) return; const imageUrl = new URL(value, '{{baseUrl}}').href; if (seen.indexOf(imageUrl) >= 0) return; seen.push(imageUrl); pages.push({ index: pages.length, url: imageUrl, imageUrl }); }); return JSON.stringify(pages); })();",
+          "description": "提取完整图片 URL 列表"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "获取单张图片 URL（图片 URL 已在 getPageList 中解析）",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按写真分类筛选套图",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "siwataotu"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const page = Math.max(1, Number('{{page}}' || 1)); const category = String('{{category}}' || 'siwataotu').replace(/^\\/+|\\/+$/g, '').replace(/\\.html$/i, ''); return page <= 1 ? '{{baseUrl}}/' + category + '.html' : '{{baseUrl}}/' + category + '_' + page + '.html'; })();",
+          "description": "构建分类 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "导航到分类页面"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "#post_list_box li.lpost",
+          "timeout": 15000,
+          "description": "等待分类列表加载"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const normalizeId = (href) => { try { return new URL(href, '{{baseUrl}}').pathname.replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^https?:\\/\\/(www\\.)?635k\\.com/i, '').replace(/^\\/+|\\/+$/g, ''); } }; const pickImage = (img) => { if (!img) return ''; const value = img.getAttribute('data-src') || img.getAttribute('data-original') || img.getAttribute('src') || ''; return value ? new URL(value, '{{baseUrl}}').href : ''; }; const results = []; document.querySelectorAll('#post_list_box li.lpost').forEach((item) => { const link = item.querySelector('h2 a[href]') || item.querySelector('.list-img a[href]'); const img = item.querySelector('.list-img img'); const category = (item.querySelector('.item-meta')?.textContent || '').trim(); const date = (item.querySelector('time')?.textContent || '').trim(); if (!link) return; const href = link.getAttribute('href') || ''; const title = (link.textContent || img?.getAttribute('alt') || '').replace(/\\s+/g, ' ').trim(); const id = normalizeId(href); if (id && title) results.push({ id, title, cover: pickImage(img), url: new URL(href, '{{baseUrl}}').href, genre: category, date }); }); return JSON.stringify(results); })();",
+          "description": "提取分类结果"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "推荐",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "分类",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "分类筛选",
+        "description": "选择写真分类",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "siwataotu",
+            "options": [
+              {
+                "value": "siwataotu",
+                "label": "丝袜套图"
+              },
+              {
+                "value": "IESSyisiquxiang",
+                "label": "异思趣向"
+              },
+              {
+                "value": "liguiligui",
+                "label": "Ligui丽柜"
+              },
+              {
+                "value": "kelanvshenKelagirls",
+                "label": "克拉女神"
+              },
+              {
+                "value": "shenshiSHENSHIjinjiqihua",
+                "label": "绅士摄影"
+              },
+              {
+                "value": "ssasishe",
+                "label": "SSA丝社"
+              },
+              {
+                "value": "simusmou",
+                "label": "丝慕SMOU"
+              },
+              {
+                "value": "siyiSIEE",
+                "label": "丝意SIEE"
+              },
+              {
+                "value": "musinvlang",
+                "label": "慕丝女郎"
+              },
+              {
+                "value": "mengsinvshen",
+                "label": "梦丝女神"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "初始版本，新建 635k/Mengteen 写真图源",
+        "支持首页推荐、最新、搜索和分类筛选",
+        "支持详情页、单 Gallery 章节和 page=all 完整图片列表"
+      ]
+    }
+  ]
+}

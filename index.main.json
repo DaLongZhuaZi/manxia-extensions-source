@@ -475,7 +475,7 @@
       "code": 30,
       "version": "1.0.0",
       "nsfw": 0,
-      "hasIcon": false,
+      "hasIcon": true,
       "sources": [
         {
           "name": "Project Gutenberg",
@@ -484,5 +484,95 @@
           "baseUrl": "https://www.gutenberg.org"
         }
       ]
-    }
-  ]
+    },
+    {
+      "name": "ManXia: Heaven Porn",
+      "pkg": "com.manxia.extension.all.heavenporn",
+      "type": "manga",
+      "lang": "all",
+      "code": 71,
+      "version": "1.0.2",
+      "nsfw": 1,
+      "hasIcon": true,
+      "sources": [
+        {
+          "name": "Heaven Porn",
+          "lang": "all",
+          "id": "7140035304874076271",
+          "baseUrl": "https://heaven.porn"
+        }
+      ]
+    },
+    {
+      "name": "ManXia: 1Y Beauties",
+      "pkg": "com.manxia.extension.all.1ybeauties",
+      "type": "manga",
+      "lang": "all",
+      "code": 74,
+      "version": "1.0.2",
+      "nsfw": 1,
+      "hasIcon": true,
+      "sources": [
+        {
+          "name": "1Y Beauties",
+          "lang": "all",
+          "id": "7440035304874076274",
+          "baseUrl": "https://www.1y.is"
+        }
+      ]
+    },
+  {
+    "name": "ManXia: AsianToLick",
+    "pkg": "com.manxia.extension.all.asiantolick",
+    "type": "manga",
+      "lang": "all",
+      "code": 78,
+      "version": "1.0.2",
+      "nsfw": 1,
+      "hasIcon": true,
+      "sources": [
+        {
+          "name": "AsianToLick",
+          "lang": "all",
+          "id": "7840035304874076278",
+        "baseUrl": "https://asiantolick.com"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: 美图乐",
+    "pkg": "com.manxia.extension.zh.meitula",
+    "type": "manga",
+    "lang": "zh",
+    "code": 81,
+    "version": "1.0.6",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "美图乐",
+        "lang": "zh",
+        "id": "8140035304874076281",
+        "baseUrl": "https://www.meitula.org"
+      }
+    ]
+  },
+  {
+    "name": "ManXia: GravureGalaxy",
+    "pkg": "com.manxia.extension.all.gravuregalaxy",
+    "type": "manga",
+    "lang": "all",
+    "code": 82,
+    "version": "1.0.2",
+    "nsfw": 1,
+    "hasIcon": true,
+    "sources": [
+      {
+        "name": "GravureGalaxy",
+        "lang": "all",
+        "id": "8240035304874076282",
+        "baseUrl": "https://gravuregalaxy.hatenablog.com"
+      }
+    ]
+  }
+]

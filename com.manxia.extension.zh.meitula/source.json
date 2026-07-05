@@ -1,0 +1,415 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.meitula",
+    "name": "美图乐",
+    "type": "manga",
+    "version": "1.0.6",
+    "language": "zh",
+    "baseUrl": "https://www.meitula.org",
+    "description": "美图乐写真图集源，适配最新、周榜、站内 POST 搜索、标签筛选、详情分页与逐页原图读取。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "cos",
+      "webview"
+    ],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 1000,
+    "headers": {
+      "Referer": "https://www.meitula.org/"
+    }
+  },
+  "workflows": {
+    "latest": {
+      "description": "最新写真图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? base + '/i/' : base + '/i/index_' + page + '.html'; })();",
+          "description": "构建最新页 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "li.list-item.card a.list-img[href*=\"/photo/\"]",
+          "timeout": 15000,
+          "description": "等待列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('li.list-item.card').forEach((item) => { const link = item.querySelector('a.list-img[href*=\"/photo/\"]') || item.querySelector('.list-body a[href*=\"/photo/\"]'); if (!link) return; const href = link.getAttribute('href') || ''; const url = abs(href); if (!/\\/photo\\/\\d+(?:_\\d+)?\\.html/i.test(url)) return; const id = idOf(url); if (!id || seen[id]) return; const img = item.querySelector('a.list-img img'); const cover = abs(attr(img)); if (!cover || /loading\\.gif|gif\\.php|url\\.php|logo|qrcode/i.test(cover)) return; const titleEl = item.querySelector('.list-body a[href*=\"/photo/\"]') || link; const title = clean(titleEl.textContent || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const genre = Array.from(item.querySelectorAll('dl dd a')).map((a) => clean(a.textContent)).filter(Boolean).join(', '); const count = clean(item.querySelector('.list-num span')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, description: count }); }); return JSON.stringify(out); })();",
+          "description": "提取图集列表"
+        }
+      ]
+    },
+    "popular": {
+      "description": "周榜热门写真图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); return page <= 1 ? base + '/week/' : base + '/week/index_' + page + '.html'; })();",
+          "description": "构建周榜 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开周榜"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "li.list-item.card a.list-img[href*=\"/photo/\"]",
+          "timeout": 15000,
+          "description": "等待列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('li.list-item.card').forEach((item) => { const link = item.querySelector('a.list-img[href*=\"/photo/\"]') || item.querySelector('.list-body a[href*=\"/photo/\"]'); if (!link) return; const href = link.getAttribute('href') || ''; const url = abs(href); if (!/\\/photo\\/\\d+(?:_\\d+)?\\.html/i.test(url)) return; const id = idOf(url); if (!id || seen[id]) return; const img = item.querySelector('a.list-img img'); const cover = abs(attr(img)); if (!cover || /loading\\.gif|gif\\.php|url\\.php|logo|qrcode/i.test(cover)) return; const titleEl = item.querySelector('.list-body a[href*=\"/photo/\"]') || link; const title = clean(titleEl.textContent || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const genre = Array.from(item.querySelectorAll('dl dd a')).map((a) => clean(a.textContent)).filter(Boolean).join(', '); const count = clean(item.querySelector('.list-num span')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, description: count }); }); return JSON.stringify(out); })();",
+          "description": "提取周榜列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "站内 POST 搜索",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "https://www.meitula.org/",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "打开首页搜索表单"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "form[action=\"/e/search/\"] input[name=\"keyboard\"]",
+          "timeout": 10000,
+          "description": "等待搜索表单"
+        },
+        {
+          "type": "script",
+          "code": "(() => { let keyword = String('{{searchKeyword}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = String('{{query}}' || '').trim(); if (/^\\{\\{.*\\}\\}$/.test(keyword)) keyword = ''; const form = document.querySelector('form[action=\"/e/search/\"]'); const input = form ? form.querySelector('input[name=\"keyboard\"]') : null; if (form && input && keyword) { input.value = keyword; form.submit(); return JSON.stringify({ status: 'submitted' }); } return JSON.stringify({ status: 'empty' }); })();",
+          "description": "提交搜索"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "li.list-item.card a.list-img[href*=\"/photo/\"]",
+          "timeout": 15000,
+          "description": "等待搜索结果"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('li.list-item.card').forEach((item) => { const link = item.querySelector('a.list-img[href*=\"/photo/\"]') || item.querySelector('.list-body a[href*=\"/photo/\"]'); if (!link) return; const href = link.getAttribute('href') || ''; const url = abs(href); if (!/\\/photo\\/\\d+(?:_\\d+)?\\.html/i.test(url)) return; const id = idOf(url); if (!id || seen[id]) return; const img = item.querySelector('a.list-img img'); const cover = abs(attr(img)); if (!cover || /loading\\.gif|gif\\.php|url\\.php|logo|qrcode/i.test(cover)) return; const titleEl = item.querySelector('.list-body a[href*=\"/photo/\"]') || link; const title = clean(titleEl.textContent || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const genre = Array.from(item.querySelectorAll('dl dd a')).map((a) => clean(a.textContent)).filter(Boolean).join(', '); const count = clean(item.querySelector('.list-num span')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, description: count }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按榜单或标签筛选写真图集",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "tags/cos"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const page = Math.max(1, parseInt('{{page}}', 10) || 1); let category = String('{{category}}' || '').replace(/^\\{\\{[^}]+\\}\\}$/, '').trim().replace(/^\\/+|\\/+$/g, ''); if (!category) category = 'i'; if (/^https?:\\/\\//i.test(category)) return category; if (category.indexOf('tags/') === 0) return page <= 1 ? base + '/' + category + '/' : base + '/' + category + '/' + page + '.html'; return page <= 1 ? base + '/' + category + '/' : base + '/' + category + '/index_' + page + '.html'; })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1800,
+          "description": "打开筛选页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "li.list-item.card a.list-img[href*=\"/photo/\"]",
+          "timeout": 15000,
+          "description": "等待筛选列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && !/^data:/i.test(v)) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return String(href || '').replace(/^\\/+|\\/+$/g, ''); } }; const out = []; const seen = {}; document.querySelectorAll('li.list-item.card').forEach((item) => { const link = item.querySelector('a.list-img[href*=\"/photo/\"]') || item.querySelector('.list-body a[href*=\"/photo/\"]'); if (!link) return; const href = link.getAttribute('href') || ''; const url = abs(href); if (!/\\/photo\\/\\d+(?:_\\d+)?\\.html/i.test(url)) return; const id = idOf(url); if (!id || seen[id]) return; const img = item.querySelector('a.list-img img'); const cover = abs(attr(img)); if (!cover || /loading\\.gif|gif\\.php|url\\.php|logo|qrcode/i.test(cover)) return; const titleEl = item.querySelector('.list-body a[href*=\"/photo/\"]') || link; const title = clean(titleEl.textContent || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const genre = Array.from(item.querySelectorAll('dl dd a')).map((a) => clean(a.textContent)).filter(Boolean).join(', '); const count = clean(item.querySelector('.list-num span')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: genre, genre, description: count }); }); return JSON.stringify(out); })();",
+          "description": "提取筛选列表"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; let raw = String('{{mangaId}}' || '').trim(); if (/^\\{\\{[^}]+\\}\\}$/.test(raw)) raw = ''; if (!raw && /\\/photo\\//i.test(location.href || '')) raw = location.href; if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/').href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".album-top, .content img",
+          "timeout": 15000,
+          "description": "等待详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const title = clean(document.querySelector('.album-top h1')?.textContent || document.querySelector('h1')?.textContent || document.title).replace(/\\s*-\\s*美图乐.*$/i, ''); const meta = {}; const dts = Array.from(document.querySelectorAll('.album-top dl dt')); dts.forEach((dt) => { const key = clean(dt.textContent); const dd = dt.nextElementSibling; if (key && dd) meta[key] = clean(dd.textContent); }); const tags = Array.from(document.querySelectorAll('.album-top dl dd a')).map((a) => clean(a.textContent)).filter(Boolean); const img = document.querySelector('.content img'); const cover = img ? abs(img.getAttribute('src') || img.getAttribute('data-src') || '') : ''; const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); const lines = ['拍摄机构: ' + (meta['拍摄机构'] || ''), '出镜模特: ' + (meta['出镜模特'] || ''), '发行日期: ' + (meta['发行日期'] || ''), '照片数量: ' + (meta['照片数量'] || '')].filter((line) => !/:\\s*$/.test(line)); return JSON.stringify({ title, cover, author: meta['出镜模特'] || meta['拍摄机构'] || '', status: 'completed', description: [desc].concat(lines).filter(Boolean).join('\\n'), genre: tags.join(', '), updateTime: meta['发行日期'] || '' }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "按图片范围切分虚拟章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; let raw = String('{{mangaId}}' || '').trim(); if (/^https?:\\/\\//i.test(raw)) return raw; return new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/').href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1200,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".album-top, .content img, ul.page a[href]",
+          "timeout": 15000,
+          "description": "等待详情分页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const groupSize = 10; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const canonical = (() => { try { const u = new URL(location.href || base); u.hash = ''; return u.href; } catch (e) { return String(location.href || ''); } })(); const idBase = (() => { try { const u = new URL(canonical); return (u.pathname + u.search).replace(/^\\/+|\\/+$/g, ''); } catch (e) { return canonical.replace(/^\\/+|\\/+$/g, ''); } })(); let total = 1; const text = clean(document.body ? document.body.textContent : ''); const countMatch = text.match(/照片数量\\s*[:：]?\\s*(\\d+)/) || text.match(/(\\d+)\\s*[张張枚]\\s*(?:图片|照片|写真)?/); if (countMatch) total = Math.max(total, parseInt(countMatch[1], 10) || 1); document.querySelectorAll('ul.page a[href*=\"/photo/\"]').forEach((a) => { const h = a.getAttribute('href') || ''; const m = h.match(/\\/photo\\/\\d+_(\\d+)\\.html/i); if (m && !countMatch) total = Math.max(total, parseInt(m[1], 10) || 1); }); total = Math.min(Math.max(total, 1), 260); const out = []; for (let start = 1; start <= total; start += groupSize) { const end = Math.min(start + groupSize - 1, total); out.push({ id: idBase + '#mxrange=' + start + '-' + end, title: '第 ' + String(start).padStart(3, '0') + '-' + String(end).padStart(3, '0') + ' 张', url: canonical + '#mxrange=' + start + '-' + end, size: end - start + 1, date: '', publishTime: '' }); } return JSON.stringify(out.length > 0 ? out : [{ id: idBase + '#mxrange=1-10', title: '第 001-010 张', url: canonical + '#mxrange=1-10', size: 10, date: '', publishTime: '' }]); })();",
+          "description": "按每 10 张生成虚拟章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "按虚拟章节提取图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; let raw = String('{{chapterId}}' || '').trim(); if (/^\\{\\{[^}]+\\}\\}$/.test(raw)) raw = ''; if (!raw) raw = String('{{mangaId}}' || '').trim(); if (/^\\{\\{[^}]+\\}\\}$/.test(raw)) raw = ''; if (!raw && /\\/photo\\//i.test(location.href || '')) raw = location.href; let url = /^https?:\\/\\//i.test(raw) ? new URL(raw) : new URL(raw.replace(/^\\/+/, ''), base.replace(/\\/+$/, '/') + '/'); const range = (url.hash.match(/mxrange=(\\d+)-(\\d+)/i) || [])[0] || 'mxrange=1-10'; const start = parseInt((range.match(/mxrange=(\\d+)-/i) || [])[1], 10) || 1; const m = url.pathname.match(/\\/photo\\/(\\d+)(?:_\\d+)?\\.html/i); if (m) url.pathname = start <= 1 ? ('/photo/' + m[1] + '.html') : ('/photo/' + m[1] + '_' + start + '.html'); url.search = ''; url.hash = range; return url.href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1500,
+          "description": "打开第一页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".content img, ul.page a[href]",
+          "timeout": 15000,
+          "description": "等待分页"
+        },
+        {
+          "type": "script",
+          "code": "(() => {\n  const base = 'https://www.meitula.org';\n  const pages = [];\n  const seen = {};\n  const abs = (v, b) => {\n    try {\n      return new URL(String(v || '').replace(/&amp;/g, '&'), b || location.href || base).href;\n    } catch (e) {\n      return String(v || '');\n    }\n  };\n  const pickUrl = (raw, pageUrl) => {\n    const imageUrl = abs(raw, pageUrl);\n    if (!/\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(imageUrl)) return '';\n    if (/loading\\.gif|logo|qrcode|gif\\.php|url\\.php/i.test(imageUrl)) return '';\n    return imageUrl;\n  };\n  const pickDoc = (doc, pageUrl) => {\n    const img = doc.querySelector('.content img');\n    const raw = img ? (img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original') || '') : '';\n    return pickUrl(raw, pageUrl);\n  };\n  const pickHtml = (html, pageUrl) => {\n    const text = String(html || '');\n    const block = text.match(/<div[^>]+class=[\"'][^\"']*content[^\"']*[\"'][\\s\\S]*?<\\/div>/i);\n    const src = block ? (block[0].match(/<img[^>]+(?:src|data-src|data-original)=[\"']([^\"']+)[\"']/i) || null) : null;\n    return pickUrl(src ? src[1] : '', pageUrl);\n  };\n  const push = (imageUrl, pageUrl) => {\n    if (!imageUrl || seen[imageUrl]) return;\n    seen[imageUrl] = true;\n    pages.push({ index: pages.length, page: pages.length, url: imageUrl, imageUrl, pageUrl });\n  };\n  const href = location.href;\n  const m = href.match(/\\/photo\\/(\\d+)(?:_(\\d+))?\\.html/i);\n  if (!m) return '[]';\n  const photoId = m[1];\n  const currentPage = parseInt(m[2] || '1', 10) || 1;\n  const range = (location.hash.match(/mxrange=(\\d+)-(\\d+)/i) || []);\n  const start = Math.max(1, parseInt(range[1] || String(currentPage), 10) || currentPage);\n  const end = Math.min(Math.max(start, parseInt(range[2] || String(start + 9), 10) || (start + 9)), start + 9);\n  for (let pageNo = start; pageNo <= end; pageNo++) {\n    const pageUrl = pageNo <= 1 ? (base + '/photo/' + photoId + '.html') : (base + '/photo/' + photoId + '_' + pageNo + '.html');\n    if (pageNo === currentPage) {\n      push(pickDoc(document, pageUrl), pageUrl);\n      continue;\n    }\n    try {\n      const xhr = new XMLHttpRequest();\n      xhr.open('GET', pageUrl, false);\n      xhr.setRequestHeader('Accept', 'text/html,application/xhtml+xml');\n      xhr.setRequestHeader('Referer', base + '/');\n      xhr.send(null);\n      if (xhr.status >= 200 && xhr.status < 400) push(pickHtml(xhr.responseText || '', pageUrl), pageUrl);\n    } catch (e) {}\n  }\n  return JSON.stringify(pages);\n})();",
+          "description": "提取当前分段原图 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "从单页提取原图 URL",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{pageUrl}}",
+          "timeout": 30000,
+          "waitAfterLoad": 800,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".content img",
+          "timeout": 12000,
+          "description": "等待图片"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.meitula.org'; const img = document.querySelector('.content img'); let imageUrl = img ? (img.getAttribute('src') || img.getAttribute('data-src') || '') : ''; try { imageUrl = new URL(imageUrl, location.href || base).href; } catch (e) {} return JSON.stringify({ imageUrl }); })();",
+          "description": "返回原图 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "美图乐筛选",
+        "description": "选择榜单或热门标签",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "tags/cos",
+            "options": [
+              {
+                "value": "i",
+                "label": "最新"
+              },
+              {
+                "value": "week",
+                "label": "周榜"
+              },
+              {
+                "value": "month",
+                "label": "月榜"
+              },
+              {
+                "value": "top",
+                "label": "热推"
+              },
+              {
+                "value": "tags/cos",
+                "label": "COS女仆"
+              },
+              {
+                "value": "tags/wangluomeinv",
+                "label": "网络美女"
+              },
+              {
+                "value": "tags/qingquneiyi",
+                "label": "情趣内衣"
+              },
+              {
+                "value": "tags/xinggan",
+                "label": "性感诱惑"
+              },
+              {
+                "value": "tags/meitui",
+                "label": "丝袜美腿"
+              },
+              {
+                "value": "tags/coser",
+                "label": "COSER"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.6",
+      "date": "2026-07-05",
+      "changes": [
+        "将大图集拆分为每 10 张一个虚拟章节，大幅缩短阅读器首图等待时间",
+        "getPageList 改为只提取当前分段图片，后续分段由章节切换和现有预加载机制继续加载"
+      ]
+    },
+    {
+      "version": "1.0.5",
+      "date": "2026-07-05",
+      "changes": [
+        "根据真实站点批量请求耗时将阅读器分页等待窗口调整到 45 秒，避免慢网络下只返回部分图片"
+      ]
+    },
+    {
+      "version": "1.0.4",
+      "date": "2026-07-05",
+      "changes": [
+        "将阅读器分页图片提取改为后台批量请求，避免大图集逐页同步请求超过脚本执行窗口"
+      ]
+    },
+    {
+      "version": "1.0.3",
+      "date": "2026-07-05",
+      "changes": [
+        "为详情分页请求增加短间隔重试，降低偶发断连导致阅读器缺页或空列表的概率"
+      ]
+    },
+    {
+      "version": "1.0.2",
+      "date": "2026-07-05",
+      "changes": [
+        "修复大页数图集在阅读器 getPageList 中触发 JavaScript 8000ms 超时的问题",
+        "分页原图提取改为更轻量的 HTML 正则解析，并为长分页图集显式配置脚本超时"
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-07-05",
+      "changes": [
+        "修复阅读器把分页 HTML 当图片加载导致 PixelMap 解码失败的问题",
+        "分页列表直接返回 .content img 的 JPG/WebP 原图直链，并保留 pageUrl 作为兜底解析入口"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-07-05",
+      "changes": [
+        "新增美图乐图源",
+        "支持最新、周榜热门、POST 搜索、标签筛选、详情与逐页原图读取",
+        "标签分页按 /tags/name/2.html 单独适配"
+      ]
+    }
+  ]
+}
