@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.manben",
+    "name": "漫本",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh-CN",
+    "baseUrl": "https://www.manben.com",
+    "description": "漫本原创漫画发行平台，支持热门、最新、分类筛选、搜索、详情、章节和阅读。",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["chinese", "webview", "manga", "manben"],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 1500,
+    "rateLimit": 600,
+    "headers": {
+      "Referer": "https://www.manben.com/"
+    }
+  },
+  "tabs": [
+    { "id": "popular", "type": "popular", "name": "热门", "enabled": true, "order": 0 },
+    { "id": "latest", "type": "latest", "name": "最新", "enabled": true, "order": 1 },
+    { "id": "filter", "type": "filter", "name": "分类", "enabled": true, "order": 2 }
+  ],
+  "filters": {
+    "categoryPath": {
+      "type": "select",
+      "name": "分类",
+      "default": "mh-list",
+      "options": [
+        { "value": "mh-list", "label": "全部" },
+        { "value": "mh-gaoxiao", "label": "搞笑" },
+        { "value": "mh-qihuan", "label": "奇幻" },
+        { "value": "mh-rexue", "label": "热血" },
+        { "value": "mh-xuanyi", "label": "悬疑" },
+        { "value": "mh-gedou1", "label": "格斗" },
+        { "value": "mh-kehuan", "label": "科幻" },
+        { "value": "mh-lizhi", "label": "励志" },
+        { "value": "mh-xiaoyuan", "label": "校园" },
+        { "value": "mh-aiqing", "label": "爱情" },
+        { "value": "mh-meishi", "label": "美食" },
+        { "value": "mh-zhanzheng", "label": "战争" },
+        { "value": "mh-baihe", "label": "百合" },
+        { "value": "mh-hktw", "label": "港台" },
+        { "value": "mh-jpkr", "label": "日韩" }
+      ]
+    }
+  },
+  "searchConfig": {
+    "types": [
+      { "id": "search", "label": "关键词", "placeholder": "输入漫画名称", "isDefault": true }
+    ]
+  },
+  "workflows": {
+    "popular": {
+      "description": "排行榜热门漫画",
+      "supportsPagination": false,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/mh-ranklist/", "timeout": 15000, "description": "打开排行榜" },
+        { "type": "wait", "condition": "element", "selector": ".searchResult .item", "timeout": 10000, "description": "等待热门列表" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const abs=(u)=>{try{return new URL(u,base).href;}catch(e){return u||'';}}; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const bad=(h)=>!/\\/mh-[^/]+\\/?$/i.test(h)||/\\/mh-(updated|ranklist|list)(-|\\/|$)/i.test(h); const results=[]; const seen={}; const pick=()=>{ const groups=['.updateList .item','.searchResult .item','.bookList_2 .item','.sideRankList li']; for(let i=0;i<groups.length;i++){ const nodes=document.querySelectorAll(groups[i]); if(nodes.length>0) return nodes; } return []; }; const containers=pick(); containers.forEach((item)=>{ const titleLink=item.querySelector('p.title a[href*=\"/mh-\"],a.comic[href*=\"/mh-\"]')||item.querySelector('a[href*=\"/mh-\"]'); if(!titleLink) return; const href=titleLink.getAttribute('href')||''; if(bad(href)) return; const itemUrl=abs(href); if(!itemUrl||seen[itemUrl]) return; const img=item.querySelector('img.cover,.img img,.cover img,img'); let cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):''; if(/css99tel|logo|btn_|searchResult_logo|noData|login/i.test(cover)) cover=''; const latest=item.querySelector('a.op[href*=\"/m\"],.op[href*=\"/m\"],a[href*=\"/m\"]'); const author=item.querySelector('.avatar'); const desc=item.querySelector('.tip,.ibcont'); seen[itemUrl]=true; results.push({id:itemUrl,title:txt(titleLink)||titleLink.getAttribute('title')||(img?img.getAttribute('alt')||'':''),url:itemUrl,cover:cover?abs(cover):'',author:txt(author),description:txt(desc),latestChapter:txt(latest)}); }); return JSON.stringify(results); })();", "description": "提取热门漫画列表" }
+      ]
+    },
+    "latest": {
+      "description": "最新更新漫画",
+      "supportsPagination": true,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/mh-updated/", "timeout": 15000, "description": "打开最新更新" },
+        { "type": "script", "code": "(() => { const page=parseInt('{{page}}',10)||1; if(page>1){ location.href='{{baseUrl}}/mh-updated-p'+page+'/'; } return JSON.stringify({page:page,url:location.href}); })();", "description": "跳转到指定最新页" },
+        { "type": "wait", "condition": "element", "selector": ".updateList .item, .sideRankList li", "timeout": 10000, "description": "等待最新列表" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const abs=(u)=>{try{return new URL(u,base).href;}catch(e){return u||'';}}; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const bad=(h)=>!/\\/mh-[^/]+\\/?$/i.test(h)||/\\/mh-(updated|ranklist|list)(-|\\/|$)/i.test(h); const results=[]; const seen={}; const pick=()=>{ const groups=['.updateList .item','.searchResult .item','.bookList_2 .item','.sideRankList li']; for(let i=0;i<groups.length;i++){ const nodes=document.querySelectorAll(groups[i]); if(nodes.length>0) return nodes; } return []; }; const containers=pick(); containers.forEach((item)=>{ const titleLink=item.querySelector('p.title a[href*=\"/mh-\"],a.comic[href*=\"/mh-\"]')||item.querySelector('a[href*=\"/mh-\"]'); if(!titleLink) return; const href=titleLink.getAttribute('href')||''; if(bad(href)) return; const itemUrl=abs(href); if(!itemUrl||seen[itemUrl]) return; const img=item.querySelector('img.cover,.img img,.cover img,img'); let cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):''; if(/css99tel|logo|btn_|searchResult_logo|noData|login/i.test(cover)) cover=''; const latest=item.querySelector('a.op[href*=\"/m\"],.op[href*=\"/m\"],a[href*=\"/m\"]'); const author=item.querySelector('.avatar'); const desc=item.querySelector('.tip,.ibcont'); seen[itemUrl]=true; results.push({id:itemUrl,title:txt(titleLink)||titleLink.getAttribute('title')||(img?img.getAttribute('alt')||'':''),url:itemUrl,cover:cover?abs(cover):'',author:txt(author),description:txt(desc),latestChapter:txt(latest)}); }); return JSON.stringify(results); })();", "description": "提取最新漫画列表" }
+      ]
+    },
+    "filter": {
+      "description": "按漫本分类筛选",
+      "supportsPagination": true,
+      "defaults": { "categoryPath": "mh-list" },
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/mh-list/", "timeout": 15000, "description": "打开分类页" },
+        { "type": "script", "code": "(() => { const page=parseInt('{{page}}',10)||1; let path=String('{{categoryPath}}'||'mh-list').replace(/^\\/+|\\/+$/g,''); if(!path||path.indexOf('{{')===0) path='mh-list'; const url='{{baseUrl}}/'+path+(page>1?'-p'+page:'')+'/'; location.href=url; return JSON.stringify({page:page,path:path,url:url}); })();", "description": "跳转到分类页码" },
+        { "type": "wait", "condition": "element", "selector": ".searchResult .item", "timeout": 10000, "description": "等待分类结果" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const abs=(u)=>{try{return new URL(u,base).href;}catch(e){return u||'';}}; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const bad=(h)=>!/\\/mh-[^/]+\\/?$/i.test(h)||/\\/mh-(updated|ranklist|list)(-|\\/|$)/i.test(h); const results=[]; const seen={}; const pick=()=>{ const groups=['.updateList .item','.searchResult .item','.bookList_2 .item','.sideRankList li']; for(let i=0;i<groups.length;i++){ const nodes=document.querySelectorAll(groups[i]); if(nodes.length>0) return nodes; } return []; }; const containers=pick(); containers.forEach((item)=>{ const titleLink=item.querySelector('p.title a[href*=\"/mh-\"],a.comic[href*=\"/mh-\"]')||item.querySelector('a[href*=\"/mh-\"]'); if(!titleLink) return; const href=titleLink.getAttribute('href')||''; if(bad(href)) return; const itemUrl=abs(href); if(!itemUrl||seen[itemUrl]) return; const img=item.querySelector('img.cover,.img img,.cover img,img'); let cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):''; if(/css99tel|logo|btn_|searchResult_logo|noData|login/i.test(cover)) cover=''; const latest=item.querySelector('a.op[href*=\"/m\"],.op[href*=\"/m\"],a[href*=\"/m\"]'); const author=item.querySelector('.avatar'); const desc=item.querySelector('.tip,.ibcont'); seen[itemUrl]=true; results.push({id:itemUrl,title:txt(titleLink)||titleLink.getAttribute('title')||(img?img.getAttribute('alt')||'':''),url:itemUrl,cover:cover?abs(cover):'',author:txt(author),description:txt(desc),latestChapter:txt(latest)}); }); return JSON.stringify(results); })();", "description": "提取分类漫画列表" }
+      ]
+    },
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/search?page={{page}}&title={{query}}&language=1&f=2", "timeout": 15000, "description": "打开搜索结果" },
+        { "type": "wait", "condition": "element", "selector": ".bookList_2 .item", "timeout": 10000, "description": "等待搜索结果" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const abs=(u)=>{try{return new URL(u,base).href;}catch(e){return u||'';}}; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const bad=(h)=>!/\\/mh-[^/]+\\/?$/i.test(h)||/\\/mh-(updated|ranklist|list)(-|\\/|$)/i.test(h); const results=[]; const seen={}; const pick=()=>{ const groups=['.updateList .item','.searchResult .item','.bookList_2 .item','.sideRankList li']; for(let i=0;i<groups.length;i++){ const nodes=document.querySelectorAll(groups[i]); if(nodes.length>0) return nodes; } return []; }; const containers=pick(); containers.forEach((item)=>{ const titleLink=item.querySelector('p.title a[href*=\"/mh-\"],a.comic[href*=\"/mh-\"]')||item.querySelector('a[href*=\"/mh-\"]'); if(!titleLink) return; const href=titleLink.getAttribute('href')||''; if(bad(href)) return; const itemUrl=abs(href); if(!itemUrl||seen[itemUrl]) return; const img=item.querySelector('img.cover,.img img,.cover img,img'); let cover=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):''; if(/css99tel|logo|btn_|searchResult_logo|noData|login/i.test(cover)) cover=''; const latest=item.querySelector('a.op[href*=\"/m\"],.op[href*=\"/m\"],a[href*=\"/m\"]'); const author=item.querySelector('.avatar'); const desc=item.querySelector('.tip,.ibcont'); seen[itemUrl]=true; results.push({id:itemUrl,title:txt(titleLink)||titleLink.getAttribute('title')||(img?img.getAttribute('alt')||'':''),url:itemUrl,cover:cover?abs(cover):'',author:txt(author),description:txt(desc),latestChapter:txt(latest)}); }); return JSON.stringify(results); })();", "description": "提取搜索结果" }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        { "type": "script", "code": "(() => { const raw=String('{{mangaId}}'||'').trim(); let url=raw; if(!/^https?:\\/\\//i.test(url)){ url='{{baseUrl}}/'+url.replace(/^\\/+/, ''); } if(url.indexOf('?')<0&&!/\\/$/.test(url)) url+='/'; return url; })();", "saveAs": "targetUrl", "description": "计算详情页地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 5000, "description": "打开详情页" },
+        { "type": "wait", "condition": "element", "selector": ".comicInfo", "timeout": 10000, "description": "等待详情信息" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const abs=(u)=>{try{return new URL(u,base).href;}catch(e){return u||'';}}; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const root=document.querySelector('.comicInfo')||document; const titleNode=root.querySelector('.info > p.title'); let title=''; if(titleNode){ const c=titleNode.cloneNode(true); const g=c.querySelector('.grading'); if(g) g.remove(); title=txt(c); } const coverEl=root.querySelector('.cover .img img,.comicInfo img[alt]'); const cover=coverEl?(coverEl.getAttribute('data-src')||coverEl.getAttribute('src')||''):''; const author=txt(root.querySelector('.info .avatar')); const description=txt(root.querySelector('p.content')); const gray=txt(root.querySelector('p.gray')); const genreMatch=gray.match(/类\\s*别：([^状]+)/); const statusMatch=gray.match(/状\\s*态：(.+)$/); return JSON.stringify({id:location.href,title:title,cover:cover?abs(cover):'',author:author,description:description,status:statusMatch?statusMatch[1].trim():'',genre:genreMatch?genreMatch[1].trim():'',url:location.href}); })();", "description": "提取详情字段" }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        { "type": "script", "code": "(() => { const raw=String('{{mangaId}}'||'').trim(); let url=raw; if(!/^https?:\\/\\//i.test(url)){ url='{{baseUrl}}/'+url.replace(/^\\/+/, ''); } if(url.indexOf('?')<0&&!/\\/$/.test(url)) url+='/'; return url; })();", "saveAs": "targetUrl", "description": "计算详情页地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 5000, "description": "打开详情页" },
+        { "type": "wait", "condition": "element", "selector": "#chapterlistload a[href*=\"/m\"]", "timeout": 10000, "description": "等待章节列表" },
+        { "type": "script", "code": "(() => { const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const chapters=[]; const seen={}; document.querySelectorAll('#chapterlistload a[href*=\"/m\"]').forEach((a)=>{ const href=a.getAttribute('href')||''; let url=''; try{ url=new URL(href,location.href||'{{baseUrl}}').href; }catch(e){ url=href; } if(!/\\/m\\d+\\//.test(url)||seen[url]) return; seen[url]=true; chapters.push({id:url,title:txt(a)||href,url:url}); }); return JSON.stringify(chapters); })();", "description": "提取章节列表" }
+      ]
+    },
+    "getPageList": {
+      "description": "获取章节图片列表",
+      "actions": [
+        { "type": "script", "code": "(() => { const raw=String('{{chapterId}}'||'').trim(); let url=raw; if(!/^https?:\\/\\//i.test(url)){ url='{{baseUrl}}/'+url.replace(/^\\/+/, ''); } if(url.indexOf('?')<0&&!/\\/$/.test(url)) url+='/'; return url; })();", "saveAs": "targetUrl", "description": "计算阅读页地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 5000, "description": "打开阅读页" },
+        { "type": "wait", "condition": "time", "duration": 800, "description": "等待阅读页变量" },
+        { "type": "script", "code": "(() => { const raw=String('{{chapterId}}'||location.pathname); const m=raw.match(/m(\\d+)/)||location.pathname.match(/m(\\d+)/); const cid=m?m[1]:''; if(!cid) throw new Error('Manben missing chapter id'); const bodyText=document.body?(document.body.textContent||''):''; if(bodyText.indexOf('章节数据缺少')>=0||bodyText.indexOf('屏蔽处理')>=0) throw new Error('Manben chapter is blocked or missing'); const pages=[]; const seen={}; const push=(pix,img,size)=>{ if(!img) return; let url=String(img); if(!/^https?:/i.test(url)){ url=String(pix||'').replace(/\\/$/,'')+'/'+url.replace(/^\\//,''); } if(seen[url]) return; seen[url]=true; const item={index:pages.length,page:pages.length,url:url,imageUrl:url}; const sm=String(size||'').match(/(\\d+)\\/(\\d+)/); if(sm){ item.width=parseInt(sm[1],10); item.height=parseInt(sm[2],10); } pages.push(item); }; for(let group=1; group<=80; group++){ const xhr=new XMLHttpRequest(); xhr.open('POST','{{baseUrl}}/imageshow.ashx?d='+Date.now(),false); xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8'); xhr.setRequestHeader('X-Requested-With','XMLHttpRequest'); xhr.send('cid='+encodeURIComponent(cid)+'&page='+group+'&showtype=1&ispre=0'); if(xhr.status<200||xhr.status>=400) break; const text=String(xhr.responseText||''); if(!text) break; const jm=text.match(/var\\s+chapterimage\\s*=\\s*(\\{[\\s\\S]*?\\});?\\s*$/); if(!jm) break; const data=JSON.parse(jm[1]); const imgs=data.Images||[]; const sizes=data.ImageSize||[]; for(let i=0;i<imgs.length;i++) push(data.ImagePix,imgs[i],sizes[i]); if(data.IsEnd) break; } if(pages.length===0) throw new Error('Manben page list extraction returned empty'); return JSON.stringify(pages); })();", "description": "请求 imageshow 接口并组装图片" }
+      ]
+    },
+    "getImageUrl": {
+      "description": "图片 URL 已由 getPageList 返回",
+      "actions": [
+        { "type": "script", "code": "(() => '')();", "description": "无需二次解析" }
+      ]
+    }
+  }
+}

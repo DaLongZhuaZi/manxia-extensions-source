@@ -1,0 +1,315 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.meizi5",
+    "name": "每日妹子图",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh",
+    "baseUrl": "https://meizi5.com",
+    "description": "每日妹子图图集源，适配最新、热门标签、搜索、专题/标签筛选、详情与防盗链原图读取。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "webview",
+      "chinese"
+    ],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 800,
+    "headers": {
+      "Referer": "https://meizi5.com/"
+    }
+  },
+  "workflows": {
+    "latest": {
+      "description": "最新图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; return page <= 1 ? base + '/' : base + '/page/' + page; })();",
+          "description": "构建最新页 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.masonry-item a.entry-thumbnail[href]",
+          "timeout": 15000,
+          "description": "等待图集列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('article.masonry-item, article.post, article.hentry').forEach((item) => { const link = item.querySelector('a.entry-thumbnail[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/wp-content/uploads/') < 0 || cover.toLowerCase().indexOf('avatar') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cat = clean(item.querySelector('.entry-category')?.textContent || ''); const metas = Array.from(item.querySelectorAll('.entry-meta li, .entry-date')).map((el) => clean(el.textContent)).filter(Boolean); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cat, genre: cat, updateTime: metas.length > 0 ? metas[0] : '', description: metas.join(' / ') }); }); return JSON.stringify(out); })();",
+          "description": "提取最新图集列表"
+        }
+      ]
+    },
+    "popular": {
+      "description": "热门标签图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com/tag/meitui'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; return page <= 1 ? base : base + '/page/' + page; })();",
+          "description": "构建热门标签 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开热门标签页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.masonry-item a.entry-thumbnail[href]",
+          "timeout": 15000,
+          "description": "等待热门列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('article.masonry-item, article.post, article.hentry').forEach((item) => { const link = item.querySelector('a.entry-thumbnail[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/wp-content/uploads/') < 0 || cover.toLowerCase().indexOf('avatar') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cat = clean(item.querySelector('.entry-category')?.textContent || ''); const metas = Array.from(item.querySelectorAll('.entry-meta li, .entry-date')).map((el) => clean(el.textContent)).filter(Boolean); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cat, genre: cat, updateTime: metas.length > 0 ? metas[0] : '', description: metas.join(' / ') }); }); return JSON.stringify(out); })();",
+          "description": "提取热门图集列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "站内搜索",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let keyword = String('{{searchKeyword}}' || '').trim(); if (keyword.indexOf('{{') === 0) keyword = String('{{query}}' || '').trim(); if (keyword.indexOf('{{') === 0) keyword = ''; return 'https://meizi5.com/?s=' + encodeURIComponent(keyword); })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.masonry-item a.entry-thumbnail[href], article.post a.entry-thumbnail[href]",
+          "timeout": 15000,
+          "description": "等待搜索结果"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('article.masonry-item, article.post, article.hentry').forEach((item) => { const link = item.querySelector('a.entry-thumbnail[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/wp-content/uploads/') < 0 || cover.toLowerCase().indexOf('avatar') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cat = clean(item.querySelector('.entry-category')?.textContent || ''); const metas = Array.from(item.querySelectorAll('.entry-meta li, .entry-date')).map((el) => clean(el.textContent)).filter(Boolean); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cat, genre: cat, updateTime: metas.length > 0 ? metas[0] : '', description: metas.join(' / ') }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按专题或标签筛选",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "topic/xiaoxinggan"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; let category = strip(String('{{category}}' || '')); if (category.indexOf('{{') === 0) category = 'topic/xiaoxinggan'; if (!category) return page <= 1 ? base + '/' : base + '/page/' + page; const raw = category.indexOf('http://') === 0 || category.indexOf('https://') === 0 ? category : base + '/' + category; let url = raw; while (url.endsWith('/')) url = url.slice(0, -1); return page <= 1 ? url : url + '/page/' + page; })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开筛选页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "article.masonry-item a.entry-thumbnail[href]",
+          "timeout": 15000,
+          "description": "等待筛选列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('article.masonry-item, article.post, article.hentry').forEach((item) => { const link = item.querySelector('a.entry-thumbnail[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/wp-content/uploads/') < 0 || cover.toLowerCase().indexOf('avatar') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cat = clean(item.querySelector('.entry-category')?.textContent || ''); const metas = Array.from(item.querySelectorAll('.entry-meta li, .entry-date')).map((el) => clean(el.textContent)).filter(Boolean); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cat, genre: cat, updateTime: metas.length > 0 ? metas[0] : '', description: metas.join(' / ') }); }); return JSON.stringify(out); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); return s; }; let raw = String('{{mangaId}}' || '').trim(); if (raw.indexOf('{{') === 0 || !raw) raw = location.href || ''; if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) return raw; return new URL(strip(raw), base + '/').href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "h1.entry-title, .entry-content img[src*=\"/wp-content/uploads/\"]",
+          "timeout": 15000,
+          "description": "等待详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const title = clean(document.querySelector('h1.entry-title')?.textContent || document.title).replace(/\\s*[–-]\\s*每日妹子图.*$/i, ''); const img = document.querySelector('.entry-content img[src*=\"/wp-content/uploads/\"], article img.size-full[src*=\"/wp-content/uploads/\"]'); const cover = img ? abs(img.getAttribute('src') || img.getAttribute('data-src') || '') : ''; const cat = clean(document.querySelector('.entry-category')?.textContent || ''); const metas = Array.from(document.querySelectorAll('.entry-meta li, .entry-date')).map((el) => clean(el.textContent)).filter(Boolean); const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); return JSON.stringify({ title, cover, author: cat, status: 'completed', description: [desc, metas.join(' / ')].filter(Boolean).join('\\n'), genre: cat, updateTime: metas.length > 0 ? metas[0] : '' }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "每篇图集作为单章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; let raw = String('{{mangaId}}' || '').trim(); if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) { try { const u = new URL(raw); raw = u.pathname + u.search; } catch (e) {} } raw = strip(raw); const url = new URL(raw, base + '/').href; return JSON.stringify([{ id: raw, title: 'Gallery', url, number: 1, date: '', publishTime: '' }]); })();",
+          "description": "生成 Gallery 章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取详情页原图列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); return s; }; let raw = String('{{chapterId}}' || '').trim(); if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) return raw; return new URL(strip(raw), base + '/').href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开图片页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content img, article img.size-full, img.size-full",
+          "timeout": 15000,
+          "description": "等待原图节点"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://meizi5.com'; const abs = (v) => { try { let s = String(v || '').replace(/&amp;/g, '&').trim(); if (s.indexOf('//') === 0) s = 'https:' + s; return new URL(s, location.href || base).href; } catch (e) { return String(v || ''); } }; const pages = []; const seen = {}; const headers = [{ name: 'Referer', value: location.href }, { name: 'Origin', value: base }]; const push = (raw, widthRaw, heightRaw) => { const url = abs(raw); const lower = url.toLowerCase(); if (!url || seen[url]) return; if (url.indexOf('/wp-content/uploads/') < 0) return; if (!/\\.(jpg|jpeg|png|webp)(\\?|#|$)/i.test(url)) return; if (lower.indexOf('_face.') >= 0 || lower.indexOf('/avatar') >= 0 || lower.indexOf('/image/') >= 0 || lower.indexOf('logo') >= 0) return; seen[url] = true; const item = { index: pages.length, page: pages.length, url, imageUrl: url, requestHeaders: headers }; const width = parseInt(String(widthRaw || '0'), 10); const height = parseInt(String(heightRaw || '0'), 10); if (Number.isFinite(width) && width > 0) item.width = width; if (Number.isFinite(height) && height > 0) item.height = height; pages.push(item); }; const readCandidate = (img) => { const attrs = ['data-src','data-original','data-lazy-src','data-orig-file','src']; for (let i = 0; i < attrs.length; i++) push(img.getAttribute(attrs[i]) || '', img.getAttribute('width') || '', img.getAttribute('height') || ''); const srcset = img.getAttribute('srcset') || img.getAttribute('data-srcset') || ''; srcset.split(',').forEach((part) => push(String(part || '').trim().split(/\\s+/)[0], img.getAttribute('width') || '', img.getAttribute('height') || '')); }; document.querySelectorAll('.entry-content img, article img.size-full, img.size-full, img[src*=\"/wp-content/uploads/\"]').forEach((img) => readCandidate(img)); if (pages.length === 0) { let html = document.documentElement ? document.documentElement.innerHTML : ''; const block = html.match(/<div[^>]+class=[\\\"'][^\\\"']*entry-content[^\\\"']*[\\\"'][^>]*>[\\s\\S]*?<\\/div>\\s*<\\/div>/i) || html.match(/<div[^>]+class=[\\\"'][^\\\"']*entry-content[^\\\"']*[\\\"'][^>]*>[\\s\\S]*?<\\/div>/i); if (block && block[0]) html = block[0]; const fullRe = /(?:https?:)?\\/\\/meizi5\\.com\\/wp-content\\/uploads\\/[^\\\"'<>\\s)]+\\.(?:jpg|jpeg|png|webp)(?:\\?[^\\\"'<>\\s)]*)?/ig; let m = fullRe.exec(html); while (m) { push(m[0], '', ''); m = fullRe.exec(html); } const relRe = /\\/wp-content\\/uploads\\/[^\\\"'<>\\s)]+\\.(?:jpg|jpeg|png|webp)(?:\\?[^\\\"'<>\\s)]*)?/ig; m = relRe.exec(html); while (m) { push(m[0], '', ''); m = relRe.exec(html); } } return JSON.stringify(pages); })();",
+          "description": "提取原图 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "每日妹子图筛选",
+        "description": "选择专题或标签",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "topic/xiaoxinggan",
+            "options": [
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "topic/xiaoxinggan",
+                "label": "小性感"
+              },
+              {
+                "value": "topic/xiaotianmei",
+                "label": "小甜美"
+              },
+              {
+                "value": "topic/xiaoxinggan/yuanchuang",
+                "label": "原创"
+              },
+              {
+                "value": "topic/xiaoxinggan/nvlaoshi",
+                "label": "女老师"
+              },
+              {
+                "value": "tag/meitui",
+                "label": "美腿"
+              },
+              {
+                "value": "tag/meixiong",
+                "label": "美胸"
+              },
+              {
+                "value": "tag/meitun",
+                "label": "美臀"
+              },
+              {
+                "value": "tag/shenyan",
+                "label": "神颜"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

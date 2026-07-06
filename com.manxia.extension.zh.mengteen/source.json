@@ -16,7 +16,7 @@
       "webview",
       "free"
     ],
-    "Internet": true
+    "Internet": false
   },
   "capabilities": {
     "urlResolver": true,

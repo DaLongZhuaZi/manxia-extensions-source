@@ -17,7 +17,7 @@
       "webview",
       "legado"
     ],
-    "Internet": true
+    "Internet": false
   },
   "capabilities": {
     "urlResolver": true,

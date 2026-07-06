@@ -1,0 +1,366 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.wai76",
+    "name": "心动美图",
+    "type": "manga",
+    "version": "1.0.1",
+    "language": "zh",
+    "baseUrl": "https://www.wai76.com",
+    "description": "心动美图写真图集源，适配最新、热门标签、搜索、模特/标签筛选、详情分页章节与原图读取。",
+    "author": "ManXia Team",
+    "nsfw": true,
+    "tags": [
+      "gallery",
+      "photos",
+      "webview",
+      "chinese"
+    ],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false,
+    "advancedFilters": true
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 2,
+    "retryDelay": 1500,
+    "rateLimit": 800,
+    "headers": {
+      "Referer": "https://www.wai76.com/"
+    }
+  },
+  "workflows": {
+    "latest": {
+      "description": "最新写真图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; return page <= 1 ? base + '/' : base + '/page/' + page + '/'; })();",
+          "description": "构建最新页 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开最新页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".hentry a.thumbnail-link[href]",
+          "timeout": 15000,
+          "description": "等待图集列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('.hentry').forEach((item) => { const link = item.querySelector('a.thumbnail-link[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/gallery/') < 0 || cover.toLowerCase().indexOf('logo') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || link.getAttribute('title') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cats = Array.from(item.querySelectorAll('.entry-category a, .entry-category-icon a, a[href*=\"/category/\"], a[href*=\"/tag/\"]')).map((a) => clean(a.textContent)).filter(Boolean); const date = clean(item.querySelector('.entry-date')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cats.join(', '), genre: cats.join(', '), updateTime: date, description: date }); }); return JSON.stringify(out); })();",
+          "description": "提取最新图集列表"
+        }
+      ]
+    },
+    "popular": {
+      "description": "热门标签图集",
+      "supportsPagination": true,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com/tag/%e6%80%a7%e6%84%9f'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; return page <= 1 ? base + '/' : base + '/page/' + page + '/'; })();",
+          "description": "构建热门标签 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开热门标签页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".hentry a.thumbnail-link[href]",
+          "timeout": 15000,
+          "description": "等待热门列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('.hentry').forEach((item) => { const link = item.querySelector('a.thumbnail-link[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/gallery/') < 0 || cover.toLowerCase().indexOf('logo') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || link.getAttribute('title') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cats = Array.from(item.querySelectorAll('.entry-category a, .entry-category-icon a, a[href*=\"/category/\"], a[href*=\"/tag/\"]')).map((a) => clean(a.textContent)).filter(Boolean); const date = clean(item.querySelector('.entry-date')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cats.join(', '), genre: cats.join(', '), updateTime: date, description: date }); }); return JSON.stringify(out); })();",
+          "description": "提取热门图集列表"
+        }
+      ]
+    },
+    "search": {
+      "description": "站内搜索",
+      "supportsPagination": false,
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { let keyword = String('{{searchKeyword}}' || '').trim(); if (keyword.indexOf('{{') === 0) keyword = String('{{query}}' || '').trim(); if (keyword.indexOf('{{') === 0) keyword = ''; return 'https://www.wai76.com/?s=' + encodeURIComponent(keyword); })();",
+          "description": "构建搜索 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开搜索页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".hentry a.thumbnail-link[href]",
+          "timeout": 15000,
+          "description": "等待搜索结果"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('.hentry').forEach((item) => { const link = item.querySelector('a.thumbnail-link[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/gallery/') < 0 || cover.toLowerCase().indexOf('logo') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || link.getAttribute('title') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cats = Array.from(item.querySelectorAll('.entry-category a, .entry-category-icon a, a[href*=\"/category/\"], a[href*=\"/tag/\"]')).map((a) => clean(a.textContent)).filter(Boolean); const date = clean(item.querySelector('.entry-date')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cats.join(', '), genre: cats.join(', '), updateTime: date, description: date }); }); return JSON.stringify(out); })();",
+          "description": "提取搜索结果"
+        }
+      ]
+    },
+    "filter": {
+      "description": "按模特或标签筛选",
+      "supportsPagination": true,
+      "defaults": {
+        "category": "tag/%e6%80%a7%e6%84%9f"
+      },
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const n = parseInt(String('{{page}}' || '1'), 10); const page = Number.isFinite(n) && n > 0 ? Math.floor(n) : 1; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const withPage = (url) => { let u = String(url || '').trim(); while (u.endsWith('/')) u = u.slice(0, -1); return page <= 1 ? u + '/' : u + '/page/' + page + '/'; }; let category = strip(String('{{category}}' || '')); if (category.indexOf('{{') === 0) category = 'tag/%e6%80%a7%e6%84%9f'; if (!category) return page <= 1 ? base + '/' : base + '/page/' + page + '/'; if (category.indexOf('http://') === 0 || category.indexOf('https://') === 0) return withPage(category); return withPage(base + '/' + category); })();",
+          "description": "构建筛选 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开筛选页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".hentry a.thumbnail-link[href]",
+          "timeout": 15000,
+          "description": "等待筛选列表"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const attr = (el) => { if (!el) return ''; const attrs = ['data-src','data-original','data-lazy-src','src']; for (let i = 0; i < attrs.length; i++) { const v = el.getAttribute(attrs[i]) || ''; if (v && v.indexOf('data:') !== 0) return v; } return ''; }; const idOf = (href) => { try { const u = new URL(href, location.href || base); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const out = []; const seen = {}; document.querySelectorAll('.hentry').forEach((item) => { const link = item.querySelector('a.thumbnail-link[href]') || item.querySelector('.entry-title a[href]'); if (!link) return; const url = abs(link.getAttribute('href') || ''); const id = idOf(url); if (!id || seen[id]) return; const img = link.querySelector('img') || item.querySelector('img.wp-post-image, img'); const coverRaw = attr(img); if (!coverRaw) return; const cover = abs(coverRaw); if (!cover || cover.indexOf('/gallery/') < 0 || cover.toLowerCase().indexOf('logo') >= 0) return; const titleEl = item.querySelector('.entry-title a, h2.entry-title, h1.entry-title'); const title = clean((titleEl ? titleEl.textContent : '') || link.getAttribute('title') || (img ? img.getAttribute('alt') : '') || id); if (!title) return; const cats = Array.from(item.querySelectorAll('.entry-category a, .entry-category-icon a, a[href*=\"/category/\"], a[href*=\"/tag/\"]')).map((a) => clean(a.textContent)).filter(Boolean); const date = clean(item.querySelector('.entry-date')?.textContent || ''); seen[id] = true; out.push({ id, title, cover, url, status: 'completed', author: cats.join(', '), genre: cats.join(', '), updateTime: date, description: date }); }); return JSON.stringify(out); })();",
+          "description": "提取筛选结果"
+        }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取图集详情",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); return s; }; let raw = String('{{mangaId}}' || '').trim(); if (raw.indexOf('{{') === 0 || !raw) raw = location.href || ''; if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) return raw; return new URL(strip(raw), base + '/').href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": "h1.entry-title, .entry-content .spotlight[data-src]",
+          "timeout": 15000,
+          "description": "等待详情"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim(); const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const title = clean(document.querySelector('h1.entry-title')?.textContent || document.title).replace(/\\s*[–-]\\s*心动美图.*$/i, ''); const first = document.querySelector('.entry-content .spotlight[data-src], .spotlight[data-src]'); const cover = first ? abs(first.getAttribute('data-src') || '') : ''; const cats = Array.from(document.querySelectorAll('.entry-category-icon a, .entry-category a, a[href*=\"/category/\"], a[href*=\"/tag/\"]')).map((a) => clean(a.textContent)).filter(Boolean); const date = clean(document.querySelector('.entry-date')?.textContent || ''); const author = clean(document.querySelector('.entry-author')?.textContent || ''); const desc = clean(document.querySelector('meta[name=\"description\"]')?.getAttribute('content') || ''); const line = ['作者: ' + author, '日期: ' + date, '标签: ' + cats.join(', ')].filter((v) => v.replace(/.*:\\s*/, '').length > 0).join('\\n'); return JSON.stringify({ title, cover, author: author || cats.join(', '), status: 'completed', description: [desc, line].filter(Boolean).join('\\n'), genre: cats.join(', '), updateTime: date }); })();",
+          "description": "提取详情"
+        }
+      ]
+    },
+    "getChapterList": {
+      "description": "按文章分页生成虚拟章节",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); return s; }; let raw = String('{{mangaId}}' || '').trim(); if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) return raw; return new URL(strip(raw), base + '/').href; })();",
+          "description": "归一化详情 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1400,
+          "description": "打开详情页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content .spotlight[data-src], .page-links, h1.entry-title",
+          "timeout": 15000,
+          "description": "等待详情分页"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); while (s.endsWith('/')) s = s.slice(0, -1); return s; }; const normalizeBase = (href) => { try { const u = new URL(href, location.href); const parts = u.pathname.split('/').filter(Boolean); if (parts.length > 1 && /^\\d+$/.test(parts[parts.length - 1])) parts.pop(); u.pathname = '/' + parts.join('/') + '/'; u.search = ''; u.hash = ''; return u.href; } catch (e) { return href; } }; const makeId = (href) => { try { const u = new URL(href, location.href); return strip(u.pathname + u.search); } catch (e) { return strip(href); } }; const baseUrl = normalizeBase(location.href); const map = {}; map[1] = baseUrl; document.querySelectorAll('a.post-page-numbers[href]').forEach((a) => { const n = parseInt(String(a.textContent || '').trim(), 10); const href = a.getAttribute('href') || ''; if (Number.isFinite(n) && n > 1 && href) map[n] = new URL(href, location.href).href; }); const nums = Object.keys(map).map((k) => parseInt(k, 10)).filter((n) => Number.isFinite(n)).sort((a, b) => a - b); const out = nums.map((n) => { const url = map[n]; return { id: makeId(url), title: '第' + n + '组', url, number: n, date: '', publishTime: '' }; }); return JSON.stringify(out.length > 0 ? out : [{ id: makeId(baseUrl), title: '第1组', url: baseUrl, number: 1, date: '', publishTime: '' }]); })();",
+          "description": "提取分页章节"
+        }
+      ]
+    },
+    "getPageList": {
+      "description": "获取当前分页内原图列表",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const strip = (v) => { let s = String(v || '').trim(); while (s.indexOf('/') === 0) s = s.slice(1); return s; }; let raw = String('{{chapterId}}' || '').trim(); if (raw.indexOf('http://') === 0 || raw.indexOf('https://') === 0) return raw; return new URL(strip(raw), base + '/').href; })();",
+          "description": "归一化章节 URL"
+        },
+        {
+          "type": "navigate",
+          "url": "{{scriptResult}}",
+          "timeout": 30000,
+          "waitAfterLoad": 1600,
+          "description": "打开图片分页"
+        },
+        {
+          "type": "wait",
+          "condition": "element",
+          "selector": ".entry-content .spotlight[data-src]",
+          "timeout": 15000,
+          "description": "等待原图节点"
+        },
+        {
+          "type": "script",
+          "code": "(() => { const base = 'https://www.wai76.com'; const abs = (v) => { try { return new URL(String(v || '').replace(/&amp;/g, '&'), location.href || base).href; } catch (e) { return String(v || ''); } }; const pages = []; const seen = {}; const headers = [{ name: 'Referer', value: location.href }, { name: 'Origin', value: base }]; document.querySelectorAll('.entry-content .spotlight[data-src], .spotlight[data-src]').forEach((el) => { const url = abs(el.getAttribute('data-src') || ''); if (!url || seen[url] || url.indexOf('/gallery/') < 0) return; seen[url] = true; pages.push({ index: pages.length, page: pages.length, url, imageUrl: url, requestHeaders: headers }); }); return JSON.stringify(pages); })();",
+          "description": "提取原图 URL"
+        }
+      ]
+    },
+    "getImageUrl": {
+      "description": "返回图片 URL",
+      "actions": [
+        {
+          "type": "script",
+          "code": "(() => { return JSON.stringify({ imageUrl: '{{imageUrl}}' || '{{pageUrl}}' }); })();",
+          "description": "返回图片 URL"
+        }
+      ]
+    }
+  },
+  "tabs": [
+    {
+      "id": "latest",
+      "type": "latest",
+      "name": "最新",
+      "enabled": true,
+      "order": 0,
+      "requiresLogin": false
+    },
+    {
+      "id": "popular",
+      "type": "popular",
+      "name": "热门",
+      "enabled": true,
+      "order": 1,
+      "requiresLogin": false
+    },
+    {
+      "id": "filter",
+      "type": "filter",
+      "name": "筛选",
+      "enabled": true,
+      "order": 2,
+      "requiresLogin": false,
+      "filterConfig": {
+        "title": "心动美图筛选",
+        "description": "选择模特分类或常用标签",
+        "groups": [
+          {
+            "id": "category",
+            "title": "分类",
+            "defaultValue": "tag/%e6%80%a7%e6%84%9f",
+            "options": [
+              {
+                "value": "",
+                "label": "全部"
+              },
+              {
+                "value": "tag/%e6%80%a7%e6%84%9f",
+                "label": "性感"
+              },
+              {
+                "value": "tag/%e9%bb%91%e4%b8%9d",
+                "label": "黑丝"
+              },
+              {
+                "value": "tag/%e4%b8%9d%e8%a2%9c",
+                "label": "丝袜"
+              },
+              {
+                "value": "tag/%e5%86%85%e8%a1%a3",
+                "label": "内衣"
+              },
+              {
+                "value": "tag/%e5%88%b6%e6%9c%8d",
+                "label": "制服"
+              },
+              {
+                "value": "tag/%e6%97%97%e8%a2%8d",
+                "label": "旗袍"
+              },
+              {
+                "value": "tag/%e6%af%94%e5%9f%ba%e5%b0%bc",
+                "label": "比基尼"
+              },
+              {
+                "value": "tag/%e7%a7%80%e4%ba%ba%e7%bd%91",
+                "label": "秀人网"
+              },
+              {
+                "value": "tag/%e8%af%ad%e7%94%bb%e7%95%8c",
+                "label": "语画界"
+              },
+              {
+                "value": "tag/%e7%88%b1%e8%9c%9c%e7%a4%be",
+                "label": "爱蜜社"
+              },
+              {
+                "value": "category/%e6%9d%a8%e6%99%a8%e6%99%a8",
+                "label": "杨晨晨"
+              },
+              {
+                "value": "category/lavinia%e8%82%89%e8%82%89",
+                "label": "Lavinia肉肉"
+              },
+              {
+                "value": "category/%e5%91%a8%e4%ba%8e%e5%b8%8c",
+                "label": "周于希"
+              },
+              {
+                "value": "category/%e5%91%a8%e5%a6%8d%e5%b8%8c",
+                "label": "周妍希"
+              },
+              {
+                "value": "category/%e7%8e%8b%e8%af%ad%e7%ba%af",
+                "label": "王语纯"
+              },
+              {
+                "value": "category/%e9%99%88%e5%b0%8f%e5%96%b5",
+                "label": "陈小喵"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

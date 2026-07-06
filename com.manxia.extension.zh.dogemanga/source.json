@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "id": "com.manxia.extension.zh.dogemanga",
+    "name": "漫画狗",
+    "type": "manga",
+    "version": "1.0.2",
+    "language": "zh-CN",
+    "baseUrl": "https://dogemanga.com",
+    "description": "Doge Manga / 漫画狗，支持中文热门、最新、搜索、筛选、详情、章节和阅读。",
+    "author": "ManXia Team",
+    "nsfw": false,
+    "tags": ["chinese", "webview", "manga", "dogemanga"],
+    "Internet": false
+  },
+  "capabilities": {
+    "urlResolver": true,
+    "pagination": true,
+    "errorRetry": true,
+    "loginSupport": false
+  },
+  "network": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "timeout": 30000,
+    "retryCount": 3,
+    "retryDelay": 1500,
+    "rateLimit": 600,
+    "headers": {
+      "Accept-Language": "zh-CN,zh;q=0.9",
+      "Referer": "https://dogemanga.com/",
+      "Origin": "https://dogemanga.com"
+    }
+  },
+  "tabs": [
+    { "id": "popular", "type": "popular", "name": "热门", "enabled": true, "order": 0 },
+    { "id": "latest", "type": "latest", "name": "最新", "enabled": true, "order": 1 },
+    { "id": "filter", "type": "filter", "name": "筛选", "enabled": true, "order": 2 }
+  ],
+  "filters": {
+    "feed": {
+      "type": "select",
+      "name": "排序",
+      "default": "",
+      "options": [
+        { "value": "", "label": "热门排行" },
+        { "value": "s=1", "label": "最新连载" }
+      ]
+    },
+    "language": {
+      "type": "select",
+      "name": "语言",
+      "default": "zh",
+      "options": [
+        { "value": "zh", "label": "中文" },
+        { "value": "en", "label": "English" }
+      ]
+    }
+  },
+  "searchConfig": {
+    "types": [
+      { "id": "search", "label": "关键词", "placeholder": "输入漫画名称或作者", "isDefault": true }
+    ]
+  },
+  "workflows": {
+    "popular": {
+      "description": "中文热门排行",
+      "supportsPagination": true,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/?l=zh", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开热门排行" },
+        { "type": "wait", "condition": "element", "selector": ".site-card[data-manga-id]", "timeout": 10000, "description": "等待热门卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const simp=(s)=>{ const map={'麗':'丽','絲':'丝','鍵':'键','輕':'轻','戀':'恋','葉':'叶','馬':'马','樂':'乐','國':'国','間':'间','從':'从','開':'开','體':'体','學':'学','會':'会','與':'与','畫':'画','話':'话','後':'后','裏':'里','裡':'里','隸':'隶','轉':'转','這':'这','強':'强'}; return String(s||'').replace(/[麗絲鍵輕戀葉馬樂國間從開體學會與畫話後裏裡隸轉這強]/g,(ch)=>map[ch]||ch); }; const normTitle=(s)=>simp(s).toLowerCase().replace(/[\\s·・.。:：,，!！?？\\-—_~～'“”‘’()（）\\[\\]【】<>《》]/g,''); const makeDoc=(html)=>new DOMParser().parseFromString(html,'text/html'); const nextHref=(d)=>{ const links=Array.from(d.querySelectorAll('a[href]')).filter((a)=>/[?&]p=/.test(a.getAttribute('href')||'')); return links.length?(links[links.length-1].getAttribute('href')||''):''; }; let doc=document; const target=parseInt('{{page}}',10)||1; for(let i=1;i<target;i++){ const href=nextHref(doc); if(!href) break; const xhr=new XMLHttpRequest(); xhr.open('GET',new URL(href,base).href,false); xhr.send(null); if(xhr.status<200||xhr.status>=400||!xhr.responseText) break; doc=makeDoc(xhr.responseText); } const lang=(new URL(location.href).searchParams.get('l')||'zh'); const seenId={}; const seenTitle={}; const mangas=[]; doc.querySelectorAll('.site-card[data-manga-id]').forEach((card)=>{ const dataId=(card.getAttribute('data-manga-id')||'').trim(); const link=card.querySelector('a.site-card__manga-title[href*=\"/m/\"]')||card.querySelector('a[href*=\"/m/\"]'); const href=link?(link.getAttribute('href')||''):(dataId?('/m/'+dataId):''); if(!href) return; const u=new URL(href,base); const match=u.pathname.match(/\\/m\\/([^/?#]+)/); const id=(dataId||(match?match[1]:'')); const title=txt(card.querySelector('a.site-card__manga-title,.site-card__manga-title')); const titleKey=normTitle(title); if(!id||!title) return; if(seenId[id]||(titleKey&&seenTitle[titleKey])) return; seenId[id]=true; if(titleKey) seenTitle[titleKey]=true; if(!u.searchParams.get('l')) u.searchParams.set('l',lang); const img=card.querySelector('img.card-img-top,img.site-manga__cover-image,img[src*=\"/images/manga-thumbnails/\"],img[data-src*=\"/images/manga-thumbnails/\"]'); const coverRaw=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:new URL('/images/manga-thumbnails/'+id+'.jpg',base).href; const author=txt(card.querySelector('h4.text-muted a,h4.text-muted,.card-subtitle,.text-muted')); const desc=txt(card.querySelector('.site-card__brief')); const latest=txt(card.querySelector('.list-group-item a[href*=\"/p/\"],a.site-manga-thumbnail__link[href*=\"/p/\"]')); mangas.push({id:'/m/'+id,title:title,url:u.href,cover:cover,author:author,description:desc,latestChapter:latest}); }); return JSON.stringify(mangas); })();", "description": "提取热门列表并按作品标题去重" }
+      ]
+    },
+    "latest": {
+      "description": "中文最新连载",
+      "supportsPagination": true,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/?s=1&l=zh", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开最新连载" },
+        { "type": "wait", "condition": "element", "selector": ".site-card[data-manga-id]", "timeout": 10000, "description": "等待最新卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const simp=(s)=>{ const map={'麗':'丽','絲':'丝','鍵':'键','輕':'轻','戀':'恋','葉':'叶','馬':'马','樂':'乐','國':'国','間':'间','從':'从','開':'开','體':'体','學':'学','會':'会','與':'与','畫':'画','話':'话','後':'后','裏':'里','裡':'里','隸':'隶','轉':'转','這':'这','強':'强'}; return String(s||'').replace(/[麗絲鍵輕戀葉馬樂國間從開體學會與畫話後裏裡隸轉這強]/g,(ch)=>map[ch]||ch); }; const normTitle=(s)=>simp(s).toLowerCase().replace(/[\\s·・.。:：,，!！?？\\-—_~～'“”‘’()（）\\[\\]【】<>《》]/g,''); const makeDoc=(html)=>new DOMParser().parseFromString(html,'text/html'); const nextHref=(d)=>{ const links=Array.from(d.querySelectorAll('a[href]')).filter((a)=>/[?&]p=/.test(a.getAttribute('href')||'')); return links.length?(links[links.length-1].getAttribute('href')||''):''; }; let doc=document; const target=parseInt('{{page}}',10)||1; for(let i=1;i<target;i++){ const href=nextHref(doc); if(!href) break; const xhr=new XMLHttpRequest(); xhr.open('GET',new URL(href,base).href,false); xhr.send(null); if(xhr.status<200||xhr.status>=400||!xhr.responseText) break; doc=makeDoc(xhr.responseText); } const lang=(new URL(location.href).searchParams.get('l')||'zh'); const seenId={}; const seenTitle={}; const mangas=[]; doc.querySelectorAll('.site-card[data-manga-id]').forEach((card)=>{ const dataId=(card.getAttribute('data-manga-id')||'').trim(); const link=card.querySelector('a.site-card__manga-title[href*=\"/m/\"]')||card.querySelector('a[href*=\"/m/\"]'); const href=link?(link.getAttribute('href')||''):(dataId?('/m/'+dataId):''); if(!href) return; const u=new URL(href,base); const match=u.pathname.match(/\\/m\\/([^/?#]+)/); const id=(dataId||(match?match[1]:'')); const title=txt(card.querySelector('a.site-card__manga-title,.site-card__manga-title')); const titleKey=normTitle(title); if(!id||!title) return; if(seenId[id]||(titleKey&&seenTitle[titleKey])) return; seenId[id]=true; if(titleKey) seenTitle[titleKey]=true; if(!u.searchParams.get('l')) u.searchParams.set('l',lang); const img=card.querySelector('img.card-img-top,img.site-manga__cover-image,img[src*=\"/images/manga-thumbnails/\"],img[data-src*=\"/images/manga-thumbnails/\"]'); const coverRaw=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:new URL('/images/manga-thumbnails/'+id+'.jpg',base).href; const author=txt(card.querySelector('h4.text-muted a,h4.text-muted,.card-subtitle,.text-muted')); const desc=txt(card.querySelector('.site-card__brief')); const latest=txt(card.querySelector('.list-group-item a[href*=\"/p/\"],a.site-manga-thumbnail__link[href*=\"/p/\"]')); mangas.push({id:'/m/'+id,title:title,url:u.href,cover:cover,author:author,description:desc,latestChapter:latest}); }); return JSON.stringify(mangas); })();", "description": "提取最新列表并按作品标题去重" }
+      ]
+    },
+    "filter": {
+      "description": "按站点实际支持的排序和语言筛选",
+      "supportsPagination": true,
+      "defaults": { "feed": "", "language": "zh" },
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/?{{feed}}&l={{language}}", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开筛选结果" },
+        { "type": "wait", "condition": "element", "selector": ".site-card[data-manga-id]", "timeout": 10000, "description": "等待筛选卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const simp=(s)=>{ const map={'麗':'丽','絲':'丝','鍵':'键','輕':'轻','戀':'恋','葉':'叶','馬':'马','樂':'乐','國':'国','間':'间','從':'从','開':'开','體':'体','學':'学','會':'会','與':'与','畫':'画','話':'话','後':'后','裏':'里','裡':'里','隸':'隶','轉':'转','這':'这','強':'强'}; return String(s||'').replace(/[麗絲鍵輕戀葉馬樂國間從開體學會與畫話後裏裡隸轉這強]/g,(ch)=>map[ch]||ch); }; const normTitle=(s)=>simp(s).toLowerCase().replace(/[\\s·・.。:：,，!！?？\\-—_~～'“”‘’()（）\\[\\]【】<>《》]/g,''); const makeDoc=(html)=>new DOMParser().parseFromString(html,'text/html'); const nextHref=(d)=>{ const links=Array.from(d.querySelectorAll('a[href]')).filter((a)=>/[?&]p=/.test(a.getAttribute('href')||'')); return links.length?(links[links.length-1].getAttribute('href')||''):''; }; let doc=document; const target=parseInt('{{page}}',10)||1; for(let i=1;i<target;i++){ const href=nextHref(doc); if(!href) break; const xhr=new XMLHttpRequest(); xhr.open('GET',new URL(href,base).href,false); xhr.send(null); if(xhr.status<200||xhr.status>=400||!xhr.responseText) break; doc=makeDoc(xhr.responseText); } const lang=(new URL(location.href).searchParams.get('l')||'zh'); const seenId={}; const seenTitle={}; const mangas=[]; doc.querySelectorAll('.site-card[data-manga-id]').forEach((card)=>{ const dataId=(card.getAttribute('data-manga-id')||'').trim(); const link=card.querySelector('a.site-card__manga-title[href*=\"/m/\"]')||card.querySelector('a[href*=\"/m/\"]'); const href=link?(link.getAttribute('href')||''):(dataId?('/m/'+dataId):''); if(!href) return; const u=new URL(href,base); const match=u.pathname.match(/\\/m\\/([^/?#]+)/); const id=(dataId||(match?match[1]:'')); const title=txt(card.querySelector('a.site-card__manga-title,.site-card__manga-title')); const titleKey=normTitle(title); if(!id||!title) return; if(seenId[id]||(titleKey&&seenTitle[titleKey])) return; seenId[id]=true; if(titleKey) seenTitle[titleKey]=true; if(!u.searchParams.get('l')) u.searchParams.set('l',lang); const img=card.querySelector('img.card-img-top,img.site-manga__cover-image,img[src*=\"/images/manga-thumbnails/\"],img[data-src*=\"/images/manga-thumbnails/\"]'); const coverRaw=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:new URL('/images/manga-thumbnails/'+id+'.jpg',base).href; const author=txt(card.querySelector('h4.text-muted a,h4.text-muted,.card-subtitle,.text-muted')); const desc=txt(card.querySelector('.site-card__brief')); const latest=txt(card.querySelector('.list-group-item a[href*=\"/p/\"],a.site-manga-thumbnail__link[href*=\"/p/\"]')); mangas.push({id:'/m/'+id,title:title,url:u.href,cover:cover,author:author,description:desc,latestChapter:latest}); }); return JSON.stringify(mangas); })();", "description": "提取筛选列表并按作品标题去重" }
+      ]
+    },
+    "search": {
+      "description": "搜索漫画",
+      "supportsPagination": true,
+      "actions": [
+        { "type": "navigate", "url": "{{baseUrl}}/?q={{query}}&l=zh", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开搜索结果" },
+        { "type": "wait", "condition": "element", "selector": ".site-card[data-manga-id]", "timeout": 10000, "description": "等待搜索卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const simp=(s)=>{ const map={'麗':'丽','絲':'丝','鍵':'键','輕':'轻','戀':'恋','葉':'叶','馬':'马','樂':'乐','國':'国','間':'间','從':'从','開':'开','體':'体','學':'学','會':'会','與':'与','畫':'画','話':'话','後':'后','裏':'里','裡':'里','隸':'隶','轉':'转','這':'这','強':'强'}; return String(s||'').replace(/[麗絲鍵輕戀葉馬樂國間從開體學會與畫話後裏裡隸轉這強]/g,(ch)=>map[ch]||ch); }; const normTitle=(s)=>simp(s).toLowerCase().replace(/[\\s·・.。:：,，!！?？\\-—_~～'“”‘’()（）\\[\\]【】<>《》]/g,''); const makeDoc=(html)=>new DOMParser().parseFromString(html,'text/html'); const nextHref=(d)=>{ const links=Array.from(d.querySelectorAll('a[href]')).filter((a)=>/[?&]p=/.test(a.getAttribute('href')||'')); return links.length?(links[links.length-1].getAttribute('href')||''):''; }; let doc=document; const target=parseInt('{{page}}',10)||1; for(let i=1;i<target;i++){ const href=nextHref(doc); if(!href) break; const xhr=new XMLHttpRequest(); xhr.open('GET',new URL(href,base).href,false); xhr.send(null); if(xhr.status<200||xhr.status>=400||!xhr.responseText) break; doc=makeDoc(xhr.responseText); } const lang=(new URL(location.href).searchParams.get('l')||'zh'); const seenId={}; const seenTitle={}; const mangas=[]; doc.querySelectorAll('.site-card[data-manga-id]').forEach((card)=>{ const dataId=(card.getAttribute('data-manga-id')||'').trim(); const link=card.querySelector('a.site-card__manga-title[href*=\"/m/\"]')||card.querySelector('a[href*=\"/m/\"]'); const href=link?(link.getAttribute('href')||''):(dataId?('/m/'+dataId):''); if(!href) return; const u=new URL(href,base); const match=u.pathname.match(/\\/m\\/([^/?#]+)/); const id=(dataId||(match?match[1]:'')); const title=txt(card.querySelector('a.site-card__manga-title,.site-card__manga-title')); const titleKey=normTitle(title); if(!id||!title) return; if(seenId[id]||(titleKey&&seenTitle[titleKey])) return; seenId[id]=true; if(titleKey) seenTitle[titleKey]=true; if(!u.searchParams.get('l')) u.searchParams.set('l',lang); const img=card.querySelector('img.card-img-top,img.site-manga__cover-image,img[src*=\"/images/manga-thumbnails/\"],img[data-src*=\"/images/manga-thumbnails/\"]'); const coverRaw=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:new URL('/images/manga-thumbnails/'+id+'.jpg',base).href; const author=txt(card.querySelector('h4.text-muted a,h4.text-muted,.card-subtitle,.text-muted')); const desc=txt(card.querySelector('.site-card__brief')); const latest=txt(card.querySelector('.list-group-item a[href*=\"/p/\"],a.site-manga-thumbnail__link[href*=\"/p/\"]')); mangas.push({id:'/m/'+id,title:title,url:u.href,cover:cover,author:author,description:desc,latestChapter:latest}); }); return JSON.stringify(mangas); })();", "description": "提取搜索列表并按作品标题去重" }
+      ]
+    },
+    "getMangaDetail": {
+      "description": "获取漫画详情",
+      "actions": [
+        { "type": "script", "saveAs": "targetUrl", "code": "(() => { const base='{{baseUrl}}'; const raw=String('{{mangaId}}'||'').trim(); const clean=(value)=>String(value||'').replace(/^\\/+/, '').split(/[?#]/)[0]; const withLang=(u)=>{ if(!u.searchParams.get('l')) u.searchParams.set('l','zh'); return u.href; }; try { if(/^https?:\\/\\//i.test(raw)){ return withLang(new URL(raw)); } if(raw.startsWith('/m/')){ return withLang(new URL(raw,base)); } const match=raw.match(/\\/?m\\/([^/?#]+)/); const id=match?match[1]:clean(raw); return withLang(new URL('/m/'+id,base)); } catch(_e) { return base+'/m/'+clean(raw)+'?l=zh'; } })();", "description": "归一化详情页地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开详情页" },
+        { "type": "wait", "condition": "element", "selector": ".site-card[data-manga-id], .site-manga__cover-image, .site-card__manga-title", "timeout": 10000, "description": "等待详情卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const root=document.querySelector('.site-card[data-manga-id]')||document; const current=new URL(location.href); const pathMatch=current.pathname.match(/\\/m\\/([^/?#]+)/); const mid=(root.getAttribute?root.getAttribute('data-manga-id')||'':'')||(pathMatch?pathMatch[1]:''); const title=txt(root.querySelector('.site-card__manga-title,h3')); const img=root.querySelector('img.site-manga__cover-image,img.card-img-top,img[src*=\"/images/manga-thumbnails/\"],img[data-src*=\"/images/manga-thumbnails/\"]'); const coverRaw=img?(img.getAttribute('src')||img.getAttribute('data-src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:(mid?new URL('/images/manga-thumbnails/'+mid+'.jpg',base).href:''); const author=txt(root.querySelector('h4.text-muted a,h4.text-muted,.card-subtitle')); const description=txt(root.querySelector('.site-card__brief')); const meta=txt(root.querySelector('small.text-muted')); const sm=meta.match(/連載狀態：([^最]+)/); const u=mid?new URL('/m/'+mid,base):current; if(!u.searchParams.get('l')) u.searchParams.set('l','zh'); return JSON.stringify({id:mid?'/m/'+mid:'{{mangaId}}',title:title,cover:cover,author:author,description:description,status:sm?sm[1].trim():'',url:u.href}); })();", "description": "提取详情字段" }
+      ]
+    },
+    "getChapterList": {
+      "description": "获取章节列表",
+      "actions": [
+        { "type": "script", "saveAs": "targetUrl", "code": "(() => { const base='{{baseUrl}}'; const raw=String('{{mangaId}}'||'').trim(); const clean=(value)=>String(value||'').replace(/^\\/+/, '').split(/[?#]/)[0]; const withLang=(u)=>{ if(!u.searchParams.get('l')) u.searchParams.set('l','zh'); return u.href; }; try { if(/^https?:\\/\\//i.test(raw)){ return withLang(new URL(raw)); } if(raw.startsWith('/m/')){ return withLang(new URL(raw,base)); } const match=raw.match(/\\/?m\\/([^/?#]+)/); const id=match?match[1]:clean(raw); return withLang(new URL('/m/'+id,base)); } catch(_e) { return base+'/m/'+clean(raw)+'?l=zh'; } })();", "description": "归一化章节目录地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开详情页" },
+        { "type": "wait", "condition": "element", "selector": "a.site-manga-thumbnail__link[href*=\"/p/\"], .list-group-item a[href*=\"/p/\"], a[href*=\"/p/\"]", "timeout": 10000, "description": "等待章节卡片" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const txt=(el)=>el?(el.textContent||'').replace(/\\s+/g,' ').trim():''; const chapters=[]; const seen={}; document.querySelectorAll('a.site-manga-thumbnail__link[href*=\"/p/\"],.list-group-item a[href*=\"/p/\"],a[href*=\"/p/\"]').forEach((a)=>{ const u=new URL(a.getAttribute('href')||'',base); const match=u.pathname.match(/\\/p\\/([^/?#]+)/); const cid=match?match[1]:''; if(!cid||seen[cid]) return; seen[cid]=true; if(!u.searchParams.get('l')) u.searchParams.set('l','zh'); const img=a.querySelector('img'); const coverRaw=img?(img.getAttribute('data-src')||img.getAttribute('src')||''):''; const cover=coverRaw?new URL(coverRaw,base).href:new URL('/images/page-thumbnails/'+cid+'.jpg',base).href; const title=txt(a.querySelector('.text-center'))||(img?(img.getAttribute('alt')||''):'')||txt(a)||cid; chapters.push({id:'/p/'+cid,title:title,url:u.href,cover:cover}); }); return JSON.stringify(chapters); })();", "description": "提取章节列表" }
+      ]
+    },
+    "getPageList": {
+      "description": "获取阅读页图片",
+      "actions": [
+        { "type": "script", "saveAs": "targetUrl", "code": "(() => { const base='{{baseUrl}}'; const raw=String('{{chapterId}}'||'').trim(); const clean=(value)=>String(value||'').replace(/^\\/+/, '').split(/[?#]/)[0]; const withLang=(u)=>{ if(!u.searchParams.get('l')) u.searchParams.set('l','zh'); return u.href; }; try { if(/^https?:\\/\\//i.test(raw)){ return withLang(new URL(raw)); } if(raw.startsWith('/p/')){ return withLang(new URL(raw,base)); } const match=raw.match(/\\/?p\\/([^/?#]+)/); const id=match?match[1]:clean(raw); return withLang(new URL('/p/'+id,base)); } catch(_e) { return base+'/p/'+clean(raw)+'?l=zh'; } })();", "description": "归一化阅读页地址" },
+        { "type": "navigate", "url": "{{targetUrl}}", "timeout": 15000, "waitAfterLoad": 2000, "description": "打开阅读页" },
+        { "type": "wait", "condition": "element", "selector": "img.site-reader__image[data-page-image-url], img[data-page-image-url], img[src*=\"/images/pages/\"]", "timeout": 10000, "description": "等待页面图片数据" },
+        { "type": "script", "code": "(() => { const base='{{baseUrl}}'; const pages=[]; const seen={}; const push=(url,id)=>{ if(!url) return; const abs=new URL(url,base).href; if(seen[abs]) return; seen[abs]=true; pages.push({index:pages.length,page:pages.length,url:abs,imageUrl:abs,id:id||''}); }; document.querySelectorAll('img.site-reader__image[data-page-image-url],img[data-page-image-url]').forEach((img)=>push(img.getAttribute('data-page-image-url')||'',img.getAttribute('data-page-id')||'')); if(pages.length===0){ document.querySelectorAll('a.site-reader__one-per-page-image-link img[src*=\"/images/pages/\"],img.site-reader__image[src*=\"/images/pages/\"],img[src*=\"/images/pages/\"]').forEach((img)=>push(img.getAttribute('src')||'',img.getAttribute('data-page-id')||'')); } if(pages.length===0) throw new Error('Doge Manga page list extraction returned empty'); return JSON.stringify(pages); })();", "description": "提取阅读页图片列表" }
+      ]
+    },
+    "getImageUrl": {
+      "description": "图片 URL 已由 getPageList 返回",
+      "actions": [
+        { "type": "script", "code": "(() => '')();", "description": "无需二次解析" }
+      ]
+    }
+  }
+}

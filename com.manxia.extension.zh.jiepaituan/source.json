@@ -15,7 +15,7 @@
       "street",
       "webview"
     ],
-    "Internet": true
+    "Internet": false
   },
   "capabilities": {
     "urlResolver": true,
